@@ -1,9 +1,6 @@
 import { Inter } from 'next/font/google';
 import './globals.css';
-import SmoothScroll from '@/components/effects/SmoothScroll';
-import LoadingScreen from '@/components/effects/LoadingScreen';
-import TerminalNav from '@/components/ui/TerminalNav';
-import CustomCursor from '@/components/effects/CustomCursor';
+import ClientWrapper from '@/components/effects/ClientWrapper';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -25,13 +22,9 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en" data-theme="dark">
       <body className={inter.className}>
-        <LoadingScreen />
-        <SmoothScroll />
-        <TerminalNav />
-        <CustomCursor />
-        <main className="main-content">
+        <ClientWrapper>
           {children}
-        </main>
+        </ClientWrapper>
       </body>
     </html>
   );

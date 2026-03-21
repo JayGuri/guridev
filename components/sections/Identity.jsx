@@ -6,6 +6,62 @@ import CometCard from '@/components/ui/comet-card';
 import StarBorder from '@/components/StarBorder';
 import DecryptedText from '@/components/DecryptedText';
 import SplitText from '@/components/SplitText';
+import LogoLoop from '@/components/LogoLoop';
+
+// ── Tech icons from simple-icons via react-icons ──────────────────────────────
+import {
+  SiReact, SiNextdotjs, SiPython, SiPytorch, SiTailwindcss, SiDocker,
+  SiPostgresql, SiMongodb, SiGit, SiFastapi, SiApachekafka, SiTensorflow,
+  SiPandas, SiScikitlearn, SiOpencv, SiHuggingface, SiNumpy,
+  SiThreedotjs, SiTypescript, SiJavascript, SiHtml5,
+  SiNodedotjs, SiExpress, SiFlask,
+  SiMysql, SiRedis, SiSupabase, SiCloudinary,
+  SiVercel, SiPostman, SiLinux, SiGithub,
+} from 'react-icons/si';
+import { VscVscode } from 'react-icons/vsc';
+
+// ── Full tech-stack logos for the marquee ─────────────────────────────────────
+const techLogos = [
+  // Core web
+  { node: <SiReact />,       title: 'React' },
+  { node: <SiNextdotjs />,   title: 'Next.js' },
+  { node: <SiTypescript />,  title: 'TypeScript' },
+  { node: <SiJavascript />,  title: 'JavaScript' },
+  { node: <SiHtml5 />,       title: 'HTML5' },
+  { node: <SiTailwindcss />, title: 'Tailwind' },
+  { node: <SiThreedotjs />,  title: 'Three.js' },
+  // Backend
+  { node: <SiNodedotjs />,   title: 'Node.js' },
+  { node: <SiExpress />,     title: 'Express' },
+  { node: <SiFastapi />,     title: 'FastAPI' },
+  { node: <SiFlask />,       title: 'Flask' },
+  // Data / ML
+  { node: <SiPython />,      title: 'Python' },
+  { node: <SiPytorch />,     title: 'PyTorch' },
+  { node: <SiTensorflow />,  title: 'TensorFlow' },
+  { node: <SiScikitlearn />, title: 'scikit-learn' },
+  { node: <SiPandas />,      title: 'Pandas' },
+  { node: <SiNumpy />,       title: 'NumPy' },
+  { node: <SiOpencv />,      title: 'OpenCV' },
+  { node: <SiHuggingface />, title: 'HuggingFace' },
+  // Databases / services
+  { node: <SiPostgresql />,  title: 'PostgreSQL' },
+  { node: <SiMongodb />,     title: 'MongoDB' },
+  { node: <SiMysql />,       title: 'MySQL' },
+  { node: <SiRedis />,       title: 'Redis' },
+  { node: <SiSupabase />,    title: 'Supabase' },
+  { node: <SiCloudinary />,  title: 'Cloudinary' },
+  // Infra / streaming
+  { node: <SiDocker />,      title: 'Docker' },
+  { node: <SiApachekafka />, title: 'Kafka' },
+  { node: <SiVercel />,      title: 'Vercel' },
+  // Tools
+  { node: <SiGit />,         title: 'Git' },
+  { node: <SiGithub />,      title: 'GitHub' },
+  { node: <SiPostman />,     title: 'Postman' },
+  { node: <SiLinux />,       title: 'Linux' },
+  { node: <VscVscode />,     title: 'VS Code' },
+];
 
 const E = [0.16, 1, 0.3, 1]; // shared ease
 
@@ -866,6 +922,46 @@ export default function Identity() {
           <PhotographerCard inView={inView} index={2} onOpen={() => setActiveModal('photographer')} />
           <CandidCard       inView={inView} index={3} onOpen={() => setActiveModal('candid')} />
         </div>
+
+        {/* ── Tech stack marquee ────────────────────────────────────────── */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.3 }}
+          transition={{ duration: 0.7, ease: E, delay: 0.2 }}
+          style={{ marginTop: '80px' }}
+        >
+          <p style={{
+            fontFamily: 'Inter, sans-serif',
+            fontSize: '11px',
+            letterSpacing: '0.2em',
+            textTransform: 'uppercase',
+            color: 'var(--text-tertiary)',
+            textAlign: 'center',
+            marginBottom: '24px',
+          }}>
+            things I build with
+          </p>
+          <div style={{
+            height: '80px',
+            position: 'relative',
+            overflow: 'hidden',
+            opacity: 0.72,
+          }}>
+            <LogoLoop
+              logos={techLogos}
+              speed={80}
+              direction="left"
+              logoHeight={40}
+              gap={48}
+              hoverSpeed={20}
+              scaleOnHover={true}
+              fadeOut={true}
+              fadeOutColor="var(--bg-surface)"
+              ariaLabel="Technologies I work with"
+            />
+          </div>
+        </motion.div>
       </div>
 
       {/* Modal — rendered inside section but position:fixed escapes layout */}
