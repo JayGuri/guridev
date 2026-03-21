@@ -2,12 +2,15 @@
 
 import { useState, useEffect } from 'react';
 import ClickSpark from '@/components/ClickSpark';
+import CustomCursor from '@/components/effects/CustomCursor';
 import LoadingScreen from '@/components/effects/LoadingScreen';
 import SmoothScroll from '@/components/effects/SmoothScroll';
 import TerminalNav from '@/components/ui/TerminalNav';
 
 // Tracks scroll position to swap ClickSpark color when the #photography section
 // is centred in the viewport — orange to match the Darkroom / photographer palette.
+// CustomCursor handles the visual cursor (dot + lagging ring + section-aware color).
+// ClickSpark layers click burst animations on top without touching cursor styling.
 export default function ClientWrapper({ children }) {
   const [sparkColor, setSparkColor] = useState('#7C6FF7');
 
@@ -21,9 +24,8 @@ export default function ClientWrapper({ children }) {
       setSparkColor(inView ? '#E8935A' : '#7C6FF7');
     };
 
-    // passive scroll listener — zero-cost
     window.addEventListener('scroll', check, { passive: true });
-    check(); // run once on mount in case already scrolled
+    check();
     return () => window.removeEventListener('scroll', check);
   }, []);
 
@@ -35,6 +37,7 @@ export default function ClientWrapper({ children }) {
       sparkCount={8}
       duration={400}
     >
+      <CustomCursor />
       <LoadingScreen />
       <SmoothScroll />
       <TerminalNav />
