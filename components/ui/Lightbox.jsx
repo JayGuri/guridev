@@ -1,19 +1,12 @@
 'use client';
 
 import Image from 'next/image';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cld, blurUrl } from '@/lib/photography';
 
 export default function Lightbox({ photos, currentIndex, onClose, onNext, onPrev }) {
   const [direction, setDirection] = useState(0);
-  const prevIndex = useRef(currentIndex);
-
-  useEffect(() => {
-    if (currentIndex > prevIndex.current) setDirection(1);
-    else if (currentIndex < prevIndex.current) setDirection(-1);
-    prevIndex.current = currentIndex;
-  }, [currentIndex]);
 
   useEffect(() => {
     const handleKey = (e) => {

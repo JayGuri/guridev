@@ -217,8 +217,9 @@ export default function DevStudio() {
           </p>
         </motion.div>
 
-        {/* 3D Canvas wrapper */}
+        {/* 3D Canvas wrapper — desktop only */}
         <div
+          className="devstudio-canvas"
           style={{
             width: '100%',
             height: '600px',
@@ -229,6 +230,29 @@ export default function DevStudio() {
           }}
         >
           <RoomScene />
+        </div>
+
+        {/* Mobile fallback for 3D scene */}
+        <div
+          className="devstudio-canvas-mobile"
+          style={{
+            display: 'none',
+            margin: '40px 0',
+            padding: '40px 24px',
+            borderRadius: '16px',
+            border: '1px solid var(--border-subtle)',
+            textAlign: 'center',
+          }}
+        >
+          <p
+            style={{
+              fontFamily: 'Inter, sans-serif',
+              fontSize: '14px',
+              color: 'var(--text-tertiary)',
+            }}
+          >
+            3D experience available on desktop
+          </p>
         </div>
 
         {/* Project cards grid */}
@@ -264,6 +288,11 @@ export default function DevStudio() {
 
       {/* Responsive grid breakpoint */}
       <style>{`
+        .devstudio-canvas-mobile { display: none; }
+        @media (max-width: 767px) {
+          .devstudio-canvas { display: none !important; }
+          .devstudio-canvas-mobile { display: block !important; }
+        }
         @media (max-width: 1023px) {
           .devstudio-grid {
             grid-template-columns: 1fr !important;

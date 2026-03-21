@@ -1,8 +1,8 @@
 'use client';
 
-import { Canvas, useFrame, useThree } from '@react-three/fiber';
+import { Canvas, useFrame } from '@react-three/fiber';
 import { OrbitControls, Environment } from '@react-three/drei';
-import { useRef, Suspense, useEffect, useState } from 'react';
+import { useRef, Suspense, useEffect, useSyncExternalStore } from 'react';
 import * as THREE from 'three';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -28,9 +28,10 @@ function Monitor({ position, rotationY = 0, screenArgs, standHeight }) {
   );
 }
 
-// Scroll-driven camera that sweeps left → right across the desk
+// Scroll-driven camera that sweeps left → right across the desk.
+// Uses useFrame's state arg to access the camera inside the render loop
+// without destructuring from useThree (avoids React compiler immutability rule).
 function ScrollCamera() {
-  const { camera } = useThree();
   const cameraState = useRef({
     posX: 0, posY: 2.5, posZ: 9,
     tarX: 0, tarY: 1, tarZ: 0,
@@ -68,19 +69,21 @@ function ScrollCamera() {
     return () => ScrollTrigger.getAll().forEach((t) => t.kill());
   }, []);
 
-  useFrame(() => {
+  useFrame((frameState) => {
+    const cam = frameState.camera;
     const s = cameraState.current;
-    const lerpFactor = 0.05;
+    const t = lookTarget.current;
+    const f = 0.05;
 
-    camera.position.x += (s.posX - camera.position.x) * lerpFactor;
-    camera.position.y += (s.posY - camera.position.y) * lerpFactor;
-    camera.position.z += (s.posZ - camera.position.z) * lerpFactor;
+    cam.position.x += (s.posX - cam.position.x) * f;
+    cam.position.y += (s.posY - cam.position.y) * f;
+    cam.position.z += (s.posZ - cam.position.z) * f;
 
-    lookTarget.current.x += (s.tarX - lookTarget.current.x) * lerpFactor;
-    lookTarget.current.y += (s.tarY - lookTarget.current.y) * lerpFactor;
-    lookTarget.current.z += (s.tarZ - lookTarget.current.z) * lerpFactor;
+    t.x += (s.tarX - t.x) * f;
+    t.y += (s.tarY - t.y) * f;
+    t.z += (s.tarZ - t.z) * f;
 
-    camera.lookAt(lookTarget.current);
+    cam.lookAt(t);
   });
 
   return null;
@@ -144,12 +147,14 @@ function Scene({ isMobile }) {
   );
 }
 
-export default function RoomScene() {
-  const [isMobile, setIsMobile] = useState(false);
+const noopSubscribe = () => () => {};
 
-  useEffect(() => {
-    setIsMobile(window.innerWidth < 768);
-  }, []);
+export default function RoomScene() {
+  const isMobile = useSyncExternalStore(
+    noopSubscribe,
+    () => window.innerWidth < 768,
+    () => false
+  );
 
   return (
     <Canvas

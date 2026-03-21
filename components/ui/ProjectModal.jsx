@@ -4,9 +4,8 @@ import { motion } from 'framer-motion';
 import { useEffect } from 'react';
 
 export default function ProjectModal({ project, onClose }) {
-  if (!project) return null;
-
   useEffect(() => {
+    if (!project) return;
     const handleKey = (e) => {
       if (e.key === 'Escape') onClose();
     };
@@ -16,7 +15,9 @@ export default function ProjectModal({ project, onClose }) {
       window.removeEventListener('keydown', handleKey);
       document.body.style.overflow = '';
     };
-  }, [onClose]);
+  }, [project, onClose]);
+
+  if (!project) return null;
 
   return (
     <div

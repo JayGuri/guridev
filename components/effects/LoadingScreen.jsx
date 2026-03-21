@@ -1,44 +1,40 @@
 'use client';
 
 import { AnimatePresence, motion } from 'framer-motion';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useSyncExternalStore } from 'react';
+
+const noopSubscribe = () => () => {};
 
 // Only plays on the first page load within a browser session.
 // sessionStorage persists across soft navigations but clears when the tab closes,
 // giving the animation a fresh run on each new visit without repeating on every route change.
 export default function LoadingScreen() {
-  const [isLoading, setIsLoading] = useState(null); // null = not yet determined
+  const hasLoaded = useSyncExternalStore(
+    noopSubscribe,
+    () => sessionStorage.getItem('hasLoaded') === 'true',
+    () => false
+  );
+
+  const [dismissed, setDismissed] = useState(false);
 
   useEffect(() => {
-    const hasLoaded = sessionStorage.getItem('hasLoaded');
-
-    if (hasLoaded) {
-      // Already seen — skip entirely
-      setIsLoading(false);
-      return;
-    }
-
-    // First visit this session — lock scroll while animating
+    if (hasLoaded) return;
     document.body.style.overflow = 'hidden';
-    setIsLoading(true);
 
-    // Step 3 finishes at ~2.4s (delay 1.7 + duration 0.7).
-    // Add a small buffer so the exit is fully painted before unmounting.
     const timer = setTimeout(() => {
-      setIsLoading(false);
+      setDismissed(true);
       sessionStorage.setItem('hasLoaded', 'true');
       document.body.style.overflow = '';
     }, 2500);
 
     return () => clearTimeout(timer);
-  }, []);
+  }, [hasLoaded]);
 
-  // Haven't determined state yet — render nothing to avoid flash
-  if (isLoading === null) return null;
+  if (hasLoaded || dismissed) return null;
 
   return (
     <AnimatePresence>
-      {isLoading && (
+      {!hasLoaded && !dismissed && (
         <motion.div
           key="loading-screen"
           initial={{ y: 0 }}

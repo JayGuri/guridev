@@ -2,6 +2,7 @@
 
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect, useRef } from 'react';
+import { useReducedMotion } from '@/lib/useReducedMotion';
 
 // Role words and their accent colours
 const ROLES = ['Developer', 'Researcher', 'Photographer', 'Builder'];
@@ -22,11 +23,7 @@ function scrollTo(id) {
 }
 
 export default function Hero() {
-  // ── Reduced-motion gate ──────────────────────────────────────────────
-  // Evaluated once on mount (client-only) so SSR never throws.
-  const prefersReduced =
-    typeof window !== 'undefined' &&
-    window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const prefersReduced = useReducedMotion();
 
   // Helpers: with reduced motion every element appears instantly in place.
   const fadeUp = (delay = 0) =>
