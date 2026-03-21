@@ -29,7 +29,7 @@ export default function RootLayout({ children }) {
         <SmoothScroll />
         <TerminalNav />
         <CustomCursor />
-        <main style={{ paddingTop: '156px' }} className="main-content">
+        <main className="main-content">
           {children}
         </main>
       </body>

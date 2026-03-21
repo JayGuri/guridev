@@ -204,11 +204,12 @@ function NavButton({ item, isActive, onClick }) {
 
 // ── Main component ────────────────────────────────────────────────────────────
 export default function TerminalNav() {
-  const [visible,       setVisible]      = useState(false);
-  const [activeSection, setActiveSection] = useState('hero');
-  const [terminalOpen,  setTerminalOpen]  = useState(false);
-  const [lines,         setLines]         = useState([]);
-  const [terminalLoc,   setTerminalLoc]   = useState('home');
+  // terminalVisible: toggled by Ctrl+` — replaces the old scroll-based visibility
+  const [terminalVisible, setTerminalVisible] = useState(false);
+  const [activeSection,   setActiveSection]   = useState('hero');
+  const [terminalOpen,    setTerminalOpen]     = useState(false);
+  const [lines,           setLines]            = useState([]);
+  const [terminalLoc,     setTerminalLoc]      = useState('home');
 
   const theme = useSyncExternalStore(subscribeTheme, getThemeSnapshot, () => 'dark');
 
@@ -225,12 +226,29 @@ export default function TerminalNav() {
     document.documentElement.setAttribute('data-theme', theme);
   }, [theme]);
 
-  // Show after 80px scroll
+  // Ctrl + ` toggles the entire terminal panel (like VS Code)
   useEffect(() => {
-    const onScroll = () => setVisible(window.scrollY > 80);
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
+    const onKeyDown = (e) => {
+      if (e.ctrlKey && e.code === 'Backquote') {
+        e.preventDefault();
+        setTerminalVisible(v => !v);
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
   }, []);
+
+  // Add/remove body class so .main-content gets the right paddingTop
+  useEffect(() => {
+    if (terminalVisible) {
+      document.body.classList.add('terminal-open');
+      // Small delay so the AnimatePresence animation starts before we focus
+      setTimeout(() => inputRef.current?.focus(), 120);
+    } else {
+      document.body.classList.remove('terminal-open');
+    }
+    return () => document.body.classList.remove('terminal-open');
+  }, [terminalVisible]);
 
   // Track active section
   useEffect(() => {
@@ -668,7 +686,7 @@ export default function TerminalNav() {
 
   return (
     <AnimatePresence>
-      {visible && (
+      {terminalVisible && (
         <motion.div
           initial={{ y: '-100%' }}
           animate={{ y: 0 }}

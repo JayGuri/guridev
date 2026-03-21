@@ -162,10 +162,17 @@ body {
   background: var(--accent-dev);
 }
 
-/* ─── Terminal nav padding offset ───────────────────────────────────── */
+/* ─── Terminal nav padding — only when terminal is toggled open ──────── */
+/* Desktop: title bar (44) + nav bar (44) + input row (44) + status (24) = 156px */
+body.terminal-open .main-content {
+  padding-top: 156px;
+  transition: padding-top 0.3s ease;
+}
+
+/* Mobile: no title bar, so 44 + 44 + 24 = 112px */
 @media (max-width: 767px) {
-  .main-content {
-    padding-top: 112px !important;
+  body.terminal-open .main-content {
+    padding-top: 112px;
   }
 }
 

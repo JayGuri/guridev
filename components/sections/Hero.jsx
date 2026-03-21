@@ -308,7 +308,64 @@ export default function Hero() {
         </motion.div>
       </div>
 
-      {/* f) Scroll indicator */}
+      {/* f) Terminal shortcut hint — fades in after 3s, bottom-left */}
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={prefersReduced ? {} : { delay: 3.2, duration: 0.7, ease: EASE_OUT_EXPO }}
+        style={{
+          position: 'absolute',
+          bottom: '44px',
+          left: '40px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '10px',
+          pointerEvents: 'none',
+          userSelect: 'none',
+        }}
+      >
+        {/* Blinking terminal cursor */}
+        <span style={{
+          display: 'inline-block',
+          width: '7px',
+          height: '14px',
+          background: '#3fb950',
+          borderRadius: '1px',
+          animation: 'termHintBlink 1s step-end infinite',
+          flexShrink: 0,
+        }} />
+        <span style={{
+          fontFamily: "'JetBrains Mono', monospace",
+          fontSize: '12px',
+          color: 'var(--text-tertiary)',
+          letterSpacing: '0.02em',
+        }}>
+          press{' '}
+          <kbd style={{
+            fontFamily: 'inherit',
+            fontSize: '11px',
+            color: '#3fb950',
+            background: 'rgba(63,185,80,0.1)',
+            border: '1px solid rgba(63,185,80,0.3)',
+            borderRadius: '4px',
+            padding: '1px 5px',
+          }}>Ctrl</kbd>
+          {' + '}
+          <kbd style={{
+            fontFamily: 'inherit',
+            fontSize: '11px',
+            color: '#3fb950',
+            background: 'rgba(63,185,80,0.1)',
+            border: '1px solid rgba(63,185,80,0.3)',
+            borderRadius: '4px',
+            padding: '1px 5px',
+          }}>{'\u0060'}</kbd>
+          {' '}to open terminal
+        </span>
+        <style>{`@keyframes termHintBlink { 0%,100%{opacity:1} 50%{opacity:0} }`}</style>
+      </motion.div>
+
+      {/* g) Scroll indicator */}
       <AnimatePresence>
         {scrollVisible && (
           <motion.div
