@@ -293,3 +293,17 @@ body.terminal-open .main-content {
   margin-bottom: 48px;
   display: block;
 }
+
+/* ─── Identity section — SplitText heading ───────────────────────────────── */
+.identity-heading {
+  font-family: 'Clash Display', sans-serif;
+  font-size: clamp(36px, 5vw, 56px);
+  font-weight: 600;
+  color: var(--text-primary);
+  display: block;
+}
+
+/* Applied to revealed characters inside DecryptedText on the researcher card */
+.researcher-title {
+  color: var(--text-primary);
+}

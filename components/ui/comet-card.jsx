@@ -57,6 +57,7 @@ export const CometCard = ({
     y.set(0);
   };
 
+  // Allow both default and named imports
   return (
     <div className={cn("perspective-distant transform-3d", className)}>
       <motion.div
@@ -90,3 +91,5 @@ export const CometCard = ({
     </div>
   );
 };
+
+export default CometCard;
