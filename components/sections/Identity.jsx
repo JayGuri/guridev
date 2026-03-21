@@ -741,18 +741,34 @@ function CandidModalContent({ onClose }) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 function IdentityModal({ activeModal, onClose }) {
-  // Scroll-lock + Escape key — also stops Lenis so the page cannot scroll behind the modal
+  // Scroll-lock strategy — required because of how Lenis works internally:
+  //
+  // lenis.stop() sets isStopped=true BUT Lenis still calls event.preventDefault()
+  // on EVERY wheel event (confirmed in lenis/dist/lenis.mjs line ~648). This means
+  // lenis.stop() alone blocks ALL scroll — including the modal panel itself.
+  //
+  // Fix: attach a stopPropagation() listener directly on the panel DOM node.
+  // Lenis registers its wheel handler on `window` in bubble phase (passive:false).
+  // By calling stopPropagation() at the panel level, the wheel event never reaches
+  // window → Lenis never calls preventDefault() → panel scrolls natively.
+  // lenis.stop() still fires for wheel events over the backdrop (outside the panel)
+  // so the page cannot scroll behind the modal.
   useEffect(() => {
     if (!activeModal) return;
-    document.documentElement.style.overflow = 'hidden';
-    document.body.style.overflow = 'hidden';
+
     if (window.__lenis) window.__lenis.stop();
+
+    // useEffect fires after the DOM is painted, so the panel is already mounted.
+    const panel = document.querySelector('.identity-modal-panel');
+    const stopWheelBubble = (e) => e.stopPropagation();
+    if (panel) panel.addEventListener('wheel', stopWheelBubble, { passive: true });
+
     const onEsc = (e) => { if (e.key === 'Escape') onClose(); };
     window.addEventListener('keydown', onEsc);
+
     return () => {
-      document.documentElement.style.overflow = '';
-      document.body.style.overflow = '';
       if (window.__lenis) window.__lenis.start();
+      if (panel) panel.removeEventListener('wheel', stopWheelBubble);
       window.removeEventListener('keydown', onEsc);
     };
   }, [activeModal, onClose]);
