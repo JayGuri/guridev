@@ -3,20 +3,22 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect, useRef } from 'react';
 import { useReducedMotion } from '@/lib/useReducedMotion';
+import PixelBlast from '@/components/PixelBlast';
+import Beams      from '@/components/Beams';
 
 // Role words and their accent colours
 const ROLES = ['Developer', 'Researcher', 'Photographer', 'Builder'];
 
 const ROLE_COLORS = {
-  Developer: '#7C6FF7',
-  Researcher: '#7C6FF7',
-  Builder: '#7C6FF7',
+  Developer:    '#7C6FF7',
+  Researcher:   '#7C6FF7',
+  Builder:      '#7C6FF7',
   Photographer: '#E8935A',
 };
 
 // Eases reused across multiple elements
 const EASE_OUT_EXPO = [0.16, 1, 0.3, 1];
-const EASE_IN_EXPO = [0.76, 0, 0.24, 1];
+const EASE_IN_EXPO  = [0.76, 0, 0.24, 1];
 
 function scrollTo(id) {
   document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
@@ -30,8 +32,8 @@ export default function Hero() {
     prefersReduced
       ? { initial: { opacity: 1, y: 0 }, animate: { opacity: 1, y: 0 } }
       : {
-          initial: { opacity: 0, y: 20 },
-          animate: { opacity: 1, y: 0 },
+          initial:    { opacity: 0, y: 20 },
+          animate:    { opacity: 1, y: 0 },
           transition: { delay, duration: 0.7, ease: EASE_OUT_EXPO },
         };
 
@@ -39,8 +41,8 @@ export default function Hero() {
     prefersReduced
       ? { initial: { opacity: 1, y: 0 }, animate: { opacity: 1, y: 0 } }
       : {
-          initial: { opacity: 0, y: distance },
-          animate: { opacity: 1, y: 0 },
+          initial:    { opacity: 0, y: distance },
+          animate:    { opacity: 1, y: 0 },
           transition: { delay, duration: 0.9, ease: EASE_OUT_EXPO },
         };
 
@@ -66,34 +68,29 @@ export default function Hero() {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  // ── Mouse parallax glow ──────────────────────────────────────────────
-  // Store both the target (raw mouse) and the smoothed current position in refs
-  // to avoid unnecessary re-renders — only the DOM transform is mutated.
-  const glowRef = useRef(null);
-  const mouseTarget = useRef({ x: 0, y: 0 });
+  // ── Mouse parallax on the name only ─────────────────────────────────
+  const nameRef      = useRef(null);
+  const mouseTarget  = useRef({ x: 0, y: 0 });
   const mouseCurrent = useRef({ x: 0, y: 0 });
-  const rafRef = useRef(null);
+  const rafRef       = useRef(null);
 
   useEffect(() => {
     const onMouseMove = (e) => {
-      // Normalise to -0.5 … +0.5 relative to viewport centre
       mouseTarget.current = {
-        x: e.clientX - window.innerWidth / 2,
+        x: e.clientX - window.innerWidth  / 2,
         y: e.clientY - window.innerHeight / 2,
       };
     };
 
     const animate = () => {
       const lerp = 0.05;
-      mouseCurrent.current.x +=
-        (mouseTarget.current.x - mouseCurrent.current.x) * lerp;
-      mouseCurrent.current.y +=
-        (mouseTarget.current.y - mouseCurrent.current.y) * lerp;
+      mouseCurrent.current.x += (mouseTarget.current.x - mouseCurrent.current.x) * lerp;
+      mouseCurrent.current.y += (mouseTarget.current.y - mouseCurrent.current.y) * lerp;
 
-      if (glowRef.current) {
-        const tx = mouseCurrent.current.x / 25;
-        const ty = mouseCurrent.current.y / 25;
-        glowRef.current.style.transform = `translate(${tx}px, ${ty}px)`;
+      if (nameRef.current) {
+        const tx = mouseCurrent.current.x / 40;
+        const ty = mouseCurrent.current.y / 40;
+        nameRef.current.style.transform = `translate(${tx}px, ${ty}px)`;
       }
 
       rafRef.current = requestAnimationFrame(animate);
@@ -122,19 +119,36 @@ export default function Hero() {
         background: 'var(--bg-base)',
       }}
     >
-      {/* ── Background glow ──────────────────────────────────────────── */}
-      <div
-        ref={glowRef}
-        style={{
-          position: 'absolute',
-          inset: 0,
-          pointerEvents: 'none',
-          background:
-            'radial-gradient(ellipse 80% 50% at 50% -10%, rgba(124,111,247,0.12), transparent)',
-          zIndex: 0,
-          willChange: 'transform',
-        }}
-      />
+      {/* ── Layer A: PixelBlast pixel grid ──────────────────────────── */}
+      <div style={{ position: 'absolute', inset: 0, opacity: 0.3, zIndex: 0, pointerEvents: 'none' }}>
+        <PixelBlast
+          variant="square"
+          pixelSize={4}
+          color="#7C6FF7"
+          patternScale={1.2}
+          patternDensity={0.5}
+          enableRipples={true}
+          rippleSpeed={0.2}
+          rippleThickness={0.08}
+          speed={0.3}
+          transparent={true}
+          edgeFade={0.6}
+        />
+      </div>
+
+      {/* ── Layer B: Beams light overlay ─────────────────────────────── */}
+      <div style={{ position: 'absolute', inset: 0, opacity: 0.5, zIndex: 0, pointerEvents: 'none' }}>
+        <Beams
+          beamWidth={1.5}
+          beamHeight={10}
+          beamNumber={12}
+          lightColor="#7C6FF7"
+          speed={0.6}
+          noiseIntensity={0.6}
+          scale={0.25}
+          rotation={0}
+        />
+      </div>
 
       {/* ── Main content ─────────────────────────────────────────────── */}
       <div
@@ -170,8 +184,9 @@ export default function Hero() {
           Mumbai, India
         </motion.div>
 
-        {/* b) Name */}
+        {/* b) Name — subtle mouse parallax */}
         <motion.h1
+          ref={nameRef}
           {...bigSlide(0.4, 60)}
           style={{
             fontFamily: 'Clash Display, sans-serif',
@@ -181,6 +196,7 @@ export default function Hero() {
             letterSpacing: '-0.03em',
             lineHeight: 1,
             marginBottom: '8px',
+            willChange: 'transform',
           }}
         >
           Jay Guri
@@ -201,32 +217,28 @@ export default function Hero() {
           <AnimatePresence mode="wait">
             <motion.span
               key={currentRole}
-              initial={
-                prefersReduced ? { opacity: 1, y: 0 } : { opacity: 0, y: 60 }
-              }
+              initial={prefersReduced ? { opacity: 1, y: 0 } : { opacity: 0, y: 60 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={
-                prefersReduced ? { opacity: 1, y: 0 } : { opacity: 0, y: -60 }
-              }
+              exit={prefersReduced ? { opacity: 1, y: 0 } : { opacity: 0, y: -60 }}
               transition={
                 prefersReduced
                   ? {}
                   : {
-                      enter: { duration: 0.5, ease: EASE_OUT_EXPO },
-                      exit: { duration: 0.3, ease: EASE_IN_EXPO },
+                      enter:    { duration: 0.5, ease: EASE_OUT_EXPO },
+                      exit:     { duration: 0.3, ease: EASE_IN_EXPO },
                       duration: 0.5,
-                      ease: EASE_OUT_EXPO,
+                      ease:     EASE_OUT_EXPO,
                     }
               }
               style={{
-                fontFamily: 'Clash Display, sans-serif',
-                fontSize: 'clamp(48px, 7vw, 90px)',
-                fontWeight: 600,
+                fontFamily:    'Clash Display, sans-serif',
+                fontSize:      'clamp(48px, 7vw, 90px)',
+                fontWeight:    600,
                 letterSpacing: '-0.03em',
-                color: ROLE_COLORS[currentRole],
-                transition: 'color 0.3s',
-                display: 'inline-block',
-                lineHeight: 1,
+                color:         ROLE_COLORS[currentRole],
+                transition:    'color 0.3s',
+                display:       'inline-block',
+                lineHeight:    1,
               }}
             >
               {currentRole}
@@ -238,11 +250,11 @@ export default function Hero() {
         <motion.p
           {...fadeUp(1.0)}
           style={{
-            fontFamily: 'Inter, sans-serif',
-            fontSize: '17px',
-            color: 'var(--text-secondary)',
-            maxWidth: '440px',
-            lineHeight: 1.6,
+            fontFamily:   'Inter, sans-serif',
+            fontSize:     '17px',
+            color:        'var(--text-secondary)',
+            maxWidth:     '440px',
+            lineHeight:   1.6,
             marginBottom: '48px',
           }}
         >
@@ -257,24 +269,24 @@ export default function Hero() {
           <button
             onClick={() => scrollTo('work')}
             onMouseEnter={(e) => {
-              e.currentTarget.style.opacity = '0.85';
+              e.currentTarget.style.opacity   = '0.85';
               e.currentTarget.style.transform = 'translateY(-2px)';
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.opacity = '1';
+              e.currentTarget.style.opacity   = '1';
               e.currentTarget.style.transform = 'translateY(0)';
             }}
             style={{
-              background: 'var(--accent-dev)',
-              color: '#ffffff',
-              padding: '14px 32px',
+              background:   'var(--accent-dev)',
+              color:        '#ffffff',
+              padding:      '14px 32px',
               borderRadius: '8px',
-              border: 'none',
-              fontFamily: 'Inter, sans-serif',
-              fontSize: '15px',
-              fontWeight: 500,
-              cursor: 'pointer',
-              transition: 'all 0.2s',
+              border:       'none',
+              fontFamily:   'Inter, sans-serif',
+              fontSize:     '15px',
+              fontWeight:   500,
+              cursor:       'pointer',
+              transition:   'all 0.2s',
             }}
           >
             See my work
@@ -284,23 +296,23 @@ export default function Hero() {
             onClick={() => scrollTo('photography')}
             onMouseEnter={(e) => {
               e.currentTarget.style.background = 'rgba(232,147,90,0.1)';
-              e.currentTarget.style.transform = 'translateY(-2px)';
+              e.currentTarget.style.transform  = 'translateY(-2px)';
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.background = 'transparent';
-              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.transform  = 'translateY(0)';
             }}
             style={{
-              background: 'transparent',
-              border: '1px solid var(--accent-photo)',
-              color: 'var(--accent-photo)',
-              padding: '14px 32px',
+              background:   'transparent',
+              border:       '1px solid var(--accent-photo)',
+              color:        'var(--accent-photo)',
+              padding:      '14px 32px',
               borderRadius: '8px',
-              fontFamily: 'Inter, sans-serif',
-              fontSize: '15px',
-              fontWeight: 500,
-              cursor: 'pointer',
-              transition: 'all 0.2s',
+              fontFamily:   'Inter, sans-serif',
+              fontSize:     '15px',
+              fontWeight:   500,
+              cursor:       'pointer',
+              transition:   'all 0.2s',
             }}
           >
             View photos
@@ -314,51 +326,50 @@ export default function Hero() {
         animate={{ opacity: 1, y: 0 }}
         transition={prefersReduced ? {} : { delay: 3.2, duration: 0.7, ease: EASE_OUT_EXPO }}
         style={{
-          position: 'absolute',
-          bottom: '44px',
-          left: '40px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '10px',
+          position:      'absolute',
+          bottom:        '44px',
+          left:          '40px',
+          display:       'flex',
+          alignItems:    'center',
+          gap:           '10px',
           pointerEvents: 'none',
-          userSelect: 'none',
+          userSelect:    'none',
         }}
       >
-        {/* Blinking terminal cursor */}
         <span style={{
-          display: 'inline-block',
-          width: '7px',
-          height: '14px',
-          background: '#3fb950',
+          display:      'inline-block',
+          width:        '7px',
+          height:       '14px',
+          background:   '#3fb950',
           borderRadius: '1px',
-          animation: 'termHintBlink 1s step-end infinite',
-          flexShrink: 0,
+          animation:    'termHintBlink 1s step-end infinite',
+          flexShrink:   0,
         }} />
         <span style={{
-          fontFamily: "'JetBrains Mono', monospace",
-          fontSize: '12px',
-          color: 'var(--text-tertiary)',
+          fontFamily:    "'JetBrains Mono', monospace",
+          fontSize:      '12px',
+          color:         'var(--text-tertiary)',
           letterSpacing: '0.02em',
         }}>
           press{' '}
           <kbd style={{
-            fontFamily: 'inherit',
-            fontSize: '11px',
-            color: '#3fb950',
-            background: 'rgba(63,185,80,0.1)',
-            border: '1px solid rgba(63,185,80,0.3)',
+            fontFamily:   'inherit',
+            fontSize:     '11px',
+            color:        '#3fb950',
+            background:   'rgba(63,185,80,0.1)',
+            border:       '1px solid rgba(63,185,80,0.3)',
             borderRadius: '4px',
-            padding: '1px 5px',
+            padding:      '1px 5px',
           }}>Ctrl</kbd>
           {' + '}
           <kbd style={{
-            fontFamily: 'inherit',
-            fontSize: '11px',
-            color: '#3fb950',
-            background: 'rgba(63,185,80,0.1)',
-            border: '1px solid rgba(63,185,80,0.3)',
+            fontFamily:   'inherit',
+            fontSize:     '11px',
+            color:        '#3fb950',
+            background:   'rgba(63,185,80,0.1)',
+            border:       '1px solid rgba(63,185,80,0.3)',
             borderRadius: '4px',
-            padding: '1px 5px',
+            padding:      '1px 5px',
           }}>{'\u0060'}</kbd>
           {' '}to open terminal
         </span>
@@ -374,30 +385,30 @@ export default function Hero() {
             exit={{ opacity: 0 }}
             transition={prefersReduced ? {} : { delay: 1.8, duration: 0.7 }}
             style={{
-              position: 'absolute',
-              bottom: '40px',
-              left: '50%',
-              transform: 'translateX(-50%)',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              gap: '8px',
+              position:       'absolute',
+              bottom:         '40px',
+              left:           '50%',
+              transform:      'translateX(-50%)',
+              display:        'flex',
+              flexDirection:  'column',
+              alignItems:     'center',
+              gap:            '8px',
             }}
           >
             <div
               style={{
-                width: '1px',
-                height: '48px',
+                width:      '1px',
+                height:     '48px',
                 background: 'var(--text-tertiary)',
-                animation: 'scrollPulse 1.5s ease-in-out infinite',
+                animation:  'scrollPulse 1.5s ease-in-out infinite',
               }}
             />
             <span
               style={{
-                fontSize: '10px',
+                fontSize:      '10px',
                 letterSpacing: '0.2em',
                 textTransform: 'uppercase',
-                color: 'var(--text-tertiary)',
+                color:         'var(--text-tertiary)',
               }}
             >
               scroll
@@ -406,7 +417,6 @@ export default function Hero() {
         )}
       </AnimatePresence>
 
-      {/* Scroll indicator keyframe — scoped inside the section */}
       <style>{`
         @keyframes scrollPulse {
           0%, 100% { transform: translateY(0); }

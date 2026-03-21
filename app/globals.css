@@ -270,3 +270,26 @@ body.terminal-open .main-content {
     @apply font-sans;
   }
 }
+
+/* ─── Hero typography classes (used by SplitText / DecryptedText) ──── */
+.hero-name {
+  font-family: 'Clash Display', sans-serif;
+  font-size: clamp(56px, 9vw, 112px);
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: -0.03em;
+  line-height: 1;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.hero-tagline {
+  font-family: 'Inter', sans-serif;
+  font-size: 17px;
+  color: var(--text-secondary);
+  max-width: 440px;
+  line-height: 1.6;
+  text-align: center;
+  margin-bottom: 48px;
+  display: block;
+}
