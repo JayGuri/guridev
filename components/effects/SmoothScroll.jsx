@@ -14,6 +14,9 @@ export default function SmoothScroll() {
       lerp: 0.1,
     });
 
+    // Expose instance so modals can pause scroll without prop drilling
+    window.__lenis = lenis;
+
     let rafId;
 
     function raf(time) {
@@ -26,6 +29,7 @@ export default function SmoothScroll() {
     return () => {
       cancelAnimationFrame(rafId);
       lenis.destroy();
+      window.__lenis = null;
     };
   }, []);
 
