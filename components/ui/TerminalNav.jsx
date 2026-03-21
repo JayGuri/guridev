@@ -220,6 +220,9 @@ export default function TerminalNav() {
   const bootShownRef       = useRef(false);
   // Tracks whether the pointer is currently inside the terminal panel
   const isHoveringTerminal = useRef(false);
+  // Stores the scrollHeight right before new output is added so we can
+  // scroll back to the START of the new output instead of the bottom
+  const cmdScrollAnchor    = useRef(0);
 
   // Sync data-theme
   useEffect(() => {
@@ -266,9 +269,14 @@ export default function TerminalNav() {
     return () => obs.forEach(o => o.disconnect());
   }, []);
 
-  // Auto-scroll output to bottom when new lines are added
+  // After lines update, jump to the START of the newly added output
+  // (cmdScrollAnchor was captured just before setLines was called).
+  // This means you always read from the command echo downward — like a pager,
+  // not a chat. Previous output is still reachable by scrolling up.
   useEffect(() => {
-    if (outputRef.current) outputRef.current.scrollTop = outputRef.current.scrollHeight;
+    if (outputRef.current) {
+      outputRef.current.scrollTop = cmdScrollAnchor.current;
+    }
   }, [lines]);
 
   // Hover-aware scroll routing:
@@ -597,15 +605,26 @@ export default function TerminalNav() {
     }
 
     if (shouldClear) {
+      cmdScrollAnchor.current = 0;
       setLines([]);
       setTerminalOpen(false);
       bootShownRef.current = false;
       return;
     }
 
+    // Capture scroll position BEFORE adding lines so the effect scrolls
+    // back to the start of this command's output, not to the very bottom.
+    cmdScrollAnchor.current = outputRef.current?.scrollTop ?? 0;
+
     setLines(prev => [...prev, ...batch]);
     if (openUrl) window.open(openUrl, '_blank', 'noopener,noreferrer');
-    if (delayedLines) setTimeout(() => setLines(prev => [...prev, ...delayedLines]), 700);
+    if (delayedLines) {
+      setTimeout(() => {
+        // Re-anchor for the delayed batch so it also starts at the top
+        cmdScrollAnchor.current = outputRef.current?.scrollTop ?? 0;
+        setLines(prev => [...prev, ...delayedLines]);
+      }, 700);
+    }
     // Navigate to the relevant section — small delay lets terminal output render first
     if (navTarget) scrollToSection(navTarget);
   }, []); // all deps are module-level constants or stable setters
@@ -653,6 +672,7 @@ export default function TerminalNav() {
   }, [runCommand]);
 
   const killTerminal = useCallback(() => {
+    cmdScrollAnchor.current = 0;
     setLines([]);
     setTerminalOpen(false);
     bootShownRef.current = false;
