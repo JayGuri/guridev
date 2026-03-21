@@ -7,6 +7,7 @@ import Research from '@/components/sections/Research';
 import Darkroom from '@/components/sections/Darkroom';
 import CandidMe from '@/components/sections/CandidMe';
 import Contact from '@/components/sections/Contact';
+import Footer from '@/components/ui/Footer';
 
 export default function Home() {
   return (
@@ -18,6 +19,7 @@ export default function Home() {
       <Darkroom />
       <CandidMe />
       <Contact />
+      <Footer />
     </>
   );
 }
