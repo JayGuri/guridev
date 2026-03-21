@@ -2,7 +2,7 @@ import { Inter } from 'next/font/google';
 import './globals.css';
 import SmoothScroll from '@/components/effects/SmoothScroll';
 import LoadingScreen from '@/components/effects/LoadingScreen';
-import FloatingNav from '@/components/ui/FloatingNav';
+import TerminalNav from '@/components/ui/TerminalNav';
 import CustomCursor from '@/components/effects/CustomCursor';
 
 const inter = Inter({ subsets: ['latin'] });
@@ -27,9 +27,11 @@ export default function RootLayout({ children }) {
       <body className={inter.className}>
         <LoadingScreen />
         <SmoothScroll />
-        <FloatingNav />
+        <TerminalNav />
         <CustomCursor />
-        <main>{children}</main>
+        <main style={{ paddingTop: '112px' }} className="main-content">
+          {children}
+        </main>
       </body>
     </html>
   );
