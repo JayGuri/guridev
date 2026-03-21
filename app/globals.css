@@ -165,7 +165,7 @@ body {
 /* ─── Terminal nav padding offset ───────────────────────────────────── */
 @media (max-width: 767px) {
   .main-content {
-    padding-top: 68px !important;
+    padding-top: 112px !important;
   }
 }
 
