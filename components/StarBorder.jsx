@@ -1,27 +1,44 @@
 'use client';
 
-// StarBorder — animates a glowing star/sparkle that orbits the element's border.
-// Usage: <StarBorder color="#7C6FF7" speed={6}>{children}</StarBorder>
+// StarBorder — travelling sparkle that orbits the element's border.
+//
+// Props:
+//   as        — outer element tag ('span' default, 'div' for block contexts)
+//   color     — sparkle color
+//   speed     — animation duration in seconds (number) or CSS value (string)
+//   thickness — border thickness in px (controls padding behind the conic gradient)
+//   ...rest   — any other props (onClick, className, style, etc.) are forwarded
+//
+// When `as="div"`, all internal wrapper elements also become divs so the
+// HTML remains valid (block elements can't be children of <span>).
 export default function StarBorder({
+  as: Outer = 'span',
   children,
   color = '#7C6FF7',
   speed = 6,
+  thickness = 1,
   className = '',
   style = {},
+  ...rest
 }) {
+  const isBlock = Outer === 'div' || Outer === 'section' || Outer === 'article';
+  const Inner = isBlock ? 'div' : 'span';
+  const duration = typeof speed === 'number' ? `${speed}s` : speed;
+
   return (
-    <span
+    <Outer
       className={`star-border-outer ${className}`}
       style={{
         position: 'relative',
-        display: 'inline-block',
-        padding: '1px',
+        display: isBlock ? 'block' : 'inline-block',
+        padding: `${thickness}px`,
         borderRadius: 'inherit',
         ...style,
       }}
+      {...rest}
     >
-      {/* Spinning conic gradient creates the travelling sparkle */}
-      <span
+      {/* Spinning conic gradient — the travelling sparkle */}
+      <Inner
         aria-hidden="true"
         style={{
           position: 'absolute',
@@ -37,15 +54,16 @@ export default function StarBorder({
             ${color}CC 98%,
             transparent 100%
           )`,
-          animation: `star-border-spin ${speed}s linear infinite`,
+          animation: `star-border-spin ${duration} linear infinite`,
           zIndex: 0,
           pointerEvents: 'none',
         }}
       />
-      {/* Content sits above the spinning gradient */}
-      <span style={{ position: 'relative', zIndex: 1, display: 'inherit' }}>
+
+      {/* Content sits above the gradient */}
+      <Inner style={{ position: 'relative', zIndex: 1, display: isBlock ? 'block' : 'inherit' }}>
         {children}
-      </span>
+      </Inner>
 
       <style>{`
         @keyframes star-border-spin {
@@ -53,6 +71,6 @@ export default function StarBorder({
           to   { transform: rotate(360deg); }
         }
       `}</style>
-    </span>
+    </Outer>
   );
 }

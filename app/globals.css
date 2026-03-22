@@ -137,6 +137,11 @@ html {
   html { cursor: auto; }
 }
 
+/* Restore OS cursor inside WebGL canvas so 3D interaction is clickable */
+canvas {
+  cursor: default;
+}
+
 body {
   background-color: var(--bg-base);
   color: var(--text-primary);

@@ -1,282 +1,236 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import dynamic from 'next/dynamic';
-import { motion, AnimatePresence } from 'framer-motion';
-import { PROJECTS } from '@/lib/data';
+import { motion, AnimatePresence, useInView } from 'framer-motion';
 import ProjectModal from '@/components/ui/ProjectModal';
 
-const EASE_OUT_EXPO = [0.16, 1, 0.3, 1];
-
+const EASE = [0.16, 1, 0.3, 1];
 const RoomScene = dynamic(() => import('../effects/RoomScene'), { ssr: false });
 
-function ProjectCard({ project, index, onClick }) {
+const SCREEN_LABELS = {
+  dev:      { label: 'The Builder',    color: '#7C6FF7' },
+  research: { label: 'The Researcher', color: '#E8935A' },
+  aiml:     { label: 'AI / ML',        color: '#28C840' },
+};
+
+// ── Terminal header ───────────────────────────────────────────────────────────
+function TerminalHeader() {
+  const ref    = useRef(null);
+  const inView = useInView(ref, { once: true, amount: 0.4 });
+  const [step, setStep] = useState(0);
+
+  useEffect(() => {
+    if (!inView) return;
+    const ts = [
+      setTimeout(() => setStep(1), 200),
+      setTimeout(() => setStep(2), 620),
+      setTimeout(() => setStep(3), 820),
+      setTimeout(() => setStep(4), 980),
+      setTimeout(() => setStep(5), 1140),
+      setTimeout(() => setStep(6), 1340),
+    ];
+    return () => ts.forEach(clearTimeout);
+  }, [inView]);
+
+  const mono = {
+    fontFamily: 'JetBrains Mono, monospace',
+    fontSize: '13px', lineHeight: 1.9, whiteSpace: 'pre',
+  };
+
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 40 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, amount: 0.2 }}
-      transition={{ delay: index * 0.1, duration: 0.6, ease: EASE_OUT_EXPO }}
-      onClick={() => onClick(project)}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.transform = 'translateY(-4px)';
-        e.currentTarget.style.borderColor = project.accent + '4D';
-        e.currentTarget.style.boxShadow = '0 16px 48px rgba(0,0,0,0.3)';
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.transform = 'translateY(0)';
-        e.currentTarget.style.borderColor = 'var(--border-subtle)';
-        e.currentTarget.style.boxShadow = 'none';
-      }}
-      style={{
-        background: 'var(--bg-elevated)',
-        border: '1px solid var(--border-subtle)',
-        borderRadius: '16px',
-        padding: '28px',
-        cursor: 'pointer',
-        position: 'relative',
-        overflow: 'hidden',
-        transition:
-          'transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease',
-      }}
-    >
-      {/* Top accent bar */}
-      <div
-        style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          height: '2px',
-          background: project.accent,
-        }}
-      />
-
-      {/* Category badge */}
-      <span
-        style={{
-          position: 'absolute',
-          top: '16px',
-          right: '16px',
-          background: project.accent + '15',
-          color: project.accent,
-          fontFamily: 'Inter, sans-serif',
-          fontSize: '11px',
-          fontWeight: 500,
-          padding: '4px 10px',
-          borderRadius: '999px',
-          textTransform: 'capitalize',
-        }}
-      >
-        {project.category}
-      </span>
-
-      {/* Title */}
-      <h3
-        style={{
-          fontFamily: 'Clash Display, sans-serif',
-          fontSize: '20px',
-          fontWeight: 600,
-          color: 'var(--text-primary)',
-          marginBottom: '10px',
-          paddingRight: '70px',
-        }}
-      >
-        {project.title}
-      </h3>
-
-      {/* Short description */}
-      <p
-        style={{
-          fontFamily: 'Inter, sans-serif',
-          fontSize: '14px',
-          lineHeight: 1.6,
-          color: 'var(--text-secondary)',
-          marginBottom: '20px',
-        }}
-      >
-        {project.shortDesc}
-      </p>
-
-      {/* Tech tags */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '20px' }}>
-        {project.tech.map((t) => (
-          <span
-            key={t}
-            style={{
-              background: project.accent + '26',
-              border: `1px solid ${project.accent}4D`,
-              color: project.accent,
-              fontFamily: 'Inter, sans-serif',
-              fontSize: '11px',
-              fontWeight: 500,
-              padding: '3px 10px',
-              borderRadius: '999px',
-            }}
-          >
-            {t}
-          </span>
-        ))}
+    <div ref={ref} style={{
+      background: '#0d1117', border: '1px solid #30363d',
+      borderRadius: '12px', padding: '20px 24px',
+      marginBottom: '32px', maxWidth: '580px',
+    }}>
+      <div style={{ display: 'flex', gap: '7px', marginBottom: '16px' }}>
+        <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#FF5F57' }} />
+        <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#FEBC2E' }} />
+        <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#28C840' }} />
       </div>
-
-      {/* Bottom row */}
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginTop: '20px',
-        }}
-      >
-        <span
-          style={{
-            fontFamily: 'Inter, sans-serif',
-            fontSize: '13px',
-            fontWeight: 500,
-            color: project.accent,
-          }}
-        >
-          View project &rarr;
-        </span>
-
-        {project.github && (
-          <a
-            href={project.github}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={(e) => e.stopPropagation()}
-            style={{ color: 'var(--text-secondary)', lineHeight: 0 }}
-          >
-            <svg
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="currentColor"
-            >
-              <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
-            </svg>
-          </a>
-        )}
-      </div>
-    </motion.div>
+      {step >= 1 && <div style={mono}><span style={{ color: '#28C840' }}>visitor@portfolio</span><span style={{ color: '#7d8590' }}>:</span><span style={{ color: '#FFA657' }}>~/work</span><span style={{ color: '#e6edf3' }}> ❯ ls -la ./projects</span></div>}
+      {step >= 1 && <div style={{ height: '4px' }} />}
+      {step >= 2 && <div style={mono}><span style={{ color: '#28C840' }}>total 3 projects · last updated Mar 2025</span></div>}
+      {step >= 2 && <div style={{ height: '4px' }} />}
+      {step >= 3 && <div style={mono}><span style={{ color: '#28C840' }}>-rw-r--r--</span><span style={{ color: '#79c0ff' }}> 01 · ARFL Platform     </span><span style={{ color: '#FFA657' }}>[ml]</span></div>}
+      {step >= 4 && <div style={mono}><span style={{ color: '#28C840' }}>-rw-r--r--</span><span style={{ color: '#79c0ff' }}> 02 · Multi-Hazard EWS  </span><span style={{ color: '#B48EFF' }}>[research]</span></div>}
+      {step >= 5 && <div style={mono}><span style={{ color: '#28C840' }}>-rw-r--r--</span><span style={{ color: '#79c0ff' }}> 03 · EEG/EMG Detection </span><span style={{ color: '#B48EFF' }}>[research]</span></div>}
+      {step >= 5 && <div style={{ height: '4px' }} />}
+      {step >= 6 && (
+        <div style={{ ...mono, display: 'flex', alignItems: 'center', gap: '3px' }}>
+          <span style={{ color: '#28C840' }}>visitor@portfolio</span>
+          <span style={{ color: '#e6edf3' }}> ❯ </span>
+          <span className="ds-cursor" />
+        </div>
+      )}
+    </div>
   );
 }
 
+// ── Section ────────────────────────────────────────────────────────────────────
 export default function DevStudio() {
+  const [activeScreen,    setActiveScreen]    = useState(null);
+  // isZoomedIn fires ~900ms after click, after the camera animation arrives
+  const [isZoomedIn,      setIsZoomedIn]      = useState(false);
   const [selectedProject, setSelectedProject] = useState(null);
 
-  return (
-    <section
-      id="work"
-      style={{
-        background: 'var(--bg-base)',
-        padding: '80px 24px',
-        width: '100%',
-      }}
-    >
-      <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-        {/* Section header */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, amount: 0.5 }}
-          transition={{ duration: 0.7, ease: EASE_OUT_EXPO }}
-          style={{ textAlign: 'center' }}
-        >
-          <p
-            style={{
-              fontFamily: 'Inter, sans-serif',
-              fontSize: '11px',
-              letterSpacing: '0.2em',
-              textTransform: 'uppercase',
-              color: 'var(--text-tertiary)',
-              marginBottom: '16px',
-            }}
-          >
-            · work ·
-          </p>
-          <h2
-            style={{
-              fontFamily: 'Clash Display, sans-serif',
-              fontSize: 'clamp(36px, 5vw, 56px)',
-              fontWeight: 600,
-              color: 'var(--text-primary)',
-            }}
-          >
-            The Dev Studio.
-          </h2>
-          <p
-            style={{
-              fontFamily: 'Inter, sans-serif',
-              fontSize: '16px',
-              color: 'var(--text-secondary)',
-              marginTop: '12px',
-            }}
-          >
-            Where the real work happens.
-          </p>
-        </motion.div>
+  useEffect(() => {
+    if (!activeScreen) { setIsZoomedIn(false); return; }
+    const t = setTimeout(() => setIsZoomedIn(true), 900);
+    return () => clearTimeout(t);
+  }, [activeScreen]);
 
-        {/* 3D Canvas wrapper — desktop only */}
-        <div
-          className="devstudio-canvas"
-          style={{
+  const handleScreenClick = (id) => {
+    if (activeScreen === id) return;
+    setIsZoomedIn(false);
+    setActiveScreen(id);
+  };
+
+  const handleBack = () => {
+    setIsZoomedIn(false);
+    setActiveScreen(null);
+  };
+
+  const sl = activeScreen ? SCREEN_LABELS[activeScreen] : null;
+
+  return (
+    <section id="work" style={{ background: 'var(--bg-base)', padding: '120px 24px', width: '100%' }}>
+      <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+
+        {/* Section label */}
+        <p style={{
+          fontFamily: 'Inter, sans-serif', fontSize: '11px',
+          letterSpacing: '0.2em', textTransform: 'uppercase',
+          color: 'var(--text-tertiary)', marginBottom: '16px',
+        }}>· work ·</p>
+
+        {/* Terminal header */}
+        <TerminalHeader />
+
+        {/* ── 3D canvas — full hero ── */}
+        <div style={{ position: 'relative', width: '100%' }}>
+          <div style={{
             width: '100%',
-            height: '600px',
-            margin: '60px 0',
+            height: 'clamp(480px, 65vh, 700px)',
             borderRadius: '20px',
             overflow: 'hidden',
-            border: '1px solid var(--border-subtle)',
-          }}
-        >
-          <RoomScene />
-        </div>
+            border: '1px solid rgba(255,255,255,0.06)',
+            position: 'relative',
+            background: '#040405',
+          }}>
 
-        {/* Mobile fallback for 3D scene */}
-        <div
-          className="devstudio-canvas-mobile"
-          style={{
-            display: 'none',
-            margin: '40px 0',
-            padding: '40px 24px',
-            borderRadius: '16px',
-            border: '1px solid var(--border-subtle)',
-            textAlign: 'center',
-          }}
-        >
-          <p
-            style={{
-              fontFamily: 'Inter, sans-serif',
-              fontSize: '14px',
-              color: 'var(--text-tertiary)',
-            }}
-          >
-            3D experience available on desktop
-          </p>
-        </div>
-
-        {/* Project cards grid */}
-        <div
-          className="devstudio-grid"
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(3, 1fr)',
-            gap: '20px',
-            marginTop: 0,
-          }}
-        >
-          {PROJECTS.map((project, i) => (
-            <ProjectCard
-              key={project.id}
-              project={project}
-              index={i}
-              onClick={setSelectedProject}
+            <RoomScene
+              activeScreen={activeScreen}
+              isZoomedIn={isZoomedIn}
+              onScreenClick={handleScreenClick}
+              onOpenProject={(p) => setSelectedProject(p)}
             />
-          ))}
+
+            {/* Cinematic vignette */}
+            <div style={{
+              position: 'absolute', inset: 0, zIndex: 2, pointerEvents: 'none',
+              background: 'radial-gradient(ellipse 88% 65% at 50% 50%, transparent 45%, rgba(0,0,0,0.55) 100%)',
+            }} />
+
+            {/* Scanlines */}
+            <div style={{
+              position: 'absolute', inset: 0, zIndex: 2, pointerEvents: 'none',
+              backgroundImage: 'repeating-linear-gradient(0deg,rgba(0,0,0,0.018) 0px,rgba(0,0,0,0.018) 1px,transparent 1px,transparent 4px)',
+            }} />
+
+            {/* ── Back button (visible when a screen is selected) ── */}
+            <AnimatePresence>
+              {activeScreen && (
+                <motion.button
+                  key="back"
+                  initial={{ opacity: 0, x: -16 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -16 }}
+                  transition={{ duration: 0.3, ease: EASE }}
+                  onClick={handleBack}
+                  style={{
+                    position: 'absolute', top: '14px', left: '14px', zIndex: 10,
+                    background: 'rgba(6,6,10,0.82)', backdropFilter: 'blur(14px)',
+                    border: `1px solid ${sl?.color ?? '#444'}40`,
+                    borderRadius: '10px', padding: '8px 16px',
+                    display: 'flex', alignItems: 'center', gap: '8px',
+                    fontFamily: 'JetBrains Mono, monospace', fontSize: '11px',
+                    color: sl?.color ?? '#aaa', cursor: 'pointer',
+                    letterSpacing: '0.04em',
+                  }}
+                >
+                  ← overview
+                </motion.button>
+              )}
+            </AnimatePresence>
+
+            {/* ── Active screen label (top-right, appears when zoomed) ── */}
+            <AnimatePresence>
+              {isZoomedIn && sl && (
+                <motion.div
+                  key="label"
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.3, ease: EASE }}
+                  style={{
+                    position: 'absolute', top: '14px', right: '14px', zIndex: 10,
+                    background: 'rgba(6,6,10,0.82)', backdropFilter: 'blur(14px)',
+                    border: `1px solid ${sl.color}40`,
+                    borderRadius: '10px', padding: '6px 14px',
+                    display: 'flex', alignItems: 'center', gap: '8px',
+                    fontFamily: 'JetBrains Mono, monospace', fontSize: '11px',
+                    color: sl.color, pointerEvents: 'none',
+                  }}
+                >
+                  <span style={{
+                    width: '6px', height: '6px', borderRadius: '50%',
+                    background: sl.color, boxShadow: `0 0 6px ${sl.color}`,
+                  }} />
+                  {sl.label}
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* ── "Click a monitor" hint (bottom-right, overview only) ── */}
+            <AnimatePresence>
+              {!activeScreen && (
+                <motion.div
+                  key="hint"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1, transition: { delay: 0.6 } }}
+                  exit={{ opacity: 0 }}
+                  style={{
+                    position: 'absolute', bottom: '14px', right: '14px', zIndex: 4,
+                    background: 'rgba(6,6,10,0.72)', backdropFilter: 'blur(10px)',
+                    border: '1px solid rgba(255,255,255,0.08)',
+                    borderRadius: '8px', padding: '5px 12px',
+                    fontFamily: 'JetBrains Mono, monospace', fontSize: '11px',
+                    color: '#7d8590', pointerEvents: 'none',
+                  }}
+                >
+                  click a monitor →
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Render label — always visible bottom-left */}
+            <div style={{
+              position: 'absolute', bottom: '14px', left: '14px', zIndex: 4,
+              background: 'rgba(6,6,10,0.72)', backdropFilter: 'blur(10px)',
+              border: '1px solid rgba(255,255,255,0.08)',
+              borderRadius: '8px', padding: '5px 12px',
+              fontFamily: 'JetBrains Mono, monospace', fontSize: '11px',
+              color: '#7d8590', pointerEvents: 'none',
+            }}>
+              render: three.js · interactive
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Project detail modal */}
+      {/* Full project modal — opened from inside the 3D screen */}
       <AnimatePresence>
         {selectedProject && (
           <ProjectModal
@@ -286,18 +240,14 @@ export default function DevStudio() {
         )}
       </AnimatePresence>
 
-      {/* Responsive grid breakpoint */}
       <style>{`
-        .devstudio-canvas-mobile { display: none; }
-        @media (max-width: 767px) {
-          .devstudio-canvas { display: none !important; }
-          .devstudio-canvas-mobile { display: block !important; }
+        .ds-cursor {
+          display: inline-block; width: 8px; height: 14px;
+          background: #28C840;
+          animation: ds-cursor-blink 1s step-end infinite;
+          vertical-align: middle; margin-left: 2px;
         }
-        @media (max-width: 1023px) {
-          .devstudio-grid {
-            grid-template-columns: 1fr !important;
-          }
-        }
+        @keyframes ds-cursor-blink { 0%,100% { opacity:1; } 50% { opacity:0; } }
       `}</style>
     </section>
   );
