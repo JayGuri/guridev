@@ -1,689 +1,902 @@
 'use client';
 
-import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { Html } from '@react-three/drei';
-import { useRef, useState, useEffect, useMemo, Suspense, useSyncExternalStore } from 'react';
+import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
-import { PROJECTS } from '@/lib/data';
 
-// ── Camera destinations ───────────────────────────────────────────────────────
-// Positions face each screen normal head-on so Html content appears flat.
-// Left/right normals: [sin(±0.22), 0, cos(0.22)] ≈ [±0.218, 0, 0.976]
-// Zoom distance ≈ 2.5 → used as distanceFactor for Html sizing.
-const CAM = {
-  overview: { pos: [0, 2.0, 8.5],       look: [0, 0.8, 0] },
-  dev:      { pos: [-1.35, 0.74, 2.32], look: [-1.9, 0.74, -0.12] },
-  research: { pos: [0, 0.84, 2.0],       look: [0, 0.84, -0.28] },
-  aiml:     { pos: [1.35, 0.74, 2.32],  look: [1.9, 0.74, -0.12] },
+// ─── Project Data (edit this to personalise) ─────────────────────────────────
+export const SCREENS_DATA = {
+  dev: {
+    label: 'The Builder', tab: '--dev', color: '#7C6FF7', hex: 0x7C6FF7,
+    projects: [
+      { name: 'CLIfolio',  tech: 'Next.js · Three.js · Framer', desc: 'Terminal portfolio with immersive 3D room', github: '#', live: '#' },
+      { name: 'DataPulse', tech: 'React · D3 · Node.js',        desc: 'Real-time analytics dashboard - 1.2k *',   github: '#', live: '#' },
+      { name: 'APIForge',  tech: 'Node.js · PostgreSQL · Redis', desc: 'Developer API management platform',        github: '#', live: null },
+    ],
+  },
+  research: {
+    label: 'The Researcher', tab: '--research', color: '#E8935A', hex: 0xE8935A,
+    projects: [
+      { name: 'Multi-Hazard EWS',  tech: 'Python · ML · GIS',      desc: 'Early warning system for disasters', github: '#', live: null },
+      { name: 'EEG/EMG Detection', tech: 'Signal Processing · CNN', desc: 'Neural signal classification',       github: '#', live: null },
+    ],
+  },
+  aiml: {
+    label: 'AI / ML', tab: '--aiml', color: '#28C840', hex: 0x28C840,
+    projects: [
+      { name: 'ARFL Platform',   tech: 'PyTorch · FastAPI · FL',  desc: 'Adaptive federated learning platform',  github: '#', live: '#' },
+      { name: 'Vision Pipeline', tech: 'YOLOv8 · OpenCV · CUDA',  desc: 'Real-time multi-class detection',       github: '#', live: null },
+    ],
+  },
 };
 
-// ── Canvas texture drawing ────────────────────────────────────────────────────
-// Each screen shows a distinct iconic preview as a WebGL texture (no CSS3D).
-// This avoids ALL Html z-fighting issues in the overview mode.
+// ─── Scene Layout ─────────────────────────────────────────────────────────────
+const DESK_Y = 0.80;
+const MON_Y  = 1.94;
+const MON_Z  = -0.44;
 
-function drawDevPreview(canvas) {
-  const ctx = canvas.getContext('2d');
-  const w = canvas.width, h = canvas.height;
+const MONITOR_CONFIG = {
+  dev:      { pos: [-2.4, MON_Y, MON_Z], rotY:  0.28, camPos: [-1.62, MON_Y, 2.9],  camLook: [-2.4, MON_Y, MON_Z] },
+  aiml:     { pos: [ 0.0, MON_Y, MON_Z], rotY:  0.00, camPos: [ 0.00, MON_Y, 3.1],  camLook: [ 0.0, MON_Y, MON_Z] },
+  research: { pos: [ 2.4, MON_Y, MON_Z], rotY: -0.28, camPos: [ 1.62, MON_Y, 2.9],  camLook: [ 2.4, MON_Y, MON_Z] },
+};
 
-  ctx.fillStyle = '#0d1117'; ctx.fillRect(0, 0, w, h);
+const OVERVIEW = { pos: [0, 2.35, 7.2], look: [0, 1.84, 0] };
 
-  // Title bar
-  ctx.fillStyle = '#161b22'; ctx.fillRect(0, 0, w, h * 0.1);
-  [['#FF5F57', 0.05], ['#FEBC2E', 0.13], ['#FEBC2E', 0.13], ['#28C840', 0.21]].slice(0,3).forEach(([c, xr]) => {
-    ctx.fillStyle = c; ctx.beginPath();
-    ctx.arc(w * xr, h * 0.05, w * 0.024, 0, Math.PI * 2); ctx.fill();
-  });
-  ctx.fillStyle = '#7d8590'; ctx.font = `${Math.round(h * 0.045)}px monospace`;
-  ctx.textAlign = 'center'; ctx.fillText('arfl_platform — VSCode', w * 0.55, h * 0.068); ctx.textAlign = 'left';
-
-  // Tab bar
-  ctx.fillStyle = '#161b22'; ctx.fillRect(0, h * 0.1, w, h * 0.07);
-  ctx.fillStyle = '#0d1117'; ctx.fillRect(0, h * 0.1, w * 0.28, h * 0.07);
-  ctx.fillStyle = '#7C6FF7'; ctx.fillRect(0, h * 0.17, w * 0.28, 2);
-  ctx.fillStyle = '#e6edf3'; ctx.font = `${Math.round(h * 0.043)}px monospace`;
-  ctx.fillText('arfl_client.py', w * 0.01, h * 0.148);
-  ctx.fillStyle = '#7d8590'; ctx.fillText('byzantine.py', w * 0.3, h * 0.148);
-
-  // Sidebar strip
-  ctx.fillStyle = '#161b22'; ctx.fillRect(0, h * 0.17, w * 0.2, h * 0.73);
-  ctx.fillStyle = '#21262d'; ctx.fillRect(w * 0.2, h * 0.17, 1, h * 0.73);
-  const sideItems = ['▶ src', '  ▼ models', '    arfl_client', '    byzantine', '  ▶ training', '▶ tests'];
-  sideItems.forEach((label, i) => {
-    ctx.fillStyle = i === 2 ? '#7C6FF7' : '#7d8590';
-    if (i === 2) { ctx.fillStyle = '#7C6FF7' + '22'; ctx.fillRect(0, h*(0.19 + i*0.08)-2, w*0.2, h*0.075); }
-    ctx.fillStyle = i === 2 ? '#7C6FF7' : '#7d8590';
-    ctx.font = `${Math.round(h * 0.038)}px monospace`;
-    ctx.fillText(label, w * 0.01, h * (0.22 + i * 0.08));
-  });
-
-  // Code area — syntax-highlighted bars
-  const codeLines = [
-    ['#ff7b72', 0.22, 0.18], ['#e6edf3', 0.22, 0.55],
-    ['#e6edf3', 0.22, 0.02], // blank
-    ['#ff7b72', 0.22, 0.10], ['#7C6FF7', 0.25, 0.35], ['#e6edf3', 0.25, 0.55],
-    ['#79c0ff', 0.27, 0.22], ['#8b949e', 0.27, 0.40],
-    ['#e6edf3', 0.27, 0.45], ['#ff7b72', 0.27, 0.14], ['#e6edf3', 0.27, 0.38],
-  ];
-  const lStart = h * 0.19, lStep = (h * 0.71) / codeLines.length;
-  codeLines.forEach(([color, xr, wr], i) => {
-    if (wr < 0.04) return;
-    ctx.fillStyle = color;
-    ctx.fillRect(w * xr, lStart + i * lStep + lStep * 0.12, w * wr, lStep * 0.52);
-  });
-
-  // Status bar
-  ctx.fillStyle = '#7C6FF7'; ctx.fillRect(0, h * 0.9, w, h * 0.1);
-  ctx.fillStyle = '#fff'; ctx.font = `bold ${Math.round(h * 0.044)}px monospace`;
-  ctx.fillText('● ARFL Platform', w * 0.03, h * 0.963);
-  ctx.textAlign = 'right'; ctx.fillStyle = '#ffffffCC';
-  ctx.font = `${Math.round(h * 0.038)}px monospace`;
-  ctx.fillText('Python · PyTorch', w * 0.97, h * 0.963); ctx.textAlign = 'left';
+// ─── Canvas Texture Builder ───────────────────────────────────────────────────
+function rr(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y); ctx.lineTo(x + w - r, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + r, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
 }
 
-function drawResearchPreview(canvas) {
-  const ctx = canvas.getContext('2d');
-  const w = canvas.width, h = canvas.height;
-  const C = '#E8935A';
+function buildScreenCanvas(id) {
+  const CW = 1024, CH = 620;
+  const cv  = document.createElement('canvas');
+  cv.width  = CW; cv.height = CH;
+  const ctx = cv.getContext('2d');
+  const d   = SCREENS_DATA[id];
 
-  ctx.fillStyle = '#0A0804'; ctx.fillRect(0, 0, w, h);
+  // Background
+  ctx.fillStyle = '#0d1117';
+  ctx.fillRect(0, 0, CW, CH);
 
-  // Title bar
-  ctx.fillStyle = C + '12'; ctx.fillRect(0, 0, w, h * 0.1);
-  ctx.strokeStyle = C + '25'; ctx.lineWidth = 1; ctx.strokeRect(0, 0, w, h * 0.1);
-  [['#FF5F57', 0.05], ['#FEBC2E', 0.13], ['#28C840', 0.21]].forEach(([c, xr]) => {
-    ctx.fillStyle = c; ctx.beginPath(); ctx.arc(w * xr, h * 0.05, w * 0.024, 0, Math.PI * 2); ctx.fill();
-  });
-  ctx.fillStyle = C; ctx.font = `${Math.round(h * 0.042)}px monospace`;
-  ctx.textAlign = 'center'; ctx.fillText('MULTI-HAZARD EWS · IIT BOMBAY', w * 0.6, h * 0.066); ctx.textAlign = 'left';
-  ctx.fillStyle = '#56d364'; ctx.font = `bold ${Math.round(h * 0.038)}px monospace`;
-  ctx.fillText('● LIVE', w * 0.86, h * 0.066);
-
-  // Stats row
-  ctx.fillStyle = '#0d0a07'; ctx.fillRect(0, h * 0.1, w, h * 0.12);
-  [
-    ['SENSORS', '12', '#56d364', 0.14],
-    ['ALERTS', '2', C, 0.45],
-    ['UPTIME', '99.8%', '#79c0ff', 0.76],
-  ].forEach(([label, value, color, xr]) => {
-    ctx.fillStyle = color; ctx.font = `bold ${Math.round(h * 0.065)}px monospace`;
-    ctx.textAlign = 'center'; ctx.fillText(value, w * xr, h * 0.18);
-    ctx.fillStyle = '#7d8590'; ctx.font = `${Math.round(h * 0.036)}px monospace`;
-    ctx.fillText(label, w * xr, h * 0.215); ctx.textAlign = 'left';
-  });
-
-  // Risk bars
-  const bars = [
-    { label: 'Flood Risk', val: 0.23, color: '#79c0ff' },
-    { label: 'Wind Event', val: 0.12, color: '#56d364' },
-    { label: 'Overall Hazard', val: 0.68, color: C },
-  ];
-  const bStart = h * 0.27, bStep = h * 0.14;
-  bars.forEach(({ label, val, color }, i) => {
-    const y = bStart + i * bStep;
-    ctx.fillStyle = '#7d8590'; ctx.font = `${Math.round(h * 0.038)}px monospace`;
-    ctx.fillText(label, w * 0.03, y);
-    ctx.fillStyle = color; ctx.textAlign = 'right';
-    ctx.fillText(`${Math.round(val * 100)}%`, w * 0.97, y); ctx.textAlign = 'left';
-    ctx.fillStyle = '#21262d'; ctx.fillRect(w * 0.03, y + h * 0.015, w * 0.94, h * 0.028);
-    ctx.fillStyle = color; ctx.fillRect(w * 0.03, y + h * 0.015, w * 0.94 * val, h * 0.028);
-  });
-
-  // Pipeline mini
-  ctx.fillStyle = '#0d0a07'; ctx.fillRect(w * 0.03, h * 0.70, w * 0.94, h * 0.14);
-  ctx.strokeStyle = C + '20'; ctx.lineWidth = 1; ctx.strokeRect(w * 0.03, h * 0.70, w * 0.94, h * 0.14);
-  ctx.fillStyle = C + '80'; ctx.font = `${Math.round(h * 0.032)}px monospace`;
-  ctx.fillText('DATA PIPELINE', w * 0.05, h * 0.728);
-  const nodes = [['IoT', '#56d364', 0.08], ['Kafka', C, 0.27], ['Flink', '#79c0ff', 0.46], ['TF Model', '#b48eff', 0.65], ['Alert', '#ff7b72', 0.84]];
-  nodes.forEach(([name, color, xr], i) => {
-    ctx.fillStyle = color + '22'; ctx.fillRect(w*xr - w*0.03, h*0.745, w*0.1, h*0.07);
-    ctx.strokeStyle = color + '55'; ctx.lineWidth = 1; ctx.strokeRect(w*xr - w*0.03, h*0.745, w*0.1, h*0.07);
-    ctx.fillStyle = color; ctx.font = `${Math.round(h * 0.036)}px monospace`;
-    ctx.textAlign = 'center'; ctx.fillText(name, w*xr + w*0.02, h*0.79); ctx.textAlign = 'left';
-    if (i < nodes.length - 1) { ctx.fillStyle = '#7d8590'; ctx.fillText('→', w*(xr + 0.1), h*0.79); }
-  });
-
-  // Status bar
-  ctx.fillStyle = C; ctx.fillRect(0, h * 0.9, w, h * 0.1);
-  ctx.fillStyle = '#fff'; ctx.font = `bold ${Math.round(h * 0.044)}px monospace`;
-  ctx.fillText('● Multi-Hazard EWS', w * 0.03, h * 0.963);
-  ctx.textAlign = 'right'; ctx.fillStyle = '#ffffffCC'; ctx.font = `${Math.round(h * 0.038)}px monospace`;
-  ctx.fillText('in development', w * 0.97, h * 0.963); ctx.textAlign = 'left';
-}
-
-function drawAIMLPreview(canvas) {
-  const ctx = canvas.getContext('2d');
-  const w = canvas.width, h = canvas.height;
-  const C = '#28C840';
-
-  ctx.fillStyle = '#040A05'; ctx.fillRect(0, 0, w, h);
-
-  // Title bar
-  ctx.fillStyle = C + '0E'; ctx.fillRect(0, 0, w, h * 0.1);
-  ctx.strokeStyle = C + '22'; ctx.lineWidth = 1; ctx.strokeRect(0, 0, w, h * 0.1);
-  [['#FF5F57', 0.05], ['#FEBC2E', 0.13], ['#28C840', 0.21]].forEach(([c, xr]) => {
-    ctx.fillStyle = c; ctx.beginPath(); ctx.arc(w * xr, h * 0.05, w * 0.024, 0, Math.PI * 2); ctx.fill();
-  });
-  ctx.fillStyle = C; ctx.font = `${Math.round(h * 0.042)}px monospace`;
-  ctx.textAlign = 'center'; ctx.fillText('EEG/EMG SIGNAL MONITOR v2.1', w * 0.6, h * 0.066); ctx.textAlign = 'left';
-  ctx.fillStyle = C; ctx.font = `bold ${Math.round(h * 0.038)}px monospace`;
-  ctx.fillText('▶ LIVE', w * 0.88, h * 0.066);
-
-  // Session row
-  ctx.fillStyle = '#060C07'; ctx.fillRect(0, h * 0.1, w, h * 0.075);
-  ctx.fillStyle = '#7d8590'; ctx.font = `${Math.round(h * 0.036)}px monospace`;
-  ctx.fillText('session_042', w * 0.03, h * 0.148);
-  ctx.fillStyle = C; ctx.fillText('512 Hz', w * 0.3, h * 0.148);
-  ctx.fillStyle = '#7d8590'; ctx.fillText('subject: P-07', w * 0.5, h * 0.148);
-  ctx.fillStyle = '#56d364'; ctx.fillText('● recording', w * 0.75, h * 0.148);
-
-  // EEG waveform
-  const eegY = h * 0.24; const eegH = h * 0.12;
-  ctx.fillStyle = '#060C07'; ctx.fillRect(w * 0.03, eegY - eegH * 0.5, w * 0.94, eegH * 1.4);
-  ctx.strokeStyle = C + '22'; ctx.lineWidth = 1; ctx.strokeRect(w * 0.03, eegY - eegH * 0.5, w * 0.94, eegH * 1.4);
-  ctx.fillStyle = '#79c0ff'; ctx.font = `${Math.round(h * 0.032)}px monospace`;
-  ctx.fillText('EEG CHANNEL  14.2 Hz', w * 0.04, eegY - eegH * 0.5 + h * 0.035);
-  // Draw EEG sine wave
-  ctx.beginPath(); ctx.strokeStyle = '#79c0ff'; ctx.lineWidth = 1.5;
-  for (let x = w * 0.04; x < w * 0.96; x += 1) {
-    const t = (x - w * 0.04) / (w * 0.92);
-    const y = eegY + Math.sin(t * Math.PI * 6) * eegH * 0.35;
-    if (x === w * 0.04) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  // Subtle CRT scanlines
+  for (let sy = 0; sy < CH; sy += 3) {
+    ctx.fillStyle = 'rgba(0,0,0,0.055)';
+    ctx.fillRect(0, sy, CW, 1);
   }
-  ctx.stroke();
 
-  // EMG waveform
-  const emgY = h * 0.46; const emgH = h * 0.12;
-  ctx.fillStyle = '#060C07'; ctx.fillRect(w * 0.03, emgY - emgH * 0.5, w * 0.94, emgH * 1.4);
-  ctx.strokeStyle = C + '22'; ctx.lineWidth = 1; ctx.strokeRect(w * 0.03, emgY - emgH * 0.5, w * 0.94, emgH * 1.4);
-  ctx.fillStyle = C; ctx.font = `${Math.round(h * 0.032)}px monospace`;
-  ctx.fillText('EMG CHANNEL  8.7 mV', w * 0.04, emgY - emgH * 0.5 + h * 0.035);
-  // Draw EMG spiky signal
-  ctx.beginPath(); ctx.strokeStyle = C; ctx.lineWidth = 1.5;
-  const emgPts = [0,0,0,0.9,-0.9,0,0,0,0.7,-0.7,0,0,0,0,0.8,-0.8,0,0,0,0.6,-0.6,0,0,0,0,0.9,-0.9,0,0,0];
-  emgPts.forEach((v, i) => {
-    const x = w * (0.04 + i * 0.032);
-    const y = emgY + v * emgH * 0.45;
-    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-  });
-  ctx.stroke();
+  // ── Title bar ──
+  ctx.fillStyle = '#161b22';
+  ctx.fillRect(0, 0, CW, 52);
+  ctx.strokeStyle = '#30363d'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(0, 52); ctx.lineTo(CW, 52); ctx.stroke();
 
-  // Prediction result
-  ctx.fillStyle = '#060C07'; ctx.fillRect(w * 0.03, h * 0.63, w * 0.94, h * 0.21);
-  ctx.strokeStyle = C + '25'; ctx.lineWidth = 1; ctx.strokeRect(w * 0.03, h * 0.63, w * 0.94, h * 0.21);
-  ctx.fillStyle = '#7d8590'; ctx.font = `${Math.round(h * 0.036)}px monospace`;
-  ctx.fillText('MODEL PREDICTION', w * 0.05, h * 0.66);
-  ctx.fillStyle = C; ctx.textAlign = 'right'; ctx.font = `bold ${Math.round(h * 0.036)}px monospace`;
-  ctx.fillText('94.2% confidence', w * 0.97, h * 0.66); ctx.textAlign = 'left';
-  // Confidence bar
-  ctx.fillStyle = '#21262d'; ctx.fillRect(w * 0.05, h * 0.67, w * 0.9, h * 0.03);
-  ctx.fillStyle = C; ctx.fillRect(w * 0.05, h * 0.67, w * 0.9 * 0.942, h * 0.03);
-  // State
-  ctx.fillStyle = '#7d8590'; ctx.font = `${Math.round(h * 0.036)}px monospace`;
-  ctx.fillText('STATE:', w * 0.05, h * 0.80);
-  ctx.fillStyle = C; ctx.font = `bold ${Math.round(h * 0.055)}px monospace`;
-  ctx.fillText('HUNGER DETECTED', w * 0.22, h * 0.80);
-
-  // Status bar
-  ctx.fillStyle = C; ctx.fillRect(0, h * 0.9, w, h * 0.1);
-  ctx.fillStyle = '#000'; ctx.font = `bold ${Math.round(h * 0.044)}px monospace`;
-  ctx.fillText('● EEG/EMG Hunger Detection', w * 0.03, h * 0.963);
-  ctx.textAlign = 'right'; ctx.fillStyle = '#000000AA'; ctx.font = `${Math.round(h * 0.038)}px monospace`;
-  ctx.fillText('Python · NumPy · scikit-learn', w * 0.97, h * 0.963); ctx.textAlign = 'left';
-}
-
-// ── Monitor physical model (NO Html inside — only canvas texture) ─────────────
-function Monitor({
-  position, rotationY = 0, screenArgs, standHeight,
-  screenColor, screenId, onSelect, isActive,
-}) {
-  const { gl } = useThree();
-  const [hovered, setHovered] = useState(false);
-  const glowRef = useRef();
-
-  // Canvas texture — drawn once per screen type, displayed in WebGL
-  const texture = useMemo(() => {
-    const canvas = document.createElement('canvas');
-    canvas.width = 512; canvas.height = 320;
-    if (screenId === 'dev')      drawDevPreview(canvas);
-    if (screenId === 'research') drawResearchPreview(canvas);
-    if (screenId === 'aiml')     drawAIMLPreview(canvas);
-    const t = new THREE.CanvasTexture(canvas);
-    t.flipY = true;
-    return t;
-  }, [screenId]);
-
-  // Subtle hover glow on top of the canvas texture
-  useFrame(() => {
-    if (!glowRef.current) return;
-    const target = isActive ? 0.0 : hovered ? 0.3 : 0.0;
-    glowRef.current.emissiveIntensity = THREE.MathUtils.lerp(
-      glowRef.current.emissiveIntensity, target, 0.07
-    );
+  // Traffic lights
+  [['#FF5F57', 22], ['#FEBC2E', 46], ['#28C840', 70]].forEach(([c, x]) => {
+    ctx.fillStyle = c;
+    ctx.beginPath(); ctx.arc(x, 26, 7, 0, Math.PI * 2); ctx.fill();
   });
 
-  const fW = screenArgs[0] * 0.9;
-  const fH = screenArgs[1] * 0.86;
+  // Tab label
+  ctx.font = '600 14px "JetBrains Mono","Courier New",monospace';
+  ctx.fillStyle = d.color;
+  ctx.fillText(d.tab, 96, 32);
 
-  return (
-    <group position={position} rotation-y={rotationY}>
+  // Right status
+  ctx.font = '12px "JetBrains Mono","Courier New",monospace';
+  ctx.fillStyle = '#3d444d';
+  const stxt = `${d.projects.length} entries`;
+  ctx.fillText(stxt, CW - ctx.measureText(stxt).width - 20, 32);
 
-      {/* Monitor body */}
-      <mesh castShadow receiveShadow>
-        <boxGeometry args={screenArgs} />
-        <meshStandardMaterial color="#111115" roughness={0.55} metalness={0.45} />
-      </mesh>
+  // ── Prompt line ──
+  const pw = (s) => ctx.measureText(s).width;
+  ctx.font = '13px "JetBrains Mono","Courier New",monospace';
+  let cx = 24;
+  ctx.fillStyle = '#28C840'; ctx.fillText('visitor@portfolio', cx, 82); cx += pw('visitor@portfolio');
+  ctx.fillStyle = '#7d8590'; ctx.fillText(':', cx, 82); cx += pw(':');
+  ctx.fillStyle = d.color;   ctx.fillText('~/work', cx, 82);            cx += pw('~/work');
+  ctx.fillStyle = '#e6edf3'; ctx.fillText(' ❯ cat projects.json', cx, 82);
 
-      {/* Bezel rim */}
-      <mesh>
-        <boxGeometry args={[screenArgs[0] + 0.028, screenArgs[1] + 0.028, screenArgs[2] * 0.35]} />
-        <meshStandardMaterial color="#1A1A24" roughness={0.6} metalness={0.2} />
-      </mesh>
+  // Divider
+  ctx.fillStyle = '#21262d';
+  ctx.fillRect(24, 98, CW - 48, 1);
 
-      {/* Stand */}
-      <mesh position={[0, -(screenArgs[1] / 2 + standHeight / 2), 0]} castShadow>
-        <boxGeometry args={[0.065, standHeight, 0.065]} />
-        <meshStandardMaterial color="#111115" roughness={0.6} metalness={0.45} />
-      </mesh>
+  // ── Category heading ──
+  ctx.font = 'bold 22px "JetBrains Mono","Courier New",monospace';
+  ctx.fillStyle = d.color;
+  ctx.fillText(d.label, 24, 134);
+  ctx.font = '12px "JetBrains Mono","Courier New",monospace';
+  ctx.fillStyle = '#3d444d';
+  ctx.fillText(`[ ${d.projects.length} projects ]`, 28 + pw(d.label), 134);
 
-      {/* Stand base */}
-      <mesh position={[0, -(screenArgs[1] / 2 + standHeight + 0.022), 0]} receiveShadow>
-        <boxGeometry args={[0.44, 0.04, 0.3]} />
-        <meshStandardMaterial color="#111115" roughness={0.6} metalness={0.45} />
-      </mesh>
+  // ── Project rows ──
+  const total     = d.projects.length;
+  const available = CH - 154 - 40;
+  const rowGap    = Math.floor(available / total);
+  const rowH      = Math.min(rowGap - 10, 128);
+  const zones     = [];
 
-      {/* Screen face — canvas texture + hover emissive glow + click */}
-      <mesh
-        position={[0, 0, screenArgs[2] / 2 + 0.001]}
-        onPointerOver={(e) => {
-          e.stopPropagation();
-          setHovered(true);
-          gl.domElement.style.cursor = 'pointer';
-        }}
-        onPointerOut={(e) => {
-          e.stopPropagation();
-          setHovered(false);
-          gl.domElement.style.cursor = 'default';
-        }}
-        onClick={(e) => {
-          e.stopPropagation();
-          if (!isActive) onSelect();
-        }}
-      >
-        <planeGeometry args={[fW, fH]} />
-        <meshStandardMaterial
-          ref={glowRef}
-          map={texture}
-          emissive={screenColor}
-          emissiveIntensity={0.0}
-          roughness={0.04}
-          metalness={0}
-          toneMapped={false}
-        />
-      </mesh>
-    </group>
-  );
+  d.projects.forEach((p, i) => {
+    const ry = 154 + i * rowGap;
+    zones.push({ yMin: ry, yMax: ry + rowH });
+
+    // Card BG
+    ctx.fillStyle = 'rgba(20,28,46,0.70)';
+    rr(ctx, 14, ry, CW - 28, rowH, 6); ctx.fill();
+    ctx.strokeStyle = '#253055'; ctx.lineWidth = 0.8;
+    rr(ctx, 14, ry, CW - 28, rowH, 6); ctx.stroke();
+
+    // Left accent
+    ctx.fillStyle = d.color;
+    ctx.fillRect(14, ry, 3, rowH);
+
+    // Index
+    ctx.font = '11px "JetBrains Mono","Courier New",monospace';
+    ctx.fillStyle = '#3d444d';
+    ctx.fillText(`0${i + 1}`, 28, ry + 20);
+
+    // Project name
+    ctx.font = 'bold 17px "JetBrains Mono","Courier New",monospace';
+    ctx.fillStyle = '#79c0ff';
+    ctx.fillText(p.name, 60, ry + 22);
+
+    // "→ open" pill
+    const btnLabel = '→ open';
+    const btnW     = ctx.measureText(btnLabel).width + 22;
+    ctx.font = '12px "JetBrains Mono","Courier New",monospace';
+    ctx.fillStyle = d.color + '22';
+    rr(ctx, CW - btnW - 16, ry + 7, btnW, 22, 4); ctx.fill();
+    ctx.strokeStyle = d.color + '55'; ctx.lineWidth = 0.7;
+    rr(ctx, CW - btnW - 16, ry + 7, btnW, 22, 4); ctx.stroke();
+    ctx.fillStyle = d.color;
+    ctx.fillText(btnLabel, CW - btnW - 5, ry + 22);
+
+    // Tech stack
+    ctx.font = '13px "JetBrains Mono","Courier New",monospace';
+    ctx.fillStyle = '#ffa657';
+    ctx.fillText(p.tech, 60, ry + 44);
+
+    // Description (truncate)
+    ctx.font = '12px "JetBrains Mono","Courier New",monospace';
+    ctx.fillStyle = '#8b949e';
+    const maxW = CW - 60 - btnW - 30;
+    let desc = p.desc;
+    while (desc.length > 4 && ctx.measureText(desc).width > maxW) desc = desc.slice(0, -1);
+    if (desc !== p.desc) desc = desc.trimEnd() + '…';
+    ctx.fillText(desc, 60, ry + 64);
+
+    // Links
+    if (rowH >= 90) {
+      ctx.font = '11px "JetBrains Mono","Courier New",monospace';
+      let lx = 60;
+      if (p.github) {
+        ctx.fillStyle = '#388bfd';
+        ctx.fillText('⌥ GitHub', lx, ry + rowH - 14);
+        lx += ctx.measureText('⌥ GitHub').width + 18;
+      }
+      if (p.live) {
+        ctx.fillStyle = d.color;
+        ctx.fillText('↗ Live', lx, ry + rowH - 14);
+      }
+    }
+  });
+
+  // ── Footer bar ──
+  ctx.fillStyle = '#161b22';
+  ctx.fillRect(0, CH - 36, CW, 36);
+  ctx.strokeStyle = '#21262d'; ctx.lineWidth = 0.5;
+  ctx.beginPath(); ctx.moveTo(0, CH - 36); ctx.lineTo(CW, CH - 36); ctx.stroke();
+  ctx.font = '11px "JetBrains Mono","Courier New",monospace';
+  ctx.fillStyle = '#3d444d';
+  ctx.fillText('click a project to open details · esc to close', 24, CH - 13);
+  ctx.fillStyle = d.color;
+  ctx.fillText(' ▮', 24 + ctx.measureText('click a project to open details · esc to close').width, CH - 13);
+
+  return { canvas: cv, zones, canvasH: CH };
 }
 
-// ── Html overlay — ONE instance, only for the active zoomed screen ────────────
-// Rendered at Scene level so only ONE Html exists in the DOM at a time.
-// This is the key fix for CSS3D z-ordering issues.
-const MONITORS_CONFIG = [
-  { id: 'dev',      position: [-1.9, 0.74, -0.12], rotationY:  0.22,  screenArgs: [1.05, 0.66, 0.045], standHeight: 0.28, color: '#7C6FF7' },
-  { id: 'research', position: [0,    0.84, -0.28],  rotationY:  0,     screenArgs: [1.28, 0.80, 0.045], standHeight: 0.34, color: '#E8935A' },
-  { id: 'aiml',     position: [1.9,  0.74, -0.12],  rotationY: -0.22,  screenArgs: [1.05, 0.66, 0.045], standHeight: 0.28, color: '#28C840' },
-];
+// ─── Main Component ───────────────────────────────────────────────────────────
+export default function RoomScene({ activeScreen, onScreenClick, onOpenProject }) {
+  const mountRef = useRef(null);
+  const refs     = useRef({});
 
-// ── Screen detail HTML content (used inside the single Html overlay) ──────────
-function DevScreenDetail({ onOpenProject }) {
-  const p = PROJECTS[0]; const C = '#7C6FF7';
-  return (
-    <div style={{ width:'100%',height:'100%',background:'#0d1117',fontFamily:'"JetBrains Mono","Courier New",monospace',display:'flex',flexDirection:'column',overflow:'hidden',boxSizing:'border-box' }}>
-      {/* Title bar */}
-      <div style={{ display:'flex',alignItems:'center',justifyContent:'space-between',padding:'5px 12px',background:'#161b22',borderBottom:'1px solid #30363d',flexShrink:0 }}>
-        <div style={{ display:'flex',gap:'6px' }}>
-          {['#FF5F57','#FEBC2E','#28C840'].map(c=><div key={c} style={{ width:'9px',height:'9px',borderRadius:'50%',background:c }} />)}
-        </div>
-        <span style={{ fontSize:'8px',color:'#7d8590' }}>arfl_platform — Visual Studio Code</span>
-        <div style={{ width:'42px' }} />
-      </div>
-      {/* Tabs */}
-      <div style={{ display:'flex',background:'#161b22',borderBottom:'1px solid #30363d',flexShrink:0 }}>
-        {['arfl_client.py','byzantine.py','server.py'].map((name,i)=>(
-          <div key={name} style={{ padding:'4px 14px',fontSize:'8px',color:i===0?'#e6edf3':'#7d8590',background:i===0?'#0d1117':'transparent',borderRight:'1px solid #30363d',borderBottom:i===0?`2px solid ${C}`:'none',flexShrink:0 }}>{name}</div>
-        ))}
-      </div>
-      {/* Editor */}
-      <div style={{ display:'flex',flex:1,overflow:'hidden',minHeight:0 }}>
-        <div style={{ width:'110px',flexShrink:0,padding:'8px 0',background:'#161b22',borderRight:'1px solid #30363d',fontSize:'8px' }}>
-          <div style={{ padding:'2px 10px 6px',fontSize:'7px',color:'#7d8590',letterSpacing:'0.12em' }}>EXPLORER</div>
-          {[['▶ src',0],['▼ models',1],['arfl_client',2,true],['byzantine',2],['▶ training',1],['▶ tests',0]].map(([n,d,active])=>(
-            <div key={n} style={{ padding:`2px 0 2px ${10+d*10}px`,color:active?C:'#7d8590',background:active?C+'12':'transparent',fontSize:'8px' }}>{n}</div>
-          ))}
-        </div>
-        <div style={{ display:'flex',flex:1,overflow:'hidden' }}>
-          <div style={{ width:'30px',flexShrink:0,padding:'8px 0',background:'#0d1117',textAlign:'right',paddingRight:'6px' }}>
-            {Array.from({length:12},(_,i)=><div key={i} style={{ fontSize:'7px',lineHeight:'1.65',color:'#484f58' }}>{i+1}</div>)}
-          </div>
-          <div style={{ flex:1,padding:'8px 12px',fontSize:'8px',lineHeight:1.65,overflow:'hidden',color:'#e6edf3' }}>
-            <div><span style={{color:'#ff7b72'}}>import</span> torch</div>
-            <div><span style={{color:'#ff7b72'}}>from</span> federated <span style={{color:'#ff7b72'}}>import</span> FLClient</div>
-            <div> </div>
-            <div><span style={{color:'#ff7b72'}}>class</span> <span style={{color:C}}>ARFLClient</span>(FLClient):</div>
-            <div>{'  '}<span style={{color:'#ff7b72'}}>def</span> <span style={{color:'#79c0ff'}}>train</span>(<span style={{color:'#ffa657'}}>self</span>, model, data):</div>
-            <div>{'    '}<span style={{color:'#8b949e'}}># Byzantine-resilient local SGD</span></div>
-            <div>{'    '}opt = SGD(lr=<span style={{color:'#79c0ff'}}>0.01</span>)</div>
-            <div>{'    '}<span style={{color:'#ff7b72'}}>for</span> e <span style={{color:'#ff7b72'}}>in</span> <span style={{color:'#79c0ff'}}>range</span>(<span style={{color:'#79c0ff'}}>5</span>):</div>
-            <div>{'      '}loss = self._step(model, data)</div>
-            <div>{'    '}<span style={{color:'#ff7b72'}}>return</span> self.clip_grads()</div>
-          </div>
-        </div>
-      </div>
-      <div style={{ background:C,padding:'3px 12px',flexShrink:0,display:'flex',justifyContent:'space-between',alignItems:'center' }}>
-        <span style={{ fontSize:'7px',color:'#fff',fontWeight:700 }}>● ARFL Platform</span>
-        <span style={{ fontSize:'7px',color:'#ffffffCC' }}>Python · PyTorch · model trained</span>
-      </div>
-      {/* Detail */}
-      <div style={{ background:'#161b22',padding:'10px 14px',flexShrink:0 }}>
-        <p style={{ fontSize:'8px',lineHeight:1.7,color:'#8b949e',marginBottom:'10px' }}>{p.fullDesc}</p>
-        <div style={{ display:'flex',flexWrap:'wrap',gap:'4px',marginBottom:'10px' }}>
-          {p.tech.map(t=><span key={t} style={{ background:C+'18',border:`1px solid ${C}35`,color:C,fontSize:'7px',padding:'2px 8px',borderRadius:'999px' }}>{t}</span>)}
-        </div>
-        <div style={{ display:'flex',gap:'8px' }}>
-          <button onClick={(e)=>{e.stopPropagation();onOpenProject(p);}} style={{ background:C,border:'none',borderRadius:'4px',padding:'5px 14px',fontSize:'8px',color:'#fff',cursor:'pointer',fontFamily:'inherit',fontWeight:600 }}>Open project →</button>
-          {p.github&&<a href={p.github} target="_blank" rel="noopener noreferrer" onClick={e=>e.stopPropagation()} style={{ background:'#21262d',border:'1px solid #30363d',borderRadius:'4px',padding:'5px 14px',fontSize:'8px',color:'#8b949e',textDecoration:'none',fontFamily:'inherit' }}>GitHub ↗</a>}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function ResearchScreenDetail({ onOpenProject }) {
-  const p = PROJECTS[1]; const C = '#E8935A';
-  const bars=[{label:'Flood Risk',val:23,color:'#79c0ff'},{label:'Wind Event',val:12,color:'#56d364'},{label:'Overall Hazard',val:68,color:C}];
-  const pipe=['IoT Sensors','→','Kafka','→','Apache Flink','→','TF Model','→','Alert API'];
-  const pCols=['#56d364',null,C,null,'#79c0ff',null,'#b48eff',null,'#ff7b72'];
-  return (
-    <div style={{ width:'100%',height:'100%',background:'#0A0804',fontFamily:'"JetBrains Mono","Courier New",monospace',display:'flex',flexDirection:'column',overflow:'hidden',boxSizing:'border-box' }}>
-      <div style={{ display:'flex',alignItems:'center',justifyContent:'space-between',padding:'5px 12px',background:C+'10',borderBottom:`1px solid ${C}28`,flexShrink:0 }}>
-        <div style={{ display:'flex',gap:'6px' }}>{['#FF5F57','#FEBC2E','#28C840'].map(c=><div key={c} style={{ width:'9px',height:'9px',borderRadius:'50%',background:c }} />)}</div>
-        <span style={{ fontSize:'8px',color:C,letterSpacing:'0.1em' }}>MULTI-HAZARD EWS · IIT BOMBAY</span>
-        <div style={{ fontSize:'7px',color:'#56d364' }}>● LIVE</div>
-      </div>
-      <div style={{ display:'grid',gridTemplateColumns:'1fr 1fr 1fr',padding:'6px 12px',gap:'6px',background:'#0d0a07',borderBottom:`1px solid ${C}20`,flexShrink:0 }}>
-        {[['SENSORS','12','#56d364'],['ALERTS','2',C],['UPTIME','99.8%','#79c0ff']].map(([l,v,c])=>(
-          <div key={l} style={{ textAlign:'center' }}>
-            <div style={{ fontSize:'11px',fontWeight:700,color:c }}>{v}</div>
-            <div style={{ fontSize:'6px',color:'#7d8590',letterSpacing:'0.1em' }}>{l}</div>
-          </div>
-        ))}
-      </div>
-      <div style={{ flex:1,padding:'8px 12px',overflow:'hidden',minHeight:0 }}>
-        {bars.map(m=>(
-          <div key={m.label} style={{ marginBottom:'8px' }}>
-            <div style={{ display:'flex',justifyContent:'space-between',marginBottom:'3px' }}>
-              <span style={{ fontSize:'7px',color:'#8b949e' }}>{m.label}</span>
-              <span style={{ fontSize:'7px',color:m.color,fontWeight:700 }}>{m.val}%</span>
-            </div>
-            <div style={{ height:'4px',background:'#21262d',borderRadius:'2px' }}>
-              <div style={{ height:'100%',width:`${m.val}%`,background:m.color,borderRadius:'2px',boxShadow:`0 0 4px ${m.color}` }} />
-            </div>
-          </div>
-        ))}
-        <div style={{ marginTop:'8px',padding:'6px 8px',background:'#0d0a07',borderRadius:'4px',border:`1px solid ${C}18` }}>
-          <div style={{ fontSize:'6px',color:C+'70',letterSpacing:'0.12em',marginBottom:'5px' }}>REALTIME DATA PIPELINE</div>
-          <div style={{ display:'flex',alignItems:'center',gap:'3px',flexWrap:'nowrap',overflow:'hidden' }}>
-            {pipe.map((node,i)=>(
-              <span key={i} style={{ fontSize:'7px',color:pCols[i]??'#7d8590',padding:pCols[i]&&!node.startsWith('→')?'2px 5px':'0',background:pCols[i]&&!node.startsWith('→')?pCols[i]+'15':'none',border:pCols[i]&&!node.startsWith('→')?`1px solid ${pCols[i]}30`:'none',borderRadius:'2px',flexShrink:0,whiteSpace:'nowrap' }}>{node}</span>
-            ))}
-          </div>
-        </div>
-      </div>
-      <div style={{ background:C,padding:'3px 12px',flexShrink:0,display:'flex',justifyContent:'space-between',alignItems:'center' }}>
-        <span style={{ fontSize:'7px',color:'#fff',fontWeight:700 }}>● Multi-Hazard EWS</span>
-        <span style={{ fontSize:'7px',color:'#ffffffCC' }}>Kafka · Flink · TensorFlow</span>
-      </div>
-      <div style={{ background:'#0d0a07',padding:'10px 14px',flexShrink:0 }}>
-        <p style={{ fontSize:'8px',lineHeight:1.7,color:'#8b949e',marginBottom:'10px' }}>{p.fullDesc}</p>
-        <div style={{ display:'flex',flexWrap:'wrap',gap:'4px',marginBottom:'10px' }}>
-          {p.tech.map(t=><span key={t} style={{ background:C+'18',border:`1px solid ${C}35`,color:C,fontSize:'7px',padding:'2px 8px',borderRadius:'999px' }}>{t}</span>)}
-        </div>
-        <button onClick={(e)=>{e.stopPropagation();onOpenProject(p);}} style={{ background:C,border:'none',borderRadius:'4px',padding:'5px 14px',fontSize:'8px',color:'#fff',cursor:'pointer',fontFamily:'inherit',fontWeight:600 }}>Open project →</button>
-      </div>
-    </div>
-  );
-}
-
-function AIMLScreenDetail({ onOpenProject }) {
-  const p = PROJECTS[2]; const C = '#28C840';
-  return (
-    <div style={{ width:'100%',height:'100%',background:'#040A05',fontFamily:'"JetBrains Mono","Courier New",monospace',display:'flex',flexDirection:'column',overflow:'hidden',boxSizing:'border-box' }}>
-      <div style={{ display:'flex',alignItems:'center',justifyContent:'space-between',padding:'5px 12px',background:C+'0E',borderBottom:`1px solid ${C}22`,flexShrink:0 }}>
-        <div style={{ display:'flex',gap:'6px' }}>{['#FF5F57','#FEBC2E','#28C840'].map(c=><div key={c} style={{ width:'9px',height:'9px',borderRadius:'50%',background:c }} />)}</div>
-        <span style={{ fontSize:'8px',color:C,letterSpacing:'0.1em' }}>EEG/EMG SIGNAL MONITOR v2.1</span>
-        <div style={{ fontSize:'7px',color:C }}>▶ LIVE</div>
-      </div>
-      <div style={{ display:'flex',gap:'16px',padding:'4px 12px',background:'#060C07',borderBottom:`1px solid ${C}15`,flexShrink:0 }}>
-        <span style={{ fontSize:'7px',color:'#7d8590' }}>session_042</span>
-        <span style={{ fontSize:'7px',color:C }}>512 Hz</span>
-        <span style={{ fontSize:'7px',color:'#56d364' }}>● recording</span>
-      </div>
-      <div style={{ flex:1,padding:'8px 12px',overflow:'hidden',minHeight:0 }}>
-        {[{label:'EEG CHANNEL · α/β BAND',freq:'14.2 Hz',color:'#79c0ff',pts:'0,11 10,9 18,6 25,11 32,16 40,11 48,7 55,11 62,15 70,11 78,5 85,11 93,17 100,11 108,8 115,11 122,14 130,11 138,6 145,11 153,16 160,11 168,7 175,11 183,15 190,11 198,5 205,11 213,17 220,11 228,8 235,11 242,14 250,11 258,6 265,11 273,16 280,11 288,7 295,11 300,11'},
-          {label:'EMG CHANNEL · MUSCLE ACTIVITY',freq:'8.7 mV',color:C,pts:'0,11 5,11 8,4 11,18 14,11 30,11 33,5 36,17 39,11 55,11 58,3 61,19 64,11 80,11 83,6 86,16 89,11 105,11 108,4 111,18 114,11 130,11 133,7 136,15 139,11 155,11 158,5 161,17 164,11 180,11 183,3 186,19 189,11 205,11 208,6 211,16 214,11 230,11 233,4 236,18 239,11 255,11 258,7 261,15 264,11 280,11 283,5 286,17 289,11 295,11 300,11'}
-        ].map(sig=>(
-          <div key={sig.label} style={{ marginBottom:'8px' }}>
-            <div style={{ display:'flex',justifyContent:'space-between',marginBottom:'3px' }}>
-              <span style={{ fontSize:'7px',color:sig.color,letterSpacing:'0.08em' }}>{sig.label}</span>
-              <span style={{ fontSize:'7px',color:sig.color }}>{sig.freq}</span>
-            </div>
-            <div style={{ height:'28px',background:'#060C07',border:`1px solid ${C}18`,borderRadius:'3px',overflow:'hidden' }}>
-              <svg width="100%" height="28" viewBox="0 0 300 22" preserveAspectRatio="none">
-                <polyline fill="none" stroke={sig.color} strokeWidth="1.5" opacity="0.9" points={sig.pts} />
-              </svg>
-            </div>
-          </div>
-        ))}
-        <div style={{ padding:'7px 10px',background:'#060C07',border:`1px solid ${C}22`,borderRadius:'4px',marginBottom:'7px' }}>
-          <div style={{ display:'flex',justifyContent:'space-between',marginBottom:'4px' }}>
-            <span style={{ fontSize:'7px',color:'#7d8590',letterSpacing:'0.08em' }}>MODEL PREDICTION</span>
-            <span style={{ fontSize:'7px',color:C,fontWeight:700 }}>94.2% confidence</span>
-          </div>
-          <div style={{ height:'4px',background:'#21262d',borderRadius:'2px',marginBottom:'5px' }}>
-            <div style={{ height:'100%',width:'94%',background:C,borderRadius:'2px',boxShadow:`0 0 6px ${C}` }} />
-          </div>
-          <div style={{ display:'flex',justifyContent:'space-between',alignItems:'center' }}>
-            <div><span style={{ fontSize:'7px',color:'#7d8590' }}>STATE: </span><span style={{ fontSize:'9px',color:C,fontWeight:700 }}>HUNGER DETECTED</span></div>
-            <div style={{ display:'flex',gap:'3px' }}>
-              {['SVM','MNE','scikit-learn'].map(t=><span key={t} style={{ background:C+'12',border:`1px solid ${C}25`,color:C,fontSize:'6px',padding:'1px 5px',borderRadius:'2px' }}>{t}</span>)}
-            </div>
-          </div>
-        </div>
-      </div>
-      <div style={{ background:C,padding:'3px 12px',flexShrink:0,display:'flex',justifyContent:'space-between',alignItems:'center' }}>
-        <span style={{ fontSize:'7px',color:'#000',fontWeight:700 }}>● EEG/EMG Hunger Detection</span>
-        <span style={{ fontSize:'7px',color:'#000000AA' }}>Python · NumPy · scikit-learn</span>
-      </div>
-      <div style={{ background:'#060C07',padding:'10px 14px',flexShrink:0 }}>
-        <p style={{ fontSize:'8px',lineHeight:1.7,color:'#8b949e',marginBottom:'10px' }}>{p.fullDesc}</p>
-        <div style={{ display:'flex',flexWrap:'wrap',gap:'4px',marginBottom:'10px' }}>
-          {p.tech.map(t=><span key={t} style={{ background:C+'18',border:`1px solid ${C}35`,color:C,fontSize:'7px',padding:'2px 8px',borderRadius:'999px' }}>{t}</span>)}
-        </div>
-        <div style={{ display:'flex',gap:'8px' }}>
-          <button onClick={(e)=>{e.stopPropagation();onOpenProject(p);}} style={{ background:C,border:'none',borderRadius:'4px',padding:'5px 14px',fontSize:'8px',color:'#000',cursor:'pointer',fontFamily:'inherit',fontWeight:700 }}>Open project →</button>
-          {p.github&&<a href={p.github} target="_blank" rel="noopener noreferrer" onClick={e=>e.stopPropagation()} style={{ background:'#060C07',border:`1px solid ${C}30`,borderRadius:'4px',padding:'5px 14px',fontSize:'8px',color:'#8b949e',textDecoration:'none',fontFamily:'inherit' }}>GitHub ↗</a>}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// Renders the Html overlay for exactly the active screen — zero z-fighting.
-function ActiveScreenHtml({ activeScreen, isZoomedIn, onOpenProject }) {
-  if (!activeScreen || !isZoomedIn) return null;
-
-  const m = MONITORS_CONFIG.find((mc) => mc.id === activeScreen);
-  if (!m) return null;
-
-  const isCenter   = m.id === 'research';
-  const htmlW      = isCenter ? 700 : 575;
-  const htmlH      = isCenter ? 490 : 380;
-
-  const DetailComp = m.id === 'dev' ? DevScreenDetail
-    : m.id === 'research' ? ResearchScreenDetail
-    : AIMLScreenDetail;
-
-  return (
-    <group position={m.position} rotation-y={m.rotationY}>
-      <Html
-        position={[0, 0, m.screenArgs[2] / 2 + 0.006]}
-        transform
-        distanceFactor={2.5}
-        style={{
-          width: `${htmlW}px`,
-          height: `${htmlH}px`,
-          overflow: 'hidden',
-          borderRadius: '1px',
-          pointerEvents: 'auto',
-        }}
-      >
-        <DetailComp onOpenProject={onOpenProject} />
-      </Html>
-    </group>
-  );
-}
-
-// ── Camera controller ─────────────────────────────────────────────────────────
-function CameraController({ activeScreen }) {
-  const { camera } = useThree();
-  const lookAt = useRef(new THREE.Vector3(...CAM.overview.look));
-  const tPos   = useRef(new THREE.Vector3(...CAM.overview.pos));
-  const tLook  = useRef(new THREE.Vector3(...CAM.overview.look));
-  const mouse  = useRef({ x: 0, y: 0 });
-
+  // ── Build scene ─────────────────────────────────────────────────────────────
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const onMove = (e) => {
-      mouse.current.x = (e.clientX / window.innerWidth  - 0.5) * 2;
-      mouse.current.y = (e.clientY / window.innerHeight - 0.5) * 2;
+    const mount = mountRef.current;
+    if (!mount) return;
+    const W = mount.clientWidth, H = mount.clientHeight;
+
+    // Renderer
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(W, H);
+    renderer.shadowMap.enabled     = true;
+    renderer.shadowMap.type        = THREE.PCFSoftShadowMap;
+    renderer.toneMapping           = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure   = 2.2;
+    renderer.outputColorSpace      = THREE.SRGBColorSpace;
+    mount.appendChild(renderer.domElement);
+
+    const scene  = new THREE.Scene();
+    scene.fog    = new THREE.FogExp2(0x03040a, 0.034);
+    scene.background = new THREE.Color(0x03040a);
+
+    const camera = new THREE.PerspectiveCamera(52, W / H, 0.1, 80);
+    camera.position.set(...OVERVIEW.pos);
+    camera.lookAt(...OVERVIEW.look);
+
+    const S = {
+      renderer, scene, camera,
+      clock:       new THREE.Clock(),
+      raycaster:   new THREE.Raycaster(),
+      mouseNDC:    new THREE.Vector2(),
+      targetPos:   new THREE.Vector3(...OVERVIEW.pos),
+      targetLook:  new THREE.Vector3(...OVERVIEW.look),
+      currentLook: new THREE.Vector3(...OVERVIEW.look),
+      activeId:    null, hovered: null,
+      clickTargets: [],
+      screens:      {},
+      monLights:    {},
+      steamGeo:     null, steamMesh: null,
+      dustGeo:      null, dustSpeeds: null,
+      disposed: false, raf: null,
     };
-    window.addEventListener('mousemove', onMove, { passive: true });
-    return () => window.removeEventListener('mousemove', onMove);
-  }, []);
+    refs.current = S;
 
+    // ══════════════════════════════════════════════════
+    // LIGHTING — rebuilt for visibility
+    // ══════════════════════════════════════════════════
+
+    // Base ambient — room is dark but not black
+    scene.add(new THREE.AmbientLight(0x08101e, 3.5));
+    scene.add(new THREE.HemisphereLight(0x0c1428, 0x040608, 2.0));
+
+    // Overhead warm fill (simulates ceiling track light)
+    const overheadLight = new THREE.PointLight(0xffd090, 5.5, 10, 1.8);
+    overheadLight.position.set(0, 5.4, 0.6);
+    overheadLight.castShadow = true;
+    overheadLight.shadow.mapSize.set(512, 512);
+    scene.add(overheadLight);
+
+    // Soft fill from camera direction (makes foreground visible)
+    const camFill = new THREE.PointLight(0x1a2848, 3.0, 16, 1.4);
+    camFill.position.set(0, 2.8, 5.8);
+    scene.add(camFill);
+
+    // Rim light from back (cool blue)
+    const rimLight = new THREE.PointLight(0x0e1ea0, 2.0, 10, 1.5);
+    rimLight.position.set(0, 3.8, -3.8);
+    scene.add(rimLight);
+
+    // Per-monitor glow lights — these illuminate the desk/keyboard
+    Object.entries(MONITOR_CONFIG).forEach(([id, cfg]) => {
+      const col = new THREE.Color(SCREENS_DATA[id].hex);
+      const ml  = new THREE.PointLight(col, 2.0, 5.0, 2.0);
+      ml.position.set(cfg.pos[0], 1.38, 0.95);
+      scene.add(ml);
+      S.monLights[id] = ml;
+    });
+
+    // ══════════════════════════════════════════════════
+    // FLOOR — reflective dark surface
+    // ══════════════════════════════════════════════════
+    const floorGeo = new THREE.PlaneGeometry(22, 22);
+    const floorMat = new THREE.MeshStandardMaterial({
+      color: 0x07080e, roughness: 0.18, metalness: 0.62,
+    });
+    const floorMesh = new THREE.Mesh(floorGeo, floorMat);
+    floorMesh.rotation.x = -Math.PI / 2;
+    floorMesh.receiveShadow = true;
+    scene.add(floorMesh);
+
+    const grid = new THREE.GridHelper(22, 36, 0x0f1526, 0x0f1526);
+    grid.position.y = 0.003;
+    scene.add(grid);
+
+    // ══════════════════════════════════════════════════
+    // WALLS
+    // ══════════════════════════════════════════════════
+    const wallMat = new THREE.MeshStandardMaterial({ color: 0x060810, roughness: 1.0 });
+
+    const addWall = (w, h, x, y, z, ry) => {
+      const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), wallMat);
+      m.position.set(x, y, z); m.rotation.y = ry;
+      m.receiveShadow = true; scene.add(m);
+    };
+    addWall(22, 10, 0,   5, -4.6, 0);
+    addWall(16, 10, -5.6, 5, 2.4, Math.PI / 2);
+    addWall(16, 10,  5.6, 5, 2.4, -Math.PI / 2);
+
+    // Back wall LED strip (blue accent)
+    const ledMat = new THREE.MeshStandardMaterial({
+      color: 0x0c1030, emissive: new THREE.Color(0x1428c0), emissiveIntensity: 1.6,
+    });
+    const ledStrip = new THREE.Mesh(new THREE.BoxGeometry(9.0, 0.06, 0.06), ledMat);
+    ledStrip.position.set(0, 0.65, -4.5);
+    scene.add(ledStrip);
+
+    // Under-desk LED strip (purple glow on floor)
+    const deskLedMat = new THREE.MeshStandardMaterial({
+      color: 0x100820, emissive: new THREE.Color(0x5020c0), emissiveIntensity: 1.4,
+    });
+    const deskLed = new THREE.Mesh(new THREE.BoxGeometry(8.2, 0.04, 0.04), deskLedMat);
+    deskLed.position.set(0, DESK_Y - 0.06, -0.35);
+    scene.add(deskLed);
+
+    // Under-desk LED light source (actual illumination on floor)
+    const deskLedLight = new THREE.PointLight(0x5020c0, 1.2, 3.0, 2.0);
+    deskLedLight.position.set(0, DESK_Y - 0.1, 0.0);
+    scene.add(deskLedLight);
+
+    // ══════════════════════════════════════════════════
+    // DESK
+    // ══════════════════════════════════════════════════
+    const deskTopMat = new THREE.MeshStandardMaterial({
+      color: 0x1c1408, roughness: 0.74, metalness: 0.05,
+    });
+    const deskLegMat = new THREE.MeshStandardMaterial({
+      color: 0x181c24, roughness: 0.6, metalness: 0.55,
+    });
+
+    const deskTop = new THREE.Mesh(new THREE.BoxGeometry(8.8, 0.072, 2.9), deskTopMat);
+    deskTop.position.set(0, DESK_Y, 0.05);
+    deskTop.castShadow = true; deskTop.receiveShadow = true;
+    scene.add(deskTop);
+
+    // L-frame legs
+    [[-4.22, 0.55], [4.22, 0.55], [-4.22, -0.9], [4.22, -0.9]].forEach(([lx, lz]) => {
+      const leg = new THREE.Mesh(new THREE.BoxGeometry(0.09, DESK_Y, 0.09), deskLegMat);
+      leg.position.set(lx, DESK_Y / 2, lz);
+      leg.castShadow = true; scene.add(leg);
+    });
+    const crossbar = new THREE.Mesh(new THREE.BoxGeometry(8.44, 0.05, 0.07), deskLegMat);
+    crossbar.position.set(0, 0.26, -0.88);
+    scene.add(crossbar);
+
+    // ══════════════════════════════════════════════════
+    // FOREGROUND KEYBOARD (key depth element)
+    // ══════════════════════════════════════════════════
+    const kbBodyMat = new THREE.MeshStandardMaterial({ color: 0x13172a, roughness: 0.82, metalness: 0.18 });
+    const kbKeyMat  = new THREE.MeshStandardMaterial({ color: 0x1c2038, roughness: 0.88, metalness: 0.06 });
+    const kbGlowMat = new THREE.MeshStandardMaterial({
+      color: 0x1c2038, roughness: 0.88,
+      emissive: new THREE.Color(0x4030b0), emissiveIntensity: 0.5,
+    });
+    const kbFnMat = new THREE.MeshStandardMaterial({
+      color: 0x1c2038, roughness: 0.88,
+      emissive: new THREE.Color(0x7C6FF7), emissiveIntensity: 0.3,
+    });
+
+    // Keyboard body
+    const kbX = 0.08, kbZ = 0.95;
+    const kb = new THREE.Mesh(new THREE.BoxGeometry(1.72, 0.042, 0.60), kbBodyMat);
+    kb.position.set(kbX, DESK_Y + 0.021 + 0.001, kbZ);
+    kb.castShadow = true; scene.add(kb);
+
+    // Key grid — 5 rows × 15 cols
+    const ROWS = 5, COLS = 15;
+    const KW = 0.094, KD = 0.092, KH = 0.022;
+    const kStartX = kbX - (COLS * (KW + 0.011)) / 2 + KW / 2;
+    const kStartZ = kbZ - (ROWS * (KD + 0.011)) / 2 + KD / 2;
+
+    for (let r = 0; r < ROWS; r++) {
+      for (let c = 0; c < COLS; c++) {
+        if (r === ROWS - 1 && c >= 5 && c <= 9) continue; // space bar area
+        const isFn   = r === 0;
+        const isWASD = (r === 2 && (c === 1 || c === 2 || c === 3)) || (r === 3 && c === 2);
+        const mat    = isFn ? kbFnMat : isWASD ? kbGlowMat : kbKeyMat;
+        const key    = new THREE.Mesh(new THREE.BoxGeometry(KW, KH, KD), mat);
+        key.position.set(
+          kStartX + c * (KW + 0.011),
+          DESK_Y + 0.042 + KH / 2,
+          kStartZ + r * (KD + 0.011),
+        );
+        scene.add(key);
+      }
+    }
+
+    // Space bar
+    const spaceBar = new THREE.Mesh(new THREE.BoxGeometry(0.56, KH, KD), kbKeyMat);
+    spaceBar.position.set(kbX + 0.02, DESK_Y + 0.042 + KH / 2, kStartZ + (ROWS - 0.5) * (KD + 0.011));
+    scene.add(spaceBar);
+
+    // Wide keys (shift, backspace, enter)
+    [
+      [kStartX + 14 * (KW + 0.011) + 0.04, DESK_Y + 0.042 + KH / 2, kStartZ + 2 * (KD + 0.011), 0.17, KH, KD, kbGlowMat],
+      [kStartX - 0.04,                       DESK_Y + 0.042 + KH / 2, kStartZ + 3 * (KD + 0.011), 0.17, KH, KD, kbKeyMat],
+    ].forEach(([x, y, z, w, h, d, m]) => {
+      const wideKey = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m);
+      wideKey.position.set(x, y, z);
+      scene.add(wideKey);
+    });
+
+    // Keyboard backlight spill on desk surface
+    const kbLight = new THREE.PointLight(0x5040c0, 0.6, 1.4, 2.0);
+    kbLight.position.set(kbX, DESK_Y + 0.12, kbZ);
+    scene.add(kbLight);
+
+    // ══════════════════════════════════════════════════
+    // FOREGROUND MOUSE + MOUSEPAD
+    // ══════════════════════════════════════════════════
+    const msMat  = new THREE.MeshStandardMaterial({ color: 0x13172a, roughness: 0.68, metalness: 0.32 });
+    const msBtnMat = new THREE.MeshStandardMaterial({ color: 0x181c2e, roughness: 0.78, metalness: 0.15 });
+
+    // Mousepad
+    const padMat = new THREE.MeshStandardMaterial({ color: 0x080a10, roughness: 0.97 });
+    const pad    = new THREE.Mesh(new THREE.BoxGeometry(0.68, 0.007, 0.46), padMat);
+    pad.position.set(1.30, DESK_Y + 0.0035, 0.90);
+    scene.add(pad);
+
+    // Mouse body
+    const msBody = new THREE.Mesh(new THREE.CylinderGeometry(0.076, 0.064, 0.17, 9), msMat);
+    msBody.rotation.x = Math.PI / 2;
+    msBody.position.set(1.30, DESK_Y + 0.047, 0.89);
+    msBody.scale.y = 0.68;
+    msBody.castShadow = true; scene.add(msBody);
+
+    // Mouse top button split
+    const msBtnL = new THREE.Mesh(new THREE.BoxGeometry(0.062, 0.016, 0.08), msBtnMat);
+    msBtnL.position.set(1.268, DESK_Y + 0.088, 0.855);
+    scene.add(msBtnL);
+    const msBtnR = new THREE.Mesh(new THREE.BoxGeometry(0.062, 0.016, 0.08), msBtnMat);
+    msBtnR.position.set(1.332, DESK_Y + 0.088, 0.855);
+    scene.add(msBtnR);
+
+    // Scroll wheel
+    const wheel = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.014, 0.014, 0.055, 7),
+      new THREE.MeshStandardMaterial({ color: 0x2a3050, roughness: 0.55, metalness: 0.5 }),
+    );
+    wheel.position.set(1.30, DESK_Y + 0.093, 0.858);
+    scene.add(wheel);
+
+    // Mouse LED glow (RGB mouse aesthetic)
+    const msLed = new THREE.PointLight(0x28C840, 0.15, 0.4);
+    msLed.position.set(1.30, DESK_Y + 0.02, 0.93);
+    scene.add(msLed);
+
+    // ══════════════════════════════════════════════════
+    // DESK ACCESSORIES — personality elements
+    // ══════════════════════════════════════════════════
+
+    // Coffee mug (left of desk)
+    const mugMat = new THREE.MeshStandardMaterial({ color: 0x181424, roughness: 0.75, metalness: 0.12 });
+    const mug    = new THREE.Mesh(new THREE.CylinderGeometry(0.088, 0.074, 0.19, 10), mugMat);
+    mug.position.set(-3.65, DESK_Y + 0.095, 0.55);
+    mug.castShadow = true; scene.add(mug);
+
+    // Mug handle (torus arc)
+    const hndl = new THREE.Mesh(
+      new THREE.TorusGeometry(0.068, 0.013, 6, 9, Math.PI),
+      mugMat,
+    );
+    hndl.rotation.y = Math.PI / 2;
+    hndl.position.set(-3.536, DESK_Y + 0.095, 0.55);
+    scene.add(hndl);
+
+    // Coffee surface
+    const coffeeFluid = new THREE.Mesh(
+      new THREE.CircleGeometry(0.078, 10),
+      new THREE.MeshStandardMaterial({ color: 0x190c04, roughness: 1.0 }),
+    );
+    coffeeFluid.rotation.x = -Math.PI / 2;
+    coffeeFluid.position.set(-3.65, DESK_Y + 0.188, 0.55);
+    scene.add(coffeeFluid);
+
+    // Steam particles above mug
+    const STEAM = 7;
+    const sPos  = new Float32Array(STEAM * 3);
+    for (let si = 0; si < STEAM; si++) {
+      sPos[si * 3]     = -3.65 + (Math.random() - 0.5) * 0.08;
+      sPos[si * 3 + 1] = DESK_Y + 0.22 + si * 0.07;
+      sPos[si * 3 + 2] = 0.55 + (Math.random() - 0.5) * 0.04;
+    }
+    const steamGeo  = new THREE.BufferGeometry();
+    steamGeo.setAttribute('position', new THREE.BufferAttribute(sPos, 3));
+    const steamMat  = new THREE.PointsMaterial({ color: 0x708090, size: 0.028, transparent: true, opacity: 0.30, sizeAttenuation: true });
+    const steamMesh = new THREE.Points(steamGeo, steamMat);
+    scene.add(steamMesh);
+    S.steamGeo = steamGeo; S.steamMesh = steamMesh;
+
+    // Notebook (left, angled)
+    const nbMat  = new THREE.MeshStandardMaterial({ color: 0x0c1018, roughness: 0.98 });
+    const nb     = new THREE.Mesh(new THREE.BoxGeometry(0.46, 0.016, 0.60), nbMat);
+    nb.position.set(-3.5, DESK_Y + 0.008, -0.15); nb.rotation.y = 0.22;
+    scene.add(nb);
+    const nbSpine = new THREE.Mesh(
+      new THREE.BoxGeometry(0.045, 0.018, 0.60),
+      new THREE.MeshStandardMaterial({ color: 0x7C6FF7, roughness: 0.9, emissive: new THREE.Color(0x7C6FF7), emissiveIntensity: 0.08 }),
+    );
+    nbSpine.position.set(-3.73, DESK_Y + 0.009, -0.15); nbSpine.rotation.y = 0.22;
+    scene.add(nbSpine);
+
+    // Pen on notebook
+    const penMat = new THREE.MeshStandardMaterial({ color: 0x28C840, roughness: 0.6, metalness: 0.3, emissive: new THREE.Color(0x28C840), emissiveIntensity: 0.05 });
+    const pen    = new THREE.Mesh(new THREE.CylinderGeometry(0.006, 0.006, 0.36, 6), penMat);
+    pen.rotation.z = 0.1; pen.position.set(-3.46, DESK_Y + 0.025, 0.06);
+    scene.add(pen);
+
+    // Mini cactus (right side)
+    const potMat  = new THREE.MeshStandardMaterial({ color: 0x2a1e14, roughness: 0.9 });
+    const cactMat = new THREE.MeshStandardMaterial({ color: 0x1a3418, roughness: 0.88 });
+    const pot     = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.105, 0.22, 8), potMat);
+    pot.position.set(3.9, DESK_Y + 0.11, 0.38); scene.add(pot);
+    const soil = new THREE.Mesh(new THREE.CylinderGeometry(0.122, 0.122, 0.022, 8),
+      new THREE.MeshStandardMaterial({ color: 0x1a1008, roughness: 1.0 }));
+    soil.position.set(3.9, DESK_Y + 0.221, 0.38); scene.add(soil);
+    const cactus = new THREE.Mesh(new THREE.CylinderGeometry(0.042, 0.052, 0.30, 7), cactMat);
+    cactus.position.set(3.9, DESK_Y + 0.37, 0.38); scene.add(cactus);
+    [-1, 1].forEach((side) => {
+      const arm = new THREE.Mesh(new THREE.CylinderGeometry(0.024, 0.030, 0.15, 5), cactMat);
+      arm.rotation.z = side * 0.75;
+      arm.position.set(3.9 + side * 0.095, DESK_Y + 0.44, 0.38);
+      scene.add(arm);
+    });
+
+    // USB hub / dock
+    const hubMat = new THREE.MeshStandardMaterial({ color: 0x101418, roughness: 0.6, metalness: 0.45 });
+    const hub    = new THREE.Mesh(new THREE.BoxGeometry(0.30, 0.062, 0.13), hubMat);
+    hub.position.set(2.8, DESK_Y + 0.031, 0.28); scene.add(hub);
+    [0, 1, 2].forEach((hi) => {
+      const lit  = hi === 0;
+      const ind  = new THREE.Mesh(new THREE.BoxGeometry(0.014, 0.009, 0.014),
+        new THREE.MeshStandardMaterial({
+          color: lit ? 0x28C840 : 0x202830,
+          emissive: lit ? new THREE.Color(0x28C840) : new THREE.Color(0),
+          emissiveIntensity: lit ? 1.0 : 0,
+        }));
+      ind.position.set(2.68 + hi * 0.064, DESK_Y + 0.065, 0.28);
+      scene.add(ind);
+    });
+
+    // Wireless earbuds case (small)
+    const earCase = new THREE.Mesh(
+      new THREE.BoxGeometry(0.12, 0.06, 0.08),
+      new THREE.MeshStandardMaterial({ color: 0x141820, roughness: 0.65, metalness: 0.4 }),
+    );
+    earCase.position.set(3.2, DESK_Y + 0.03, -0.28); earCase.rotation.y = 0.4;
+    scene.add(earCase);
+
+    // ══════════════════════════════════════════════════
+    // SHELVES (RIGHT WALL)
+    // ══════════════════════════════════════════════════
+    const shelfMat = new THREE.MeshStandardMaterial({ color: 0x111008, roughness: 0.9, metalness: 0.12 });
+    const bookPalette = [0x8B2252, 0x1f4fa0, 0x2a6b3a, 0x8c6b20, 0x5c2a8c, 0x7a2828];
+
+    [{ y: 1.85, bookCount: 5 }, { y: 2.95, bookCount: 4 }].forEach(({ y, bookCount }, si) => {
+      const shelf = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.048, 0.30), shelfMat);
+      shelf.position.set(5.1, y, -1.8); shelf.castShadow = true; scene.add(shelf);
+
+      let bx = 4.44;
+      for (let b = 0; b < bookCount; b++) {
+        const bh = 0.22 + Math.random() * 0.12;
+        const bw = 0.055 + Math.random() * 0.038;
+        const book = new THREE.Mesh(
+          new THREE.BoxGeometry(bw, bh, 0.24),
+          new THREE.MeshStandardMaterial({ color: bookPalette[(si * 3 + b) % bookPalette.length], roughness: 0.92 }),
+        );
+        book.position.set(bx + bw / 2, y + bh / 2 + 0.024, -1.8);
+        book.rotation.z = (Math.random() - 0.5) * 0.06;
+        scene.add(book); bx += bw + 0.016;
+      }
+    });
+
+    // Small vinyl figure on top shelf
+    const figMat = new THREE.MeshStandardMaterial({ color: 0x28303e, roughness: 0.68, metalness: 0.35 });
+    const figBody = new THREE.Mesh(new THREE.BoxGeometry(0.085, 0.13, 0.065), figMat);
+    figBody.position.set(5.42, 2.95 + 0.024 + 0.065, -1.8); scene.add(figBody);
+    const figHead = new THREE.Mesh(new THREE.SphereGeometry(0.044, 7, 7), figMat);
+    figHead.position.set(5.42, 2.95 + 0.024 + 0.178, -1.8); scene.add(figHead);
+
+    // ══════════════════════════════════════════════════
+    // WALL POSTERS (back wall)
+    // ══════════════════════════════════════════════════
+    const buildPoster = (lines, bg, accent) => {
+      const pc = document.createElement('canvas');
+      pc.width = 256; pc.height = 320;
+      const pctx = pc.getContext('2d');
+      pctx.fillStyle = bg; pctx.fillRect(0, 0, 256, 320);
+      // Border
+      pctx.strokeStyle = accent + '44'; pctx.lineWidth = 2.5;
+      pctx.strokeRect(4, 4, 248, 312);
+      pctx.font = '15px "Courier New",monospace';
+      lines.forEach((line, li) => {
+        pctx.fillStyle = line.startsWith('//') || line.startsWith('#')
+          ? '#3d5060'
+          : line.includes('(') ? accent : '#e6edf3';
+        pctx.fillText(line, 16, 36 + li * 24);
+      });
+      return new THREE.CanvasTexture(pc);
+    };
+
+    [
+      {
+        x: -2.6, y: 3.6,
+        lines: ['// life.js', 'const you = {', "  role: 'builder',", "  mode: 'ship',", '};', '', 'you.build();', 'you.learn();', 'you.repeat();'],
+        accent: '#7C6FF7',
+      },
+      {
+        x: 2.6, y: 3.6,
+        lines: ['# .bashrc', 'alias ship=', '  "git push"', '', '$ ship', '✓ deployed', '✓ live', '', '# never stop'],
+        accent: '#28C840',
+      },
+    ].forEach(({ x, y, lines, accent }) => {
+      const mesh = new THREE.Mesh(
+        new THREE.PlaneGeometry(0.76, 0.95),
+        new THREE.MeshBasicMaterial({ map: buildPoster(lines, '#0d1117', accent) }),
+      );
+      mesh.position.set(x, y, -4.55);
+      scene.add(mesh);
+    });
+
+    // ══════════════════════════════════════════════════
+    // HEADPHONES (hanging on left monitor stand)
+    // ══════════════════════════════════════════════════
+    const hpMat = new THREE.MeshStandardMaterial({ color: 0x141820, roughness: 0.65, metalness: 0.45 });
+    const hpBand = new THREE.Mesh(new THREE.TorusGeometry(0.23, 0.022, 7, 14, Math.PI), hpMat);
+    hpBand.position.set(-2.4, MON_Y - 0.82 - 0.44, MON_Z + 0.55);
+    hpBand.rotation.x = -0.25; scene.add(hpBand);
+    [-1, 1].forEach((side) => {
+      const cup = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.07, 0.07, 0.055, 10),
+        new THREE.MeshStandardMaterial({ color: 0x1a1f28, roughness: 0.7, metalness: 0.4 }),
+      );
+      cup.rotation.x = Math.PI / 2;
+      cup.position.set(-2.4 + side * 0.235, MON_Y - 0.82 - 0.44 - 0.02, MON_Z + 0.55);
+      scene.add(cup);
+    });
+
+    // ══════════════════════════════════════════════════
+    // MONITORS
+    // ══════════════════════════════════════════════════
+    const bezelMat      = new THREE.MeshStandardMaterial({ color: 0x0e1218, roughness: 0.58, metalness: 0.42 });
+    const innerBezelMat = new THREE.MeshStandardMaterial({ color: 0x080a0c, roughness: 1.0 });
+
+    Object.entries(MONITOR_CONFIG).forEach(([id, cfg]) => {
+      const sdata = SCREENS_DATA[id];
+      const group = new THREE.Group();
+      group.position.set(...cfg.pos);
+      group.rotation.y = cfg.rotY;
+
+      // Outer bezel
+      const bezel = new THREE.Mesh(new THREE.BoxGeometry(2.58, 1.62, 0.115), bezelMat);
+      bezel.castShadow = true; group.add(bezel);
+
+      // Inner bezel ring
+      const ib = new THREE.Mesh(new THREE.BoxGeometry(2.34, 1.44, 0.058), innerBezelMat);
+      ib.position.z = 0.031; group.add(ib);
+
+      // ── SCREEN — MeshBasicMaterial means texture shows at full brightness
+      //    regardless of scene lighting (this is correct for monitors)
+      const { canvas, zones, canvasH } = buildScreenCanvas(id);
+      const screenTex = new THREE.CanvasTexture(canvas);
+      const screenMesh = new THREE.Mesh(
+        new THREE.PlaneGeometry(2.22, 1.36),
+        new THREE.MeshBasicMaterial({ map: screenTex }),
+      );
+      screenMesh.position.z = 0.064;
+      screenMesh.userData   = { isScreen: true, screenId: id, zones, canvasH };
+      group.add(screenMesh);
+      S.clickTargets.push(screenMesh);
+
+      // Very subtle edge glow (additive overlay)
+      const glowMat = new THREE.MeshBasicMaterial({
+        color: new THREE.Color(sdata.hex),
+        transparent: true, opacity: 0.04,
+        blending: THREE.AdditiveBlending, depthWrite: false,
+      });
+      const glow = new THREE.Mesh(new THREE.PlaneGeometry(2.74, 1.84), glowMat);
+      glow.position.z = 0.062; group.add(glow);
+
+      // Monitor stand
+      const standMat = new THREE.MeshStandardMaterial({ color: 0x0e1218, roughness: 0.52, metalness: 0.58 });
+      const neck     = new THREE.Mesh(new THREE.BoxGeometry(0.112, 0.42, 0.112), standMat);
+      neck.position.set(0, -0.81 - 0.21, 0); group.add(neck);
+      const base = new THREE.Mesh(new THREE.BoxGeometry(0.72, 0.052, 0.40), standMat);
+      base.position.set(0, -0.81 - 0.42 - 0.026, 0); group.add(base);
+
+      // Post-it notes (top of monitor — personality)
+      const postItColors = [0xffdd44, 0xff8878, 0x66ccff, 0xaaffaa];
+      const postItCount  = id === 'dev' ? 2 : id === 'research' ? 3 : 1;
+      for (let pi = 0; pi < postItCount; pi++) {
+        const piMesh = new THREE.Mesh(
+          new THREE.PlaneGeometry(0.19, 0.19),
+          new THREE.MeshBasicMaterial({ color: postItColors[pi % postItColors.length], side: THREE.DoubleSide }),
+        );
+        piMesh.position.set(-0.4 + pi * 0.44, 1.62 / 2 + 0.095, 0.06);
+        piMesh.rotation.z = (Math.random() - 0.5) * 0.35;
+        group.add(piMesh);
+      }
+
+      // Cable running from monitor down to desk
+      const cableMat = new THREE.MeshStandardMaterial({ color: 0x0c0e12, roughness: 0.95 });
+      const cable    = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.008, 0.75, 5), cableMat);
+      cable.position.set(0.3, -0.81 - 0.58, 0.04);
+      cable.rotation.z = 0.12; group.add(cable);
+
+      scene.add(group);
+      S.screens[id] = { group, screenMesh, glowMat, zones };
+    });
+
+    // ══════════════════════════════════════════════════
+    // FLOATING DUST PARTICLES
+    // ══════════════════════════════════════════════════
+    const DC   = 220;
+    const dPos = new Float32Array(DC * 3);
+    const dSpd = new Float32Array(DC);
+    for (let i = 0; i < DC; i++) {
+      dPos[i * 3]     = (Math.random() - 0.5) * 18;
+      dPos[i * 3 + 1] = Math.random() * 7;
+      dPos[i * 3 + 2] = (Math.random() - 0.5) * 12 - 1;
+      dSpd[i]         = 0.003 + Math.random() * 0.009;
+    }
+    const dustGeo = new THREE.BufferGeometry();
+    dustGeo.setAttribute('position', new THREE.BufferAttribute(dPos, 3));
+    const dustMat = new THREE.PointsMaterial({ color: 0x1e2840, size: 0.030, transparent: true, opacity: 0.5 });
+    scene.add(new THREE.Points(dustGeo, dustMat));
+    S.dustGeo = dustGeo; S.dustSpeeds = dSpd;
+
+    // ══════════════════════════════════════════════════
+    // EVENT LISTENERS
+    // ══════════════════════════════════════════════════
+    const onMouseMove = (e) => {
+      const rect = mount.getBoundingClientRect();
+      S.mouseNDC.set(
+        ((e.clientX - rect.left) / rect.width)  *  2 - 1,
+        ((e.clientY - rect.top)  / rect.height) * -2 + 1,
+      );
+      S.raycaster.setFromCamera(S.mouseNDC, camera);
+      const hits = S.raycaster.intersectObjects(S.clickTargets);
+      const prev = S.hovered;
+      S.hovered  = hits.length ? hits[0].object.userData.screenId : null;
+      if (S.hovered !== prev) mount.style.cursor = S.hovered ? 'pointer' : 'default';
+    };
+
+    const onClick = () => {
+      S.raycaster.setFromCamera(S.mouseNDC, camera);
+      const hits = S.raycaster.intersectObjects(S.clickTargets);
+      if (!hits.length) return;
+
+      const hit = hits[0];
+      const sid = hit.object.userData.screenId;
+
+      if (S.activeId === sid) {
+        // Already zoomed — detect project row via UV
+        const uv = hit.uv;
+        if (uv) {
+          const cH      = hit.object.userData.canvasH ?? 620;
+          const canvasY = (1 - uv.y) * cH;
+          hit.object.userData.zones.forEach((zone, zi) => {
+            if (canvasY >= zone.yMin && canvasY <= zone.yMax) {
+              const proj = SCREENS_DATA[sid].projects[zi];
+              if (proj) onOpenProject({ ...proj, category: sid, color: SCREENS_DATA[sid].color });
+            }
+          });
+        }
+      } else {
+        // Navigate directly to this screen (no overview pass-through)
+        S.activeId = sid;
+        const cfg  = MONITOR_CONFIG[sid];
+        S.targetPos .set(...cfg.camPos);
+        S.targetLook.set(...cfg.camLook);
+        onScreenClick(sid);
+      }
+    };
+
+    mount.addEventListener('mousemove', onMouseMove);
+    mount.addEventListener('click',     onClick);
+
+    const onResize = () => {
+      const w = mount.clientWidth, h = mount.clientHeight;
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+      renderer.setSize(w, h);
+    };
+    window.addEventListener('resize', onResize);
+
+    // ══════════════════════════════════════════════════
+    // RENDER LOOP
+    // ══════════════════════════════════════════════════
+    const tick = () => {
+      if (S.disposed) return;
+      S.raf = requestAnimationFrame(tick);
+      const t = S.clock.getElapsedTime();
+
+      // Dust drift
+      const dp = S.dustGeo.attributes.position.array;
+      for (let i = 0; i < DC; i++) {
+        dp[i * 3 + 1] += S.dustSpeeds[i];
+        dp[i * 3]     += Math.sin(t * 0.28 + i * 1.1) * 0.0003;
+        if (dp[i * 3 + 1] > 7) dp[i * 3 + 1] = 0;
+      }
+      S.dustGeo.attributes.position.needsUpdate = true;
+
+      // Steam animation
+      if (S.steamGeo) {
+        const sp = S.steamGeo.attributes.position.array;
+        for (let si = 0; si < STEAM; si++) {
+          sp[si * 3 + 1] += 0.0055;
+          sp[si * 3]      = -3.65 + Math.sin(t * 1.1 + si * 0.9) * 0.045;
+          if (sp[si * 3 + 1] > DESK_Y + 0.82) {
+            sp[si * 3 + 1] = DESK_Y + 0.22;
+            sp[si * 3]     = -3.65 + (Math.random() - 0.5) * 0.06;
+          }
+        }
+        S.steamGeo.attributes.position.needsUpdate = true;
+        // Fade based on height
+        const progress = (sp[1] - (DESK_Y + 0.22)) / 0.60;
+        S.steamMesh.material.opacity = 0.30 * Math.max(0, 1 - progress);
+      }
+
+      // Parallax on overview only
+      if (!S.activeId) {
+        const mx = S.mouseNDC.x * 0.26;
+        const my = S.mouseNDC.y * 0.13;
+        S.targetPos .set(OVERVIEW.pos[0] + mx, OVERVIEW.pos[1] + my, OVERVIEW.pos[2]);
+        S.targetLook.set(mx * 0.28, OVERVIEW.look[1], 0);
+      }
+
+      // Smooth camera
+      camera.position.lerp(S.targetPos,  0.052);
+      S.currentLook.lerp(S.targetLook,   0.052);
+      camera.lookAt(S.currentLook);
+
+      // Per-screen glow animation
+      const screenKeys = Object.keys(S.screens);
+      screenKeys.forEach((id, idx) => {
+        const m        = S.screens[id];
+        const isActive = S.activeId === id;
+        const isHover  = S.hovered === id;
+        const baseO    = isActive ? 0.14 : isHover ? 0.09 : 0.04;
+        const pulse    = Math.sin(t * 1.9 + idx * 1.4) * 0.016;
+        m.glowMat.opacity          = Math.max(0, baseO + pulse);
+        S.monLights[id].intensity  = isActive ? 3.2 : isHover ? 2.2 : 1.8;
+      });
+
+      // Lamp flicker
+      overheadLight.intensity = 5.5 + Math.sin(t * 0.38) * 0.14;
+
+      renderer.render(scene, camera);
+    };
+    tick();
+
+    return () => {
+      S.disposed = true;
+      cancelAnimationFrame(S.raf);
+      window.removeEventListener('resize',     onResize);
+      mount.removeEventListener('mousemove', onMouseMove);
+      mount.removeEventListener('click',     onClick);
+      renderer.dispose();
+      if (mount.contains(renderer.domElement)) mount.removeChild(renderer.domElement);
+    };
+  }, []); // eslint-disable-line
+
+  // ── Sync camera target when activeScreen prop changes ───────────────────────
   useEffect(() => {
-    if (!activeScreen) return;
-    const cfg = CAM[activeScreen];
-    tPos.current.set(...cfg.pos);
-    tLook.current.set(...cfg.look);
+    const S = refs.current;
+    if (!S.targetPos) return;
+
+    if (!activeScreen) {
+      S.activeId = null;
+      S.targetPos .set(...OVERVIEW.pos);
+      S.targetLook.set(...OVERVIEW.look);
+    } else {
+      S.activeId = activeScreen;
+      const cfg  = MONITOR_CONFIG[activeScreen];
+      if (cfg) {
+        S.targetPos .set(...cfg.camPos);
+        S.targetLook.set(...cfg.camLook);
+      }
+    }
   }, [activeScreen]);
 
-  useFrame(() => {
-    if (!activeScreen) {
-      tPos.current.set(mouse.current.x * 0.3, 2.0 + (-mouse.current.y * 0.14), 8.5);
-      tLook.current.set(mouse.current.x * 0.18, 0.8, 0);
-    }
-    const speed = activeScreen ? 0.055 : 0.038;
-    camera.position.lerp(tPos.current, speed);
-    lookAt.current.lerp(tLook.current, speed);
-    camera.lookAt(lookAt.current);
-  });
-
-  return null;
-}
-
-// ── Scene ─────────────────────────────────────────────────────────────────────
-function Scene({ activeScreen, isZoomedIn, onScreenClick, onOpenProject }) {
-  return (
-    <>
-      <ambientLight intensity={0.12} />
-      <directionalLight position={[3, 8, 5]} intensity={0.8} castShadow />
-
-      {/* Colored atmospheric fill lights — one per monitor */}
-      <pointLight position={[-2.1, 1.6, 1.1]} color="#7C6FF7" intensity={2.0} distance={5} />
-      <pointLight position={[0,   1.7, 1.1]}  color="#E8935A" intensity={1.5} distance={5} />
-      <pointLight position={[2.1, 1.6, 1.1]}  color="#28C840" intensity={1.8} distance={5} />
-
-      {/* Desk — wide enough for 3 spaced monitors */}
-      <mesh position={[0, 0, 0]} receiveShadow castShadow>
-        <boxGeometry args={[5.8, 0.07, 1.5]} />
-        <meshStandardMaterial color="#18181E" roughness={0.84} metalness={0.16} />
-      </mesh>
-      {/* Desk front edge highlight */}
-      <mesh position={[0, 0.038, 0.75]}>
-        <boxGeometry args={[5.8, 0.003, 0.007]} />
-        <meshStandardMaterial color="#2A2A3A" roughness={0.4} metalness={0.6} />
-      </mesh>
-
-      {/* Keyboard */}
-      <mesh position={[0, 0.045, 0.42]} receiveShadow>
-        <boxGeometry args={[0.95, 0.018, 0.33]} />
-        <meshStandardMaterial color="#0E0E14" roughness={0.75} metalness={0.25} />
-      </mesh>
-      {/* Mouse */}
-      <mesh position={[0.66, 0.046, 0.42]} receiveShadow>
-        <boxGeometry args={[0.12, 0.018, 0.2]} />
-        <meshStandardMaterial color="#0E0E14" roughness={0.75} metalness={0.25} />
-      </mesh>
-
-      {/* Three monitors — well spaced at x=±1.9 */}
-      {MONITORS_CONFIG.map((m) => (
-        <Monitor
-          key={m.id}
-          position={m.position}
-          rotationY={m.rotationY}
-          screenArgs={m.screenArgs}
-          standHeight={m.standHeight}
-          screenColor={m.color}
-          screenId={m.id}
-          onSelect={() => onScreenClick(m.id)}
-          isActive={activeScreen === m.id}
-        />
-      ))}
-
-      {/* Single Html overlay — only when zoomed in, for the active screen */}
-      <ActiveScreenHtml
-        activeScreen={activeScreen}
-        isZoomedIn={isZoomedIn}
-        onOpenProject={onOpenProject}
-      />
-
-      {/* Floor */}
-      <mesh rotation-x={-Math.PI / 2} position={[0, -0.04, 0]} receiveShadow>
-        <planeGeometry args={[40, 40]} />
-        <meshStandardMaterial color="#040405" />
-      </mesh>
-
-      <CameraController activeScreen={activeScreen} />
-    </>
-  );
-}
-
-// ── Export ────────────────────────────────────────────────────────────────────
-const noopSubscribe = () => () => {};
-
-export default function RoomScene({ activeScreen, isZoomedIn, onScreenClick, onOpenProject }) {
-  const isMobile = useSyncExternalStore(
-    noopSubscribe,
-    () => window.innerWidth < 768,
-    () => false
-  );
-
-  return (
-    <Canvas
-      camera={{ fov: isMobile ? 55 : 43, position: [0, 2.0, 8.5] }}
-      shadows
-      gl={{ antialias: true }}
-      dpr={[1, 1.5]}
-      style={{ background: 'transparent' }}
-    >
-      <Suspense fallback={null}>
-        <Scene
-          activeScreen={activeScreen}
-          isZoomedIn={isZoomedIn}
-          onScreenClick={onScreenClick}
-          onOpenProject={onOpenProject}
-        />
-      </Suspense>
-    </Canvas>
-  );
+  return <div ref={mountRef} style={{ width: '100%', height: '100%' }} />;
 }
