@@ -41,6 +41,7 @@ const MONITOR_CONFIG = {
 };
 
 const OVERVIEW = { pos: [0, 2.35, 7.2], look: [0, 1.84, 0] };
+const MUG_X = -3.62, MUG_Z = 0.55;
 
 // ─── Canvas Texture Builder ───────────────────────────────────────────────────
 function rr(ctx, x, y, w, h, r) {
@@ -54,6 +55,173 @@ function rr(ctx, x, y, w, h, r) {
   ctx.lineTo(x, y + r);
   ctx.quadraticCurveTo(x, y, x + r, y);
   ctx.closePath();
+}
+
+// ─── Neon helper for sign strokes ────────────────────────────────────────────
+function neonStroke(ctx, color, outerBlur, innerBlur, lineW, alpha = 1) {
+  ctx.save();
+  ctx.shadowColor = color;
+  ctx.shadowBlur = outerBlur;
+  ctx.strokeStyle = color;
+  ctx.globalAlpha = alpha;
+  ctx.lineWidth = lineW;
+  ctx.stroke();
+  ctx.shadowBlur = innerBlur;
+  ctx.strokeStyle = '#ffffff';
+  ctx.lineWidth = lineW * 0.28;
+  ctx.stroke();
+  ctx.restore();
+}
+
+// ─── Stylized MU neon sign canvas (red/black/white) ─────────────────────────
+function buildMUNeonCanvas() {
+  const W = 512, H = 640;
+  const cv = document.createElement('canvas');
+  cv.width = W; cv.height = H;
+  const ctx = cv.getContext('2d');
+  const cx = W / 2;
+
+  ctx.fillStyle = '#06010a';
+  ctx.fillRect(0, 0, W, H);
+
+  ctx.save();
+  ctx.strokeStyle = '#1a0a0a';
+  ctx.lineWidth = 18;
+  ctx.strokeRect(14, 14, W - 28, H - 28);
+  ctx.strokeStyle = '#2a1212';
+  ctx.lineWidth = 4;
+  ctx.strokeRect(14, 14, W - 28, H - 28);
+  ctx.restore();
+
+  const arcR = 170;
+  const arcCY = 300;
+  const text = 'MANCHESTER UNITED';
+  const totalA = Math.PI * 0.85;
+  const startA = -Math.PI / 2 - totalA / 2;
+  const charW = totalA / (text.length - 1);
+  ctx.save();
+  ctx.font = 'bold 28px Arial, sans-serif';
+  ctx.textAlign = 'center';
+  text.split('').forEach((ch, i) => {
+    const angle = startA + i * charW;
+    ctx.save();
+    ctx.translate(cx + Math.cos(angle) * arcR, arcCY + Math.sin(angle) * arcR);
+    ctx.rotate(angle + Math.PI / 2);
+    ctx.shadowColor = '#ff3030';
+    ctx.shadowBlur = 18;
+    ctx.fillStyle = '#ff4444';
+    ctx.fillText(ch, 0, 0);
+    ctx.shadowBlur = 6;
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText(ch, 0, 0);
+    ctx.restore();
+  });
+  ctx.restore();
+
+  const shieldPath = () => {
+    ctx.beginPath();
+    ctx.moveTo(cx - 110, 96);
+    ctx.bezierCurveTo(cx - 120, 96, cx - 125, 105, cx - 125, 118);
+    ctx.lineTo(cx - 125, 340);
+    ctx.quadraticCurveTo(cx - 125, 390, cx - 80, 430);
+    ctx.lineTo(cx, 490);
+    ctx.lineTo(cx + 80, 430);
+    ctx.quadraticCurveTo(cx + 125, 390, cx + 125, 340);
+    ctx.lineTo(cx + 125, 118);
+    ctx.bezierCurveTo(cx + 125, 105, cx + 120, 96, cx + 110, 96);
+    ctx.closePath();
+  };
+
+  shieldPath();
+  ctx.fillStyle = 'rgba(30,0,0,0.86)';
+  ctx.fill();
+  shieldPath(); neonStroke(ctx, '#ff1010', 40, 12, 3.5);
+  shieldPath(); neonStroke(ctx, '#ff3020', 22, 8, 2.4, 0.7);
+  shieldPath(); neonStroke(ctx, '#ff6050', 10, 4, 1.4, 0.45);
+
+  [[cx - 115, cx + 115, 155], [cx - 115, cx + 115, 370]].forEach(([x1, x2, y]) => {
+    ctx.beginPath();
+    ctx.moveTo(x1, y); ctx.lineTo(x2, y);
+    neonStroke(ctx, '#ff1010', 16, 6, 1.8, 0.6);
+  });
+
+  ctx.save();
+  ctx.shadowColor = '#ff2020';
+  ctx.shadowBlur = 20;
+  ctx.fillStyle = '#cc1010';
+  ctx.globalAlpha = 0.9;
+  ctx.beginPath(); ctx.ellipse(cx, 250, 32, 48, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(cx, 186, 22, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(cx - 16, 172); ctx.lineTo(cx - 26, 148); ctx.lineTo(cx - 8, 166); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(cx + 16, 172); ctx.lineTo(cx + 26, 148); ctx.lineTo(cx + 8, 166); ctx.fill();
+  ctx.lineWidth = 3.5;
+  ctx.strokeStyle = '#ff3030';
+  ctx.beginPath(); ctx.moveTo(cx + 55, 200); ctx.lineTo(cx + 55, 310); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(cx + 45, 215); ctx.lineTo(cx + 45, 200); ctx.lineTo(cx + 55, 210); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(cx + 65, 215); ctx.lineTo(cx + 65, 200); ctx.lineTo(cx + 55, 210); ctx.stroke();
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(cx - 30, 230);
+  ctx.bezierCurveTo(cx - 75, 195, cx - 90, 245, cx - 70, 275);
+  ctx.bezierCurveTo(cx - 55, 295, cx - 35, 280, cx - 30, 270);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(cx + 30, 230);
+  ctx.bezierCurveTo(cx + 75, 195, cx + 90, 245, cx + 70, 275);
+  ctx.bezierCurveTo(cx + 55, 295, cx + 35, 280, cx + 30, 270);
+  ctx.stroke();
+  ctx.restore();
+
+  ctx.save();
+  ctx.font = 'bold 38px Arial, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.shadowColor = '#ff2020';
+  ctx.shadowBlur = 30;
+  ctx.fillStyle = '#ff3030';
+  ctx.fillText('MUFC', cx, 420);
+  ctx.shadowBlur = 8;
+  ctx.fillStyle = '#ffffff';
+  ctx.fillText('MUFC', cx, 420);
+  ctx.restore();
+
+  ctx.save();
+  ctx.font = 'bold 22px Arial, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.shadowColor = '#ffffff';
+  ctx.shadowBlur = 18;
+  ctx.fillStyle = '#ffdddd';
+  ctx.fillText('EST. 1878', cx, 468);
+  ctx.shadowBlur = 5;
+  ctx.fillStyle = '#ffffff';
+  ctx.fillText('EST. 1878', cx, 468);
+  ctx.restore();
+
+  [[20, 20], [W - 20, 20], [20, H - 20], [W - 20, H - 20]].forEach(([x, y]) => {
+    ctx.save();
+    ctx.shadowColor = '#ff1010';
+    ctx.shadowBlur = 14;
+    ctx.fillStyle = '#ff3030';
+    ctx.beginPath(); ctx.arc(x, y, 5, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+  });
+
+  return cv;
+}
+
+// ─── Sprite texture for denser mug mist ──────────────────────────────────────
+function buildSteamTexture() {
+  const S = 64;
+  const cv = document.createElement('canvas');
+  cv.width = S; cv.height = S;
+  const ctx = cv.getContext('2d');
+  const grad = ctx.createRadialGradient(S / 2, S / 2, 0, S / 2, S / 2, S / 2);
+  grad.addColorStop(0, 'rgba(230,230,240,1)');
+  grad.addColorStop(0.35, 'rgba(200,210,225,0.55)');
+  grad.addColorStop(0.7, 'rgba(180,195,215,0.18)');
+  grad.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, S, S);
+  return new THREE.CanvasTexture(cv);
 }
 
 function buildScreenCanvas(id) {
@@ -221,13 +389,13 @@ export default function RoomScene({ activeScreen, onScreenClick, onOpenProject }
     renderer.shadowMap.enabled     = true;
     renderer.shadowMap.type        = THREE.PCFSoftShadowMap;
     renderer.toneMapping           = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure   = 2.2;
+    renderer.toneMappingExposure   = 2.6;
     renderer.outputColorSpace      = THREE.SRGBColorSpace;
     mount.appendChild(renderer.domElement);
 
     const scene  = new THREE.Scene();
-    scene.fog    = new THREE.FogExp2(0x03040a, 0.034);
-    scene.background = new THREE.Color(0x03040a);
+    scene.fog    = new THREE.FogExp2(0x0b0a14, 0.026);
+    scene.background = new THREE.Color(0x0b0a14);
 
     const camera = new THREE.PerspectiveCamera(52, W / H, 0.1, 80);
     camera.position.set(...OVERVIEW.pos);
@@ -244,9 +412,12 @@ export default function RoomScene({ activeScreen, onScreenClick, onOpenProject }
       activeId:    null, hovered: null,
       clickTargets: [],
       screens:      {},
-      monLights:    {},
-      steamGeo:     null, steamMesh: null,
-      dustGeo:      null, dustSpeeds: null,
+      monLights: {},
+      steamPuffs: [],
+      muSign: null,
+      dustGeo: null, dustSpeeds: null,
+      mouseRgbLight: null,
+      kbLight: null,
       disposed: false, raf: null,
     };
     refs.current = S;
@@ -256,31 +427,39 @@ export default function RoomScene({ activeScreen, onScreenClick, onOpenProject }
     // ══════════════════════════════════════════════════
 
     // Base ambient — room is dark but not black
-    scene.add(new THREE.AmbientLight(0x08101e, 3.5));
-    scene.add(new THREE.HemisphereLight(0x0c1428, 0x040608, 2.0));
+    scene.add(new THREE.AmbientLight(0x1a1828, 4.5));
+    scene.add(new THREE.HemisphereLight(0x182040, 0x080610, 2.8));
 
     // Overhead warm fill (simulates ceiling track light)
-    const overheadLight = new THREE.PointLight(0xffd090, 5.5, 10, 1.8);
-    overheadLight.position.set(0, 5.4, 0.6);
+    const overheadLight = new THREE.PointLight(0xffd090, 8.0, 12, 1.6);
+    overheadLight.position.set(0, 5.6, 0.5);
     overheadLight.castShadow = true;
     overheadLight.shadow.mapSize.set(512, 512);
     scene.add(overheadLight);
 
     // Soft fill from camera direction (makes foreground visible)
-    const camFill = new THREE.PointLight(0x1a2848, 3.0, 16, 1.4);
-    camFill.position.set(0, 2.8, 5.8);
+    const ceilL2 = new THREE.PointLight(0xffe0b0, 3.5, 8, 1.8);
+    ceilL2.position.set(-1.5, 4.8, -1.2);
+    scene.add(ceilL2);
+
+    const camFill = new THREE.PointLight(0x1e2c50, 4.5, 18, 1.2);
+    camFill.position.set(0, 3.2, 6.0);
     scene.add(camFill);
 
     // Rim light from back (cool blue)
-    const rimLight = new THREE.PointLight(0x0e1ea0, 2.0, 10, 1.5);
-    rimLight.position.set(0, 3.8, -3.8);
+    const rimLight = new THREE.PointLight(0x0a1ad0, 2.8, 12, 1.4);
+    rimLight.position.set(0, 3.5, -3.6);
     scene.add(rimLight);
+
+    const muGlow = new THREE.PointLight(0xff1010, 1.2, 4.5, 2.0);
+    muGlow.position.set(0, 3.8, -4.2);
+    scene.add(muGlow);
 
     // Per-monitor glow lights — these illuminate the desk/keyboard
     Object.entries(MONITOR_CONFIG).forEach(([id, cfg]) => {
       const col = new THREE.Color(SCREENS_DATA[id].hex);
-      const ml  = new THREE.PointLight(col, 2.0, 5.0, 2.0);
-      ml.position.set(cfg.pos[0], 1.38, 0.95);
+      const ml  = new THREE.PointLight(col, 2.2, 5.5, 2.0);
+      ml.position.set(cfg.pos[0], 1.42, 1.0);
       scene.add(ml);
       S.monLights[id] = ml;
     });
@@ -304,7 +483,7 @@ export default function RoomScene({ activeScreen, onScreenClick, onOpenProject }
     // ══════════════════════════════════════════════════
     // WALLS
     // ══════════════════════════════════════════════════
-    const wallMat = new THREE.MeshStandardMaterial({ color: 0x060810, roughness: 1.0 });
+    const wallMat = new THREE.MeshStandardMaterial({ color: 0x080a12, roughness: 1.0 });
 
     const addWall = (w, h, x, y, z, ry) => {
       const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), wallMat);
@@ -320,21 +499,37 @@ export default function RoomScene({ activeScreen, onScreenClick, onOpenProject }
       color: 0x0c1030, emissive: new THREE.Color(0x1428c0), emissiveIntensity: 1.6,
     });
     const ledStrip = new THREE.Mesh(new THREE.BoxGeometry(9.0, 0.06, 0.06), ledMat);
-    ledStrip.position.set(0, 0.65, -4.5);
+    ledStrip.position.set(0, 0.62, -4.52);
     scene.add(ledStrip);
 
     // Under-desk LED strip (purple glow on floor)
     const deskLedMat = new THREE.MeshStandardMaterial({
-      color: 0x100820, emissive: new THREE.Color(0x5020c0), emissiveIntensity: 1.4,
+      color: 0x100820, emissive: new THREE.Color(0x5020c0), emissiveIntensity: 1.6,
     });
     const deskLed = new THREE.Mesh(new THREE.BoxGeometry(8.2, 0.04, 0.04), deskLedMat);
     deskLed.position.set(0, DESK_Y - 0.06, -0.35);
     scene.add(deskLed);
 
     // Under-desk LED light source (actual illumination on floor)
-    const deskLedLight = new THREE.PointLight(0x5020c0, 1.2, 3.0, 2.0);
-    deskLedLight.position.set(0, DESK_Y - 0.1, 0.0);
+    const deskLedLight = new THREE.PointLight(0x5020c0, 1.6, 3.5, 2.0);
+    deskLedLight.position.set(0, DESK_Y - 0.08, 0.0);
     scene.add(deskLedLight);
+
+    // Back-wall neon sign to add personality and red ambient bounce.
+    const muCanvas = buildMUNeonCanvas();
+    const muTex = new THREE.CanvasTexture(muCanvas);
+    const muMat = new THREE.MeshBasicMaterial({ map: muTex, transparent: true, opacity: 1.0 });
+    const muMesh = new THREE.Mesh(new THREE.PlaneGeometry(1.62, 2.04), muMat);
+    muMesh.position.set(0, 3.85, -4.54);
+    scene.add(muMesh);
+    S.muSign = { mesh: muMesh, mat: muMat };
+
+    const signFrame = new THREE.Mesh(
+      new THREE.BoxGeometry(1.78, 2.20, 0.06),
+      new THREE.MeshStandardMaterial({ color: 0x120808, roughness: 0.7, metalness: 0.5 }),
+    );
+    signFrame.position.set(0, 3.85, -4.56);
+    scene.add(signFrame);
 
     // ══════════════════════════════════════════════════
     // DESK
@@ -419,9 +614,10 @@ export default function RoomScene({ activeScreen, onScreenClick, onOpenProject }
     });
 
     // Keyboard backlight spill on desk surface
-    const kbLight = new THREE.PointLight(0x5040c0, 0.6, 1.4, 2.0);
+    const kbLight = new THREE.PointLight(0x7C6FF7, 0.7, 1.2, 2.0);
     kbLight.position.set(kbX, DESK_Y + 0.12, kbZ);
     scene.add(kbLight);
+    S.kbLight = kbLight;
 
     // ══════════════════════════════════════════════════
     // FOREGROUND MOUSE + MOUSEPAD
@@ -459,18 +655,19 @@ export default function RoomScene({ activeScreen, onScreenClick, onOpenProject }
     scene.add(wheel);
 
     // Mouse LED glow (RGB mouse aesthetic)
-    const msLed = new THREE.PointLight(0x28C840, 0.15, 0.4);
-    msLed.position.set(1.30, DESK_Y + 0.02, 0.93);
+    const msLed = new THREE.PointLight(0xff1020, 0.18, 0.55, 2.0);
+    msLed.position.set(1.30, DESK_Y + 0.005, 0.93);
     scene.add(msLed);
+    S.mouseRgbLight = msLed;
 
     // ══════════════════════════════════════════════════
     // DESK ACCESSORIES — personality elements
     // ══════════════════════════════════════════════════
 
-    // Coffee mug (left of desk)
-    const mugMat = new THREE.MeshStandardMaterial({ color: 0x181424, roughness: 0.75, metalness: 0.12 });
-    const mug    = new THREE.Mesh(new THREE.CylinderGeometry(0.088, 0.074, 0.19, 10), mugMat);
-    mug.position.set(-3.65, DESK_Y + 0.095, 0.55);
+    // Coffee mug and denser mist volume.
+    const mugMat = new THREE.MeshStandardMaterial({ color: 0x200c1c, roughness: 0.72, metalness: 0.14 });
+    const mug = new THREE.Mesh(new THREE.CylinderGeometry(0.088, 0.074, 0.19, 12), mugMat);
+    mug.position.set(MUG_X, DESK_Y + 0.095, MUG_Z);
     mug.castShadow = true; scene.add(mug);
 
     // Mug handle (torus arc)
@@ -479,7 +676,7 @@ export default function RoomScene({ activeScreen, onScreenClick, onOpenProject }
       mugMat,
     );
     hndl.rotation.y = Math.PI / 2;
-    hndl.position.set(-3.536, DESK_Y + 0.095, 0.55);
+    hndl.position.set(MUG_X + 0.066, DESK_Y + 0.095, MUG_Z);
     scene.add(hndl);
 
     // Coffee surface
@@ -488,35 +685,99 @@ export default function RoomScene({ activeScreen, onScreenClick, onOpenProject }
       new THREE.MeshStandardMaterial({ color: 0x190c04, roughness: 1.0 }),
     );
     coffeeFluid.rotation.x = -Math.PI / 2;
-    coffeeFluid.position.set(-3.65, DESK_Y + 0.188, 0.55);
+    coffeeFluid.position.set(MUG_X, DESK_Y + 0.189, MUG_Z);
     scene.add(coffeeFluid);
 
-    // Steam particles above mug
-    const STEAM = 7;
-    const sPos  = new Float32Array(STEAM * 3);
-    for (let si = 0; si < STEAM; si++) {
-      sPos[si * 3]     = -3.65 + (Math.random() - 0.5) * 0.08;
-      sPos[si * 3 + 1] = DESK_Y + 0.22 + si * 0.07;
-      sPos[si * 3 + 2] = 0.55 + (Math.random() - 0.5) * 0.04;
-    }
-    const steamGeo  = new THREE.BufferGeometry();
-    steamGeo.setAttribute('position', new THREE.BufferAttribute(sPos, 3));
-    const steamMat  = new THREE.PointsMaterial({ color: 0x708090, size: 0.028, transparent: true, opacity: 0.30, sizeAttenuation: true });
-    const steamMesh = new THREE.Points(steamGeo, steamMat);
-    scene.add(steamMesh);
-    S.steamGeo = steamGeo; S.steamMesh = steamMesh;
+    const coffeeGlow = new THREE.PointLight(0xff9050, 0.32, 0.95, 2.0);
+    coffeeGlow.position.set(MUG_X, DESK_Y + 0.22, MUG_Z);
+    scene.add(coffeeGlow);
 
-    // Notebook (left, angled)
-    const nbMat  = new THREE.MeshStandardMaterial({ color: 0x0c1018, roughness: 0.98 });
-    const nb     = new THREE.Mesh(new THREE.BoxGeometry(0.46, 0.016, 0.60), nbMat);
-    nb.position.set(-3.5, DESK_Y + 0.008, -0.15); nb.rotation.y = 0.22;
-    scene.add(nb);
-    const nbSpine = new THREE.Mesh(
-      new THREE.BoxGeometry(0.045, 0.018, 0.60),
-      new THREE.MeshStandardMaterial({ color: 0x7C6FF7, roughness: 0.9, emissive: new THREE.Color(0x7C6FF7), emissiveIntensity: 0.08 }),
+    const steamTex = buildSteamTexture();
+    const STEAM_PUFF_COUNT = 18;
+    const spawnSteamPuff = () => {
+      const mat = new THREE.SpriteMaterial({
+        map: steamTex,
+        transparent: true,
+        opacity: 0,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending,
+        color: new THREE.Color(0.88, 0.90, 0.95),
+      });
+      const sprite = new THREE.Sprite(mat);
+      const scale = 0.04 + Math.random() * 0.05;
+      sprite.scale.set(scale, scale, 1);
+      sprite.position.set(
+        MUG_X + (Math.random() - 0.5) * 0.07,
+        DESK_Y + 0.20,
+        MUG_Z + (Math.random() - 0.5) * 0.04,
+      );
+      scene.add(sprite);
+      const puff = {
+        sprite,
+        mat,
+        life: 0,
+        maxLife: 1.8 + Math.random() * 1.2,
+        vx: (Math.random() - 0.5) * 0.012,
+        vz: (Math.random() - 0.5) * 0.008,
+        baseScale: scale,
+        wobblePhase: Math.random() * Math.PI * 2,
+      };
+      S.steamPuffs.push(puff);
+      return puff;
+    };
+    for (let i = 0; i < STEAM_PUFF_COUNT; i++) {
+      const p = spawnSteamPuff();
+      p.life = Math.random() * p.maxLife;
+    }
+
+    // Diary (open pages) for a lived-in but controlled desk feel.
+    const diaryCanvas = (() => {
+      const dc = document.createElement('canvas');
+      dc.width = 256; dc.height = 384;
+      const dctx = dc.getContext('2d');
+      dctx.fillStyle = '#f5ead8'; dctx.fillRect(0, 0, 128, 384);
+      dctx.fillStyle = '#f0e4ce'; dctx.fillRect(128, 0, 128, 384);
+      dctx.fillStyle = 'rgba(0,0,0,0.25)'; dctx.fillRect(120, 0, 16, 384);
+      dctx.strokeStyle = '#c8bfa8'; dctx.lineWidth = 0.8;
+      for (let ly = 32; ly < 370; ly += 22) {
+        dctx.beginPath(); dctx.moveTo(136, ly); dctx.lineTo(248, ly); dctx.stroke();
+      }
+      dctx.strokeStyle = '#1a2040'; dctx.lineWidth = 1.1;
+      [[54, 210], [76, 228], [98, 195], [120, 220], [142, 200], [164, 185]].forEach(([y, x2]) => {
+        dctx.beginPath(); dctx.moveTo(136, y); dctx.lineTo(x2, y); dctx.stroke();
+      });
+      dctx.strokeStyle = '#6050a0'; dctx.lineWidth = 1.3;
+      [60, 96, 132, 168].forEach((cy, ci) => {
+        dctx.strokeRect(18, cy - 12, 14, 14);
+        if (ci < 2) {
+          dctx.beginPath();
+          dctx.moveTo(20, cy - 3); dctx.lineTo(24, cy + 2); dctx.lineTo(30, cy - 8);
+          dctx.stroke();
+        }
+        dctx.strokeStyle = '#8070a8'; dctx.lineWidth = 0.9;
+        dctx.beginPath(); dctx.moveTo(40, cy - 2); dctx.lineTo(100, cy - 2); dctx.stroke();
+        dctx.strokeStyle = '#6050a0'; dctx.lineWidth = 1.3;
+      });
+      dctx.fillStyle = '#ffdd44'; dctx.fillRect(200, 6, 48, 44);
+      dctx.strokeStyle = '#e0c020'; dctx.lineWidth = 0.5; dctx.strokeRect(200, 6, 48, 44);
+      dctx.fillStyle = '#333'; dctx.font = '8px Arial'; dctx.fillText('TODO:', 204, 20); dctx.fillText('ship!', 204, 34);
+      return new THREE.CanvasTexture(dc);
+    })();
+    const diaryTop = new THREE.Mesh(
+      new THREE.PlaneGeometry(0.60, 0.90),
+      new THREE.MeshBasicMaterial({ map: diaryCanvas }),
     );
-    nbSpine.position.set(-3.73, DESK_Y + 0.009, -0.15); nbSpine.rotation.y = 0.22;
-    scene.add(nbSpine);
+    diaryTop.rotation.x = -Math.PI / 2;
+    diaryTop.position.set(-3.55, DESK_Y + 0.017, -0.12);
+    diaryTop.rotation.z = 0.22;
+    scene.add(diaryTop);
+    const diaryBody = new THREE.Mesh(
+      new THREE.BoxGeometry(0.60, 0.022, 0.90),
+      new THREE.MeshStandardMaterial({ color: 0x1a1030, roughness: 0.88 }),
+    );
+    diaryBody.position.set(-3.55, DESK_Y + 0.009, -0.12);
+    diaryBody.rotation.y = 0.22;
+    scene.add(diaryBody);
 
     // Pen on notebook
     const penMat = new THREE.MeshStandardMaterial({ color: 0x28C840, roughness: 0.6, metalness: 0.3, emissive: new THREE.Color(0x28C840), emissiveIntensity: 0.05 });
@@ -638,21 +899,37 @@ export default function RoomScene({ activeScreen, onScreenClick, onOpenProject }
     });
 
     // ══════════════════════════════════════════════════
-    // HEADPHONES (hanging on left monitor stand)
+    // HEADPHONES (on a desk stand near left monitor)
     // ══════════════════════════════════════════════════
-    const hpMat = new THREE.MeshStandardMaterial({ color: 0x141820, roughness: 0.65, metalness: 0.45 });
-    const hpBand = new THREE.Mesh(new THREE.TorusGeometry(0.23, 0.022, 7, 14, Math.PI), hpMat);
-    hpBand.position.set(-2.4, MON_Y - 0.82 - 0.44, MON_Z + 0.55);
-    hpBand.rotation.x = -0.25; scene.add(hpBand);
+    const hpMat = new THREE.MeshStandardMaterial({ color: 0x0e1018, roughness: 0.62, metalness: 0.52 });
+    const hpCushMat = new THREE.MeshStandardMaterial({ color: 0x1a1420, roughness: 0.92, metalness: 0.04 });
+    const hpPole = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.022, 0.48, 8), hpMat);
+    hpPole.position.set(-3.0, DESK_Y + 0.24, -0.28);
+    scene.add(hpPole);
+    const hpBase = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.016, 10), hpMat);
+    hpBase.position.set(-3.0, DESK_Y + 0.008, -0.28);
+    scene.add(hpBase);
+    const hpBand = new THREE.Mesh(new THREE.TorusGeometry(0.21, 0.019, 7, 14, Math.PI), hpMat);
+    hpBand.position.set(-3.0, DESK_Y + 0.48, -0.28);
+    hpBand.rotation.x = -0.18;
+    scene.add(hpBand);
     [-1, 1].forEach((side) => {
-      const cup = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.07, 0.07, 0.055, 10),
-        new THREE.MeshStandardMaterial({ color: 0x1a1f28, roughness: 0.7, metalness: 0.4 }),
-      );
+      const cup = new THREE.Mesh(new THREE.CylinderGeometry(0.072, 0.072, 0.052, 10), hpMat);
       cup.rotation.x = Math.PI / 2;
-      cup.position.set(-2.4 + side * 0.235, MON_Y - 0.82 - 0.44 - 0.02, MON_Z + 0.55);
+      cup.position.set(-3.0 + side * 0.215, DESK_Y + 0.44, -0.28);
       scene.add(cup);
+      const cushion = new THREE.Mesh(new THREE.TorusGeometry(0.055, 0.024, 7, 12), hpCushMat);
+      cushion.rotation.x = Math.PI / 2;
+      cushion.position.set(-3.0 + side * 0.218, DESK_Y + 0.44, -0.28);
+      scene.add(cushion);
     });
+    const hpCable = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.007, 0.007, 0.4, 5),
+      new THREE.MeshStandardMaterial({ color: 0x1a1020, roughness: 0.95 }),
+    );
+    hpCable.position.set(-3.0, DESK_Y + 0.20, -0.24);
+    hpCable.rotation.z = 0.08;
+    scene.add(hpCable);
 
     // ══════════════════════════════════════════════════
     // MONITORS
@@ -729,7 +1006,7 @@ export default function RoomScene({ activeScreen, onScreenClick, onOpenProject }
     // ══════════════════════════════════════════════════
     // FLOATING DUST PARTICLES
     // ══════════════════════════════════════════════════
-    const DC   = 220;
+    const DC   = 240;
     const dPos = new Float32Array(DC * 3);
     const dSpd = new Float32Array(DC);
     for (let i = 0; i < DC; i++) {
@@ -740,7 +1017,7 @@ export default function RoomScene({ activeScreen, onScreenClick, onOpenProject }
     }
     const dustGeo = new THREE.BufferGeometry();
     dustGeo.setAttribute('position', new THREE.BufferAttribute(dPos, 3));
-    const dustMat = new THREE.PointsMaterial({ color: 0x1e2840, size: 0.030, transparent: true, opacity: 0.5 });
+    const dustMat = new THREE.PointsMaterial({ color: 0x2a3050, size: 0.028, transparent: true, opacity: 0.55 });
     scene.add(new THREE.Points(dustGeo, dustMat));
     S.dustGeo = dustGeo; S.dustSpeeds = dSpd;
 
@@ -805,6 +1082,10 @@ export default function RoomScene({ activeScreen, onScreenClick, onOpenProject }
     // ══════════════════════════════════════════════════
     // RENDER LOOP
     // ══════════════════════════════════════════════════
+    let steamSpawnTimer = 0;
+    let muFlickerTimer = 0;
+    let nextFlickerAt = 4 + Math.random() * 6;
+
     const tick = () => {
       if (S.disposed) return;
       S.raf = requestAnimationFrame(tick);
@@ -819,21 +1100,69 @@ export default function RoomScene({ activeScreen, onScreenClick, onOpenProject }
       }
       S.dustGeo.attributes.position.needsUpdate = true;
 
-      // Steam animation
-      if (S.steamGeo) {
-        const sp = S.steamGeo.attributes.position.array;
-        for (let si = 0; si < STEAM; si++) {
-          sp[si * 3 + 1] += 0.0055;
-          sp[si * 3]      = -3.65 + Math.sin(t * 1.1 + si * 0.9) * 0.045;
-          if (sp[si * 3 + 1] > DESK_Y + 0.82) {
-            sp[si * 3 + 1] = DESK_Y + 0.22;
-            sp[si * 3]     = -3.65 + (Math.random() - 0.5) * 0.06;
-          }
+      // Volumetric steam with constant respawn.
+      steamSpawnTimer += 0.016;
+      if (steamSpawnTimer > 0.22) {
+        steamSpawnTimer = 0;
+        if (S.steamPuffs.length < 22) {
+          spawnSteamPuff();
         }
-        S.steamGeo.attributes.position.needsUpdate = true;
-        // Fade based on height
-        const progress = (sp[1] - (DESK_Y + 0.22)) / 0.60;
-        S.steamMesh.material.opacity = 0.30 * Math.max(0, 1 - progress);
+      }
+
+      for (let i = S.steamPuffs.length - 1; i >= 0; i--) {
+        const p = S.steamPuffs[i];
+        p.life += 0.016;
+        const progress = p.life / p.maxLife;
+        const rawOpacity = progress < 0.3 ? (progress / 0.3) * 0.38 : (1 - (progress - 0.3) / 0.7) * 0.38;
+        p.mat.opacity = Math.max(0, rawOpacity);
+        const s = p.baseScale * (1 + progress * 2.4);
+        p.sprite.scale.set(s, s, 1);
+        p.sprite.position.y += 0.0045;
+        p.sprite.position.x += p.vx + Math.sin(t * 1.4 + p.wobblePhase) * 0.0006;
+        p.sprite.position.z += p.vz;
+        if (p.life >= p.maxLife) {
+          scene.remove(p.sprite);
+          p.mat.dispose();
+          S.steamPuffs.splice(i, 1);
+          spawnSteamPuff();
+        }
+      }
+
+      // Neon sign sporadic flicker + continuous breathing.
+      muFlickerTimer += 0.016;
+      if (muFlickerTimer >= nextFlickerAt) {
+        muFlickerTimer = 0;
+        nextFlickerAt = 4 + Math.random() * 8;
+        const doFlicker = async () => {
+          if (!S.muSign || S.disposed) return;
+          S.muSign.mat.opacity = 0.1;
+          muGlow.intensity = 0.08;
+          await new Promise((r) => setTimeout(r, 60));
+          if (!S.muSign || S.disposed) return;
+          S.muSign.mat.opacity = 1.0;
+          muGlow.intensity = 1.2;
+          await new Promise((r) => setTimeout(r, 40));
+          if (!S.muSign || S.disposed) return;
+          S.muSign.mat.opacity = 0.06;
+          muGlow.intensity = 0.04;
+          await new Promise((r) => setTimeout(r, 80));
+          if (!S.muSign || S.disposed) return;
+          S.muSign.mat.opacity = 1.0;
+          muGlow.intensity = 1.2 + Math.sin(t) * 0.1;
+        };
+        doFlicker();
+      }
+      if (S.muSign && S.muSign.mat.opacity > 0.5) {
+        muGlow.intensity = 1.2 * (1.0 + Math.sin(t * 0.7) * 0.04);
+      }
+
+      if (S.mouseRgbLight) {
+        const hue = (t * 0.4) % 1;
+        S.mouseRgbLight.color.setHSL(hue, 1, 0.5);
+        S.mouseRgbLight.intensity = 0.15 + Math.sin(t * 2.2) * 0.05;
+      }
+      if (S.kbLight) {
+        S.kbLight.intensity = 0.7 + Math.sin(t * 1.8) * 0.2;
       }
 
       // Parallax on overview only
@@ -862,7 +1191,7 @@ export default function RoomScene({ activeScreen, onScreenClick, onOpenProject }
       });
 
       // Lamp flicker
-      overheadLight.intensity = 5.5 + Math.sin(t * 0.38) * 0.14;
+      overheadLight.intensity = 8.0 + Math.sin(t * 0.42) * 0.2;
 
       renderer.render(scene, camera);
     };
@@ -871,6 +1200,11 @@ export default function RoomScene({ activeScreen, onScreenClick, onOpenProject }
     return () => {
       S.disposed = true;
       cancelAnimationFrame(S.raf);
+      S.steamPuffs.forEach((p) => {
+        scene.remove(p.sprite);
+        p.mat.dispose();
+      });
+      S.steamPuffs.length = 0;
       window.removeEventListener('resize',     onResize);
       mount.removeEventListener('mousemove', onMouseMove);
       mount.removeEventListener('click',     onClick);
