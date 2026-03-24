@@ -476,8 +476,8 @@ export default function RoomScene({ activeScreen, onScreenClick, onOpenProject }
     rimLight.position.set(0, 3.5, -3.6);
     scene.add(rimLight);
 
-    const muGlow = new THREE.PointLight(0xff1010, 2.1, 6.5, 1.9);
-    muGlow.position.set(0, 3.35, -4.1);
+    const muGlow = new THREE.PointLight(0xff1010, 2.8, 7.2, 1.8);
+    muGlow.position.set(0, 3.75, -4.12);
     scene.add(muGlow);
 
     // Per-monitor glow lights — these illuminate the desk/keyboard
@@ -545,27 +545,41 @@ export default function RoomScene({ activeScreen, onScreenClick, onOpenProject }
     muTex.colorSpace = THREE.SRGBColorSpace;
     const muMat = new THREE.MeshBasicMaterial({
       map: muTex,
-      transparent: false,
-      opacity: 1.0,
+      transparent: true,
+      opacity: 0.98,
+      blending: THREE.AdditiveBlending,
       depthWrite: false,
     });
-    const muMesh = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 3.9), muMat);
-    muMesh.position.set(0, 3.15, -4.52);
+    const muMesh = new THREE.Mesh(new THREE.PlaneGeometry(2.15, 3.82), muMat);
+    muMesh.position.set(0, 3.62, -4.52);
     muMesh.renderOrder = 5;
     scene.add(muMesh);
-    S.muSign = { mesh: muMesh, mat: muMat };
+
+    const muGlowPlateMat = new THREE.MeshBasicMaterial({
+      color: 0xff2020,
+      transparent: true,
+      opacity: 0.12,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    });
+    const muGlowPlate = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 4.25), muGlowPlateMat);
+    muGlowPlate.position.set(0, 3.62, -4.535);
+    muGlowPlate.renderOrder = 4;
+    scene.add(muGlowPlate);
+
+    S.muSign = { mesh: muMesh, mat: muMat, glowMat: muGlowPlateMat };
 
     const signFrame = new THREE.Mesh(
       new THREE.BoxGeometry(2.34, 4.04, 0.03),
       new THREE.MeshStandardMaterial({
-        color: 0x0a0a0c,
+        color: 0x080a12,
         roughness: 0.92,
         metalness: 0.12,
         transparent: true,
-        opacity: 0.12,
+        opacity: 0.04,
       }),
     );
-    signFrame.position.set(0, 3.15, -4.57);
+    signFrame.position.set(0, 3.62, -4.57);
     scene.add(signFrame);
 
     // ══════════════════════════════════════════════════
@@ -1173,24 +1187,31 @@ export default function RoomScene({ activeScreen, onScreenClick, onOpenProject }
         const doFlicker = async () => {
           if (!S.muSign || S.disposed) return;
           S.muSign.mat.opacity = 0.1;
+          if (S.muSign.glowMat) S.muSign.glowMat.opacity = 0.03;
           muGlow.intensity = 0.08;
           await new Promise((r) => setTimeout(r, 60));
           if (!S.muSign || S.disposed) return;
-          S.muSign.mat.opacity = 1.0;
-          muGlow.intensity = 1.2;
+          S.muSign.mat.opacity = 0.98;
+          if (S.muSign.glowMat) S.muSign.glowMat.opacity = 0.12;
+          muGlow.intensity = 2.6;
           await new Promise((r) => setTimeout(r, 40));
           if (!S.muSign || S.disposed) return;
           S.muSign.mat.opacity = 0.06;
+          if (S.muSign.glowMat) S.muSign.glowMat.opacity = 0.02;
           muGlow.intensity = 0.04;
           await new Promise((r) => setTimeout(r, 80));
           if (!S.muSign || S.disposed) return;
-          S.muSign.mat.opacity = 1.0;
-          muGlow.intensity = 1.2 + Math.sin(t) * 0.1;
+          S.muSign.mat.opacity = 0.98;
+          if (S.muSign.glowMat) S.muSign.glowMat.opacity = 0.12 + Math.sin(t * 1.1) * 0.02;
+          muGlow.intensity = 2.6 + Math.sin(t) * 0.14;
         };
         doFlicker();
       }
       if (S.muSign && S.muSign.mat.opacity > 0.5) {
-        muGlow.intensity = 1.2 * (1.0 + Math.sin(t * 0.7) * 0.04);
+        if (S.muSign.glowMat) {
+          S.muSign.glowMat.opacity = 0.11 + Math.sin(t * 0.9) * 0.02;
+        }
+        muGlow.intensity = 2.5 * (1.0 + Math.sin(t * 0.7) * 0.05);
       }
 
       if (S.mouseRgbLight) {
