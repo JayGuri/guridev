@@ -73,137 +73,162 @@ function neonStroke(ctx, color, outerBlur, innerBlur, lineW, alpha = 1) {
   ctx.restore();
 }
 
-// ─── Stylized MU neon sign canvas (red/black/white) ─────────────────────────
+// ─── Red devil neon logo canvas ──────────────────────────────────────────────
 function buildMUNeonCanvas() {
-  const W = 512, H = 640;
+  const W = 520, H = 760;
   const cv = document.createElement('canvas');
   cv.width = W; cv.height = H;
   const ctx = cv.getContext('2d');
   const cx = W / 2;
-
-  ctx.fillStyle = '#06010a';
-  ctx.fillRect(0, 0, W, H);
-
-  ctx.save();
-  ctx.strokeStyle = '#1a0a0a';
-  ctx.lineWidth = 18;
-  ctx.strokeRect(14, 14, W - 28, H - 28);
-  ctx.strokeStyle = '#2a1212';
-  ctx.lineWidth = 4;
-  ctx.strokeRect(14, 14, W - 28, H - 28);
-  ctx.restore();
-
-  const arcR = 170;
-  const arcCY = 300;
-  const text = 'MANCHESTER UNITED';
-  const totalA = Math.PI * 0.85;
-  const startA = -Math.PI / 2 - totalA / 2;
-  const charW = totalA / (text.length - 1);
-  ctx.save();
-  ctx.font = 'bold 28px Arial, sans-serif';
-  ctx.textAlign = 'center';
-  text.split('').forEach((ch, i) => {
-    const angle = startA + i * charW;
+  const neonFill = (fillColor, alpha = 1) => {
     ctx.save();
-    ctx.translate(cx + Math.cos(angle) * arcR, arcCY + Math.sin(angle) * arcR);
-    ctx.rotate(angle + Math.PI / 2);
-    ctx.shadowColor = '#ff3030';
-    ctx.shadowBlur = 18;
-    ctx.fillStyle = '#ff4444';
-    ctx.fillText(ch, 0, 0);
-    ctx.shadowBlur = 6;
-    ctx.fillStyle = '#ffffff';
-    ctx.fillText(ch, 0, 0);
+    ctx.globalAlpha = alpha;
+    ctx.shadowColor = '#ff2020';
+    ctx.shadowBlur = 34;
+    ctx.fillStyle = fillColor;
+    ctx.fill();
+    ctx.shadowBlur = 14;
+    ctx.fill();
     ctx.restore();
-  });
-  ctx.restore();
-
-  const shieldPath = () => {
-    ctx.beginPath();
-    ctx.moveTo(cx - 110, 96);
-    ctx.bezierCurveTo(cx - 120, 96, cx - 125, 105, cx - 125, 118);
-    ctx.lineTo(cx - 125, 340);
-    ctx.quadraticCurveTo(cx - 125, 390, cx - 80, 430);
-    ctx.lineTo(cx, 490);
-    ctx.lineTo(cx + 80, 430);
-    ctx.quadraticCurveTo(cx + 125, 390, cx + 125, 340);
-    ctx.lineTo(cx + 125, 118);
-    ctx.bezierCurveTo(cx + 125, 105, cx + 120, 96, cx + 110, 96);
-    ctx.closePath();
   };
 
-  shieldPath();
-  ctx.fillStyle = 'rgba(30,0,0,0.86)';
-  ctx.fill();
-  shieldPath(); neonStroke(ctx, '#ff1010', 40, 12, 3.5);
-  shieldPath(); neonStroke(ctx, '#ff3020', 22, 8, 2.4, 0.7);
-  shieldPath(); neonStroke(ctx, '#ff6050', 10, 4, 1.4, 0.45);
+  const neonOutline = (lineW = 8) => {
+    ctx.save();
+    ctx.shadowColor = '#ffffff';
+    ctx.shadowBlur = 22;
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = lineW;
+    ctx.lineJoin = 'round';
+    ctx.lineCap = 'round';
+    ctx.stroke();
+    ctx.shadowBlur = 8;
+    ctx.lineWidth = lineW * 0.45;
+    ctx.stroke();
+    ctx.restore();
+  };
 
-  [[cx - 115, cx + 115, 155], [cx - 115, cx + 115, 370]].forEach(([x1, x2, y]) => {
-    ctx.beginPath();
-    ctx.moveTo(x1, y); ctx.lineTo(x2, y);
-    neonStroke(ctx, '#ff1010', 16, 6, 1.8, 0.6);
-  });
+  // Transparent canvas so only the logo itself shows up on the back wall.
+  ctx.clearRect(0, 0, W, H);
+  ctx.translate(20, 70);
 
-  ctx.save();
-  ctx.shadowColor = '#ff2020';
-  ctx.shadowBlur = 20;
-  ctx.fillStyle = '#cc1010';
-  ctx.globalAlpha = 0.9;
-  ctx.beginPath(); ctx.ellipse(cx, 250, 32, 48, 0, 0, Math.PI * 2); ctx.fill();
-  ctx.beginPath(); ctx.arc(cx, 186, 22, 0, Math.PI * 2); ctx.fill();
-  ctx.beginPath(); ctx.moveTo(cx - 16, 172); ctx.lineTo(cx - 26, 148); ctx.lineTo(cx - 8, 166); ctx.fill();
-  ctx.beginPath(); ctx.moveTo(cx + 16, 172); ctx.lineTo(cx + 26, 148); ctx.lineTo(cx + 8, 166); ctx.fill();
-  ctx.lineWidth = 3.5;
-  ctx.strokeStyle = '#ff3030';
-  ctx.beginPath(); ctx.moveTo(cx + 55, 200); ctx.lineTo(cx + 55, 310); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(cx + 45, 215); ctx.lineTo(cx + 45, 200); ctx.lineTo(cx + 55, 210); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(cx + 65, 215); ctx.lineTo(cx + 65, 200); ctx.lineTo(cx + 55, 210); ctx.stroke();
-  ctx.lineWidth = 2;
+  // Tail / back curve
   ctx.beginPath();
-  ctx.moveTo(cx - 30, 230);
-  ctx.bezierCurveTo(cx - 75, 195, cx - 90, 245, cx - 70, 275);
-  ctx.bezierCurveTo(cx - 55, 295, cx - 35, 280, cx - 30, 270);
-  ctx.stroke();
-  ctx.beginPath();
-  ctx.moveTo(cx + 30, 230);
-  ctx.bezierCurveTo(cx + 75, 195, cx + 90, 245, cx + 70, 275);
-  ctx.bezierCurveTo(cx + 55, 295, cx + 35, 280, cx + 30, 270);
-  ctx.stroke();
-  ctx.restore();
+  ctx.moveTo(126, 358);
+  ctx.bezierCurveTo(98, 348, 74, 330, 70, 306);
+  ctx.bezierCurveTo(66, 282, 80, 264, 94, 258);
+  ctx.bezierCurveTo(106, 252, 110, 260, 102, 268);
+  ctx.lineTo(86, 260); ctx.lineTo(96, 246); ctx.lineTo(110, 256);
+  ctx.bezierCurveTo(124, 262, 122, 282, 116, 298);
+  ctx.bezierCurveTo(110, 316, 106, 336, 120, 348);
+  ctx.closePath();
+  neonFill('#a40000', 0.92); neonOutline(8);
 
+  // Left arm
+  ctx.beginPath();
+  ctx.moveTo(148, 270); ctx.lineTo(128, 282);
+  ctx.lineTo(94, 264); ctx.lineTo(64, 242);
+  ctx.lineTo(40, 212); ctx.lineTo(28, 190);
+  ctx.lineTo(20, 164); ctx.lineTo(33, 172);
+  ctx.lineTo(26, 153); ctx.lineTo(42, 166);
+  ctx.lineTo(40, 151); ctx.lineTo(54, 170);
+  ctx.lineTo(60, 190); ctx.lineTo(82, 215);
+  ctx.lineTo(108, 238); ctx.lineTo(136, 258);
+  ctx.lineTo(150, 272);
+  ctx.closePath();
+  neonFill('#a40000', 0.95); neonOutline(8);
+
+  // Main torso and head block
+  ctx.beginPath();
+  ctx.moveTo(118, 178);
+  ctx.lineTo(102, 115); ctx.lineTo(132, 158);
+  ctx.lineTo(155, 86);  ctx.lineTo(178, 160);
+  ctx.lineTo(196, 115); ctx.lineTo(210, 175);
+  ctx.quadraticCurveTo(226, 186, 224, 216);
+  ctx.lineTo(218, 242); ctx.lineTo(204, 252);
+  ctx.lineTo(210, 258); ctx.lineTo(224, 272);
+  ctx.lineTo(230, 312); ctx.lineTo(234, 358);
+  ctx.lineTo(218, 372); ctx.lineTo(192, 382);
+  ctx.lineTo(174, 382); ctx.lineTo(144, 372);
+  ctx.lineTo(126, 358); ctx.lineTo(128, 312);
+  ctx.lineTo(136, 258); ctx.lineTo(148, 240);
+  ctx.quadraticCurveTo(140, 212, 118, 178);
+  ctx.closePath();
+  neonFill('#b00000', 0.98); neonOutline(9);
+
+  // Legs
+  ctx.beginPath();
+  ctx.moveTo(174, 382); ctx.lineTo(154, 388);
+  ctx.lineTo(136, 424); ctx.lineTo(126, 460);
+  ctx.lineTo(130, 494); ctx.lineTo(122, 514);
+  ctx.lineTo(84, 518);  ctx.lineTo(78, 508);
+  ctx.lineTo(116, 504); ctx.lineTo(124, 490);
+  ctx.lineTo(150, 462); ctx.lineTo(160, 426);
+  ctx.lineTo(178, 392);
+  ctx.closePath();
+  neonFill('#a40000', 0.95); neonOutline(8);
+
+  ctx.beginPath();
+  ctx.moveTo(192, 382); ctx.lineTo(218, 372);
+  ctx.lineTo(230, 388); ctx.lineTo(248, 420);
+  ctx.lineTo(260, 450); ctx.lineTo(250, 478);
+  ctx.lineTo(236, 494); ctx.lineTo(270, 492);
+  ctx.lineTo(284, 482); ctx.lineTo(274, 466);
+  ctx.lineTo(266, 450); ctx.lineTo(280, 420);
+  ctx.lineTo(266, 390); ctx.lineTo(248, 378);
+  ctx.lineTo(224, 368);
+  ctx.closePath();
+  neonFill('#a40000', 0.95); neonOutline(8);
+
+  // Right arm holding trident
+  ctx.beginPath();
+  ctx.moveTo(212, 260); ctx.lineTo(230, 270);
+  ctx.lineTo(252, 294); ctx.lineTo(262, 322);
+  ctx.lineTo(256, 344); ctx.lineTo(246, 358);
+  ctx.lineTo(242, 365); ctx.lineTo(254, 368);
+  ctx.lineTo(260, 355); ctx.lineTo(270, 344);
+  ctx.lineTo(278, 326); ctx.lineTo(272, 300);
+  ctx.lineTo(252, 274); ctx.lineTo(234, 260);
+  ctx.closePath();
+  neonFill('#a40000', 0.95); neonOutline(8);
+
+  // Trident shaft and head
+  ctx.beginPath(); ctx.rect(255, 354, 12, 166);
+  neonFill('#a40000', 0.95); neonOutline(8);
+
+  ctx.beginPath();
+  ctx.moveTo(226, 232); ctx.lineTo(238, 296); ctx.lineTo(250, 296); ctx.lineTo(244, 232);
+  ctx.closePath();
+  neonFill('#a40000', 0.95); neonOutline(7);
+
+  ctx.beginPath();
+  ctx.moveTo(261, 186); ctx.lineTo(271, 288); ctx.lineTo(251, 288);
+  ctx.closePath();
+  neonFill('#a40000', 0.95); neonOutline(7);
+
+  ctx.beginPath();
+  ctx.moveTo(296, 232); ctx.lineTo(278, 232); ctx.lineTo(272, 296); ctx.lineTo(284, 296);
+  ctx.closePath();
+  neonFill('#a40000', 0.95); neonOutline(7);
+
+  // Eye cutouts
   ctx.save();
-  ctx.font = 'bold 38px Arial, sans-serif';
-  ctx.textAlign = 'center';
-  ctx.shadowColor = '#ff2020';
-  ctx.shadowBlur = 30;
-  ctx.fillStyle = '#ff3030';
-  ctx.fillText('MUFC', cx, 420);
-  ctx.shadowBlur = 8;
   ctx.fillStyle = '#ffffff';
-  ctx.fillText('MUFC', cx, 420);
-  ctx.restore();
-
-  ctx.save();
-  ctx.font = 'bold 22px Arial, sans-serif';
-  ctx.textAlign = 'center';
   ctx.shadowColor = '#ffffff';
   ctx.shadowBlur = 18;
-  ctx.fillStyle = '#ffdddd';
-  ctx.fillText('EST. 1878', cx, 468);
-  ctx.shadowBlur = 5;
-  ctx.fillStyle = '#ffffff';
-  ctx.fillText('EST. 1878', cx, 468);
+  ctx.beginPath(); ctx.moveTo(151, 196); ctx.lineTo(164, 187); ctx.lineTo(167, 208); ctx.lineTo(154, 210); ctx.closePath(); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(193, 188); ctx.lineTo(206, 196); ctx.lineTo(203, 210); ctx.lineTo(190, 208); ctx.closePath(); ctx.fill();
   ctx.restore();
 
-  [[20, 20], [W - 20, 20], [20, H - 20], [W - 20, H - 20]].forEach(([x, y]) => {
-    ctx.save();
-    ctx.shadowColor = '#ff1010';
-    ctx.shadowBlur = 14;
-    ctx.fillStyle = '#ff3030';
-    ctx.beginPath(); ctx.arc(x, y, 5, 0, Math.PI * 2); ctx.fill();
-    ctx.restore();
-  });
+  // Mouth / beard cutout highlight
+  ctx.save();
+  ctx.fillStyle = '#ffffff';
+  ctx.shadowColor = '#ffffff';
+  ctx.shadowBlur = 16;
+  ctx.beginPath();
+  ctx.moveTo(176, 226); ctx.lineTo(189, 226); ctx.lineTo(182, 245);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
 
   return cv;
 }
@@ -451,8 +476,8 @@ export default function RoomScene({ activeScreen, onScreenClick, onOpenProject }
     rimLight.position.set(0, 3.5, -3.6);
     scene.add(rimLight);
 
-    const muGlow = new THREE.PointLight(0xff1010, 1.2, 4.5, 2.0);
-    muGlow.position.set(0, 3.8, -4.2);
+    const muGlow = new THREE.PointLight(0xff1010, 2.1, 6.5, 1.9);
+    muGlow.position.set(0, 3.35, -4.1);
     scene.add(muGlow);
 
     // Per-monitor glow lights — these illuminate the desk/keyboard
@@ -515,20 +540,32 @@ export default function RoomScene({ activeScreen, onScreenClick, onOpenProject }
     deskLedLight.position.set(0, DESK_Y - 0.08, 0.0);
     scene.add(deskLedLight);
 
-    // Back-wall neon sign to add personality and red ambient bounce.
-    const muCanvas = buildMUNeonCanvas();
-    const muTex = new THREE.CanvasTexture(muCanvas);
-    const muMat = new THREE.MeshBasicMaterial({ map: muTex, transparent: true, opacity: 1.0 });
-    const muMesh = new THREE.Mesh(new THREE.PlaneGeometry(1.62, 2.04), muMat);
-    muMesh.position.set(0, 3.85, -4.54);
+    // Use the real reference image so the back-wall sign matches the desired look.
+    const muTex = new THREE.TextureLoader().load('/785d1f69766098745a997a84fd58212f.jpg');
+    muTex.colorSpace = THREE.SRGBColorSpace;
+    const muMat = new THREE.MeshBasicMaterial({
+      map: muTex,
+      transparent: false,
+      opacity: 1.0,
+      depthWrite: false,
+    });
+    const muMesh = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 3.9), muMat);
+    muMesh.position.set(0, 3.15, -4.52);
+    muMesh.renderOrder = 5;
     scene.add(muMesh);
     S.muSign = { mesh: muMesh, mat: muMat };
 
     const signFrame = new THREE.Mesh(
-      new THREE.BoxGeometry(1.78, 2.20, 0.06),
-      new THREE.MeshStandardMaterial({ color: 0x120808, roughness: 0.7, metalness: 0.5 }),
+      new THREE.BoxGeometry(2.34, 4.04, 0.03),
+      new THREE.MeshStandardMaterial({
+        color: 0x0a0a0c,
+        roughness: 0.92,
+        metalness: 0.12,
+        transparent: true,
+        opacity: 0.12,
+      }),
     );
-    signFrame.position.set(0, 3.85, -4.56);
+    signFrame.position.set(0, 3.15, -4.57);
     scene.add(signFrame);
 
     // ══════════════════════════════════════════════════
