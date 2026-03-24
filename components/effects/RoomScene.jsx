@@ -476,9 +476,17 @@ export default function RoomScene({ activeScreen, onScreenClick, onOpenProject }
     rimLight.position.set(0, 3.5, -3.6);
     scene.add(rimLight);
 
-    const muGlow = new THREE.PointLight(0xff1010, 3.0, 7.8, 1.8);
+    const muGlow = new THREE.PointLight(0xff1010, 3.8, 8.6, 1.7);
     muGlow.position.set(0, 3.95, -4.12);
     scene.add(muGlow);
+
+    const muWallSpill = new THREE.PointLight(0xff3030, 1.15, 8.0, 2.1);
+    muWallSpill.position.set(0, 2.55, -2.65);
+    scene.add(muWallSpill);
+
+    const muDeskSpill = new THREE.PointLight(0xaa1010, 0.42, 4.6, 2.3);
+    muDeskSpill.position.set(0, 1.18, -0.15);
+    scene.add(muDeskSpill);
 
     // Per-monitor glow lights — these illuminate the desk/keyboard
     Object.entries(MONITOR_CONFIG).forEach(([id, cfg]) => {
@@ -591,7 +599,7 @@ export default function RoomScene({ activeScreen, onScreenClick, onOpenProject }
     const muMat = new THREE.MeshBasicMaterial({
       map: muTex,
       transparent: true,
-      opacity: 0.96,
+      opacity: 1.0,
       alphaTest: 0.06,
       blending: THREE.NormalBlending,
       depthWrite: false,
@@ -618,7 +626,7 @@ export default function RoomScene({ activeScreen, onScreenClick, onOpenProject }
       map: haloTex,
       color: 0xff4040,
       transparent: true,
-      opacity: 0.18,
+      opacity: 0.25,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
     });
@@ -1247,31 +1255,41 @@ export default function RoomScene({ activeScreen, onScreenClick, onOpenProject }
         const doFlicker = async () => {
           if (!S.muSign || S.disposed) return;
           S.muSign.mat.opacity = 0.1;
-          if (S.muSign.glowMat) S.muSign.glowMat.opacity = 0.03;
+          if (S.muSign.glowMat) S.muSign.glowMat.opacity = 0.05;
           muGlow.intensity = 0.08;
+          muWallSpill.intensity = 0.18;
+          muDeskSpill.intensity = 0.08;
           await new Promise((r) => setTimeout(r, 60));
           if (!S.muSign || S.disposed) return;
           S.muSign.mat.opacity = 0.98;
-          if (S.muSign.glowMat) S.muSign.glowMat.opacity = 0.12;
-          muGlow.intensity = 2.6;
+          if (S.muSign.glowMat) S.muSign.glowMat.opacity = 0.25;
+          muGlow.intensity = 3.5;
+          muWallSpill.intensity = 1.05;
+          muDeskSpill.intensity = 0.36;
           await new Promise((r) => setTimeout(r, 40));
           if (!S.muSign || S.disposed) return;
           S.muSign.mat.opacity = 0.06;
           if (S.muSign.glowMat) S.muSign.glowMat.opacity = 0.02;
           muGlow.intensity = 0.04;
+          muWallSpill.intensity = 0.12;
+          muDeskSpill.intensity = 0.05;
           await new Promise((r) => setTimeout(r, 80));
           if (!S.muSign || S.disposed) return;
           S.muSign.mat.opacity = 0.98;
-          if (S.muSign.glowMat) S.muSign.glowMat.opacity = 0.12 + Math.sin(t * 1.1) * 0.02;
-          muGlow.intensity = 2.6 + Math.sin(t) * 0.14;
+          if (S.muSign.glowMat) S.muSign.glowMat.opacity = 0.24 + Math.sin(t * 1.1) * 0.03;
+          muGlow.intensity = 3.5 + Math.sin(t) * 0.18;
+          muWallSpill.intensity = 1.02 + Math.sin(t * 0.8) * 0.08;
+          muDeskSpill.intensity = 0.34 + Math.sin(t * 0.7) * 0.04;
         };
         doFlicker();
       }
       if (S.muSign && S.muSign.mat.opacity > 0.5) {
         if (S.muSign.glowMat) {
-          S.muSign.glowMat.opacity = 0.11 + Math.sin(t * 0.9) * 0.02;
+          S.muSign.glowMat.opacity = 0.23 + Math.sin(t * 0.9) * 0.03;
         }
-        muGlow.intensity = 2.5 * (1.0 + Math.sin(t * 0.7) * 0.05);
+        muGlow.intensity = 3.4 * (1.0 + Math.sin(t * 0.7) * 0.06);
+        muWallSpill.intensity = 0.98 + Math.sin(t * 0.6) * 0.08;
+        muDeskSpill.intensity = 0.32 + Math.sin(t * 0.75) * 0.04;
       }
 
       if (S.mouseRgbLight) {
