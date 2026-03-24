@@ -476,8 +476,8 @@ export default function RoomScene({ activeScreen, onScreenClick, onOpenProject }
     rimLight.position.set(0, 3.5, -3.6);
     scene.add(rimLight);
 
-    const muGlow = new THREE.PointLight(0xff1010, 2.8, 7.2, 1.8);
-    muGlow.position.set(0, 3.75, -4.12);
+    const muGlow = new THREE.PointLight(0xff1010, 3.0, 7.8, 1.8);
+    muGlow.position.set(0, 3.95, -4.12);
     scene.add(muGlow);
 
     // Per-monitor glow lights — these illuminate the desk/keyboard
@@ -540,30 +540,90 @@ export default function RoomScene({ activeScreen, onScreenClick, onOpenProject }
     deskLedLight.position.set(0, DESK_Y - 0.08, 0.0);
     scene.add(deskLedLight);
 
-    // Use the real reference image so the back-wall sign matches the desired look.
-    const muTex = new THREE.TextureLoader().load('/785d1f69766098745a997a84fd58212f.jpg');
+    // Process the JPG into a keyed canvas texture so the black background blends
+    // into the wall while preserving a sharper devil silhouette.
+    const muCanvas = document.createElement('canvas');
+    muCanvas.width = 520;
+    muCanvas.height = 760;
+    const muCtx = muCanvas.getContext('2d');
+    const muTex = new THREE.CanvasTexture(muCanvas);
     muTex.colorSpace = THREE.SRGBColorSpace;
+    muTex.minFilter = THREE.LinearFilter;
+    muTex.magFilter = THREE.LinearFilter;
+    muTex.generateMipmaps = false;
+
+    new THREE.TextureLoader().load('/785d1f69766098745a997a84fd58212f.jpg', (loadedTexture) => {
+      const img = loadedTexture.image;
+      const drawW = muCanvas.width;
+      const drawH = muCanvas.height;
+      muCtx.clearRect(0, 0, drawW, drawH);
+      muCtx.drawImage(img, 0, 0, drawW, drawH);
+
+      const imgData = muCtx.getImageData(0, 0, drawW, drawH);
+      const data = imgData.data;
+      for (let i = 0; i < data.length; i += 4) {
+        const r = data[i];
+        const g = data[i + 1];
+        const b = data[i + 2];
+        const maxC = Math.max(r, g, b);
+        const minC = Math.min(r, g, b);
+        const spread = maxC - minC;
+        const alphaBase = Math.max(0, Math.min(1, (maxC - 12) / 118));
+        const alpha = Math.pow(alphaBase, 1.28);
+        const isWhite = maxC > 150 && spread < 42;
+
+        if (isWhite) {
+          data[i] = Math.min(255, r * 1.08 + 18);
+          data[i + 1] = Math.min(255, g * 1.08 + 18);
+          data[i + 2] = Math.min(255, b * 1.08 + 18);
+        } else {
+          data[i] = Math.min(255, r * 1.12 + 14);
+          data[i + 1] = g * 0.78;
+          data[i + 2] = b * 0.78;
+        }
+        data[i + 3] = Math.round(alpha * 255);
+      }
+      muCtx.putImageData(imgData, 0, 0);
+      muTex.needsUpdate = true;
+      loadedTexture.dispose();
+    });
+
     const muMat = new THREE.MeshBasicMaterial({
       map: muTex,
       transparent: true,
-      opacity: 0.98,
-      blending: THREE.AdditiveBlending,
+      opacity: 0.96,
+      alphaTest: 0.06,
+      blending: THREE.NormalBlending,
       depthWrite: false,
     });
-    const muMesh = new THREE.Mesh(new THREE.PlaneGeometry(2.15, 3.82), muMat);
-    muMesh.position.set(0, 3.62, -4.52);
+    const muMesh = new THREE.Mesh(new THREE.PlaneGeometry(2.08, 3.74), muMat);
+    muMesh.position.set(0, 3.82, -4.52);
     muMesh.renderOrder = 5;
     scene.add(muMesh);
 
+    const haloCanvas = document.createElement('canvas');
+    haloCanvas.width = 256;
+    haloCanvas.height = 256;
+    const haloCtx = haloCanvas.getContext('2d');
+    const haloGrad = haloCtx.createRadialGradient(128, 128, 14, 128, 128, 128);
+    haloGrad.addColorStop(0, 'rgba(255,64,64,0.42)');
+    haloGrad.addColorStop(0.25, 'rgba(255,48,48,0.26)');
+    haloGrad.addColorStop(0.65, 'rgba(160,24,24,0.10)');
+    haloGrad.addColorStop(1, 'rgba(0,0,0,0)');
+    haloCtx.fillStyle = haloGrad;
+    haloCtx.fillRect(0, 0, 256, 256);
+    const haloTex = new THREE.CanvasTexture(haloCanvas);
+
     const muGlowPlateMat = new THREE.MeshBasicMaterial({
-      color: 0xff2020,
+      map: haloTex,
+      color: 0xff4040,
       transparent: true,
-      opacity: 0.12,
+      opacity: 0.18,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
     });
-    const muGlowPlate = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 4.25), muGlowPlateMat);
-    muGlowPlate.position.set(0, 3.62, -4.535);
+    const muGlowPlate = new THREE.Mesh(new THREE.PlaneGeometry(3.15, 4.8), muGlowPlateMat);
+    muGlowPlate.position.set(0, 3.82, -4.535);
     muGlowPlate.renderOrder = 4;
     scene.add(muGlowPlate);
 
@@ -579,7 +639,7 @@ export default function RoomScene({ activeScreen, onScreenClick, onOpenProject }
         opacity: 0.04,
       }),
     );
-    signFrame.position.set(0, 3.62, -4.57);
+    signFrame.position.set(0, 3.82, -4.57);
     scene.add(signFrame);
 
     // ══════════════════════════════════════════════════
@@ -819,21 +879,21 @@ export default function RoomScene({ activeScreen, onScreenClick, onOpenProject }
       new THREE.MeshBasicMaterial({ map: diaryCanvas }),
     );
     diaryTop.rotation.x = -Math.PI / 2;
-    diaryTop.position.set(-3.55, DESK_Y + 0.017, -0.12);
-    diaryTop.rotation.z = 0.22;
+    diaryTop.position.set(-3.50, DESK_Y + 0.017, -0.08);
+    diaryTop.rotation.z = 0.18;
     scene.add(diaryTop);
     const diaryBody = new THREE.Mesh(
       new THREE.BoxGeometry(0.60, 0.022, 0.90),
       new THREE.MeshStandardMaterial({ color: 0x1a1030, roughness: 0.88 }),
     );
-    diaryBody.position.set(-3.55, DESK_Y + 0.009, -0.12);
-    diaryBody.rotation.y = 0.22;
+    diaryBody.position.set(-3.50, DESK_Y + 0.009, -0.08);
+    diaryBody.rotation.y = 0.18;
     scene.add(diaryBody);
 
     // Pen on notebook
     const penMat = new THREE.MeshStandardMaterial({ color: 0x28C840, roughness: 0.6, metalness: 0.3, emissive: new THREE.Color(0x28C840), emissiveIntensity: 0.05 });
     const pen    = new THREE.Mesh(new THREE.CylinderGeometry(0.006, 0.006, 0.36, 6), penMat);
-    pen.rotation.z = 0.1; pen.position.set(-3.46, DESK_Y + 0.025, 0.06);
+    pen.rotation.z = 0.18; pen.position.set(-3.40, DESK_Y + 0.025, 0.10);
     scene.add(pen);
 
     // Mini cactus (right side)
@@ -1242,10 +1302,10 @@ export default function RoomScene({ activeScreen, onScreenClick, onOpenProject }
         const m        = S.screens[id];
         const isActive = S.activeId === id;
         const isHover  = S.hovered === id;
-        const baseO    = isActive ? 0.14 : isHover ? 0.09 : 0.04;
+        const baseO    = isActive ? 0.11 : isHover ? 0.07 : 0.03;
         const pulse    = Math.sin(t * 1.9 + idx * 1.4) * 0.016;
         m.glowMat.opacity          = Math.max(0, baseO + pulse);
-        S.monLights[id].intensity  = isActive ? 3.2 : isHover ? 2.2 : 1.8;
+        S.monLights[id].intensity  = isActive ? 2.8 : isHover ? 2.0 : 1.45;
       });
 
       // Lamp flicker
