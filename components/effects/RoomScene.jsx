@@ -256,20 +256,31 @@ function buildScreenCanvas(id) {
   const ctx = cv.getContext('2d');
   const d   = SCREENS_DATA[id];
 
-  // Background
-  ctx.fillStyle = '#0d1117';
+  // Richer screen background with slight vertical falloff so the UI
+  // feels lit from within instead of painted flat on a dark card.
+  const bgGrad = ctx.createLinearGradient(0, 0, 0, CH);
+  bgGrad.addColorStop(0, '#121927');
+  bgGrad.addColorStop(0.55, '#0f1723');
+  bgGrad.addColorStop(1, '#0b111b');
+  ctx.fillStyle = bgGrad;
   ctx.fillRect(0, 0, CW, CH);
 
-  // Subtle CRT scanlines
-  for (let sy = 0; sy < CH; sy += 3) {
-    ctx.fillStyle = 'rgba(0,0,0,0.055)';
+  const bloom = ctx.createRadialGradient(CW * 0.5, CH * 0.12, 10, CW * 0.5, CH * 0.12, CW * 0.7);
+  bloom.addColorStop(0, 'rgba(124,111,247,0.08)');
+  bloom.addColorStop(0.45, 'rgba(50,80,140,0.05)');
+  bloom.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = bloom;
+  ctx.fillRect(0, 0, CW, CH);
+
+  for (let sy = 0; sy < CH; sy += 4) {
+    ctx.fillStyle = 'rgba(255,255,255,0.02)';
     ctx.fillRect(0, sy, CW, 1);
   }
 
   // ── Title bar ──
-  ctx.fillStyle = '#161b22';
+  ctx.fillStyle = '#161f2f';
   ctx.fillRect(0, 0, CW, 52);
-  ctx.strokeStyle = '#30363d'; ctx.lineWidth = 1;
+  ctx.strokeStyle = '#2a3447'; ctx.lineWidth = 1;
   ctx.beginPath(); ctx.moveTo(0, 52); ctx.lineTo(CW, 52); ctx.stroke();
 
   // Traffic lights
@@ -285,7 +296,7 @@ function buildScreenCanvas(id) {
 
   // Right status
   ctx.font = '12px "JetBrains Mono","Courier New",monospace';
-  ctx.fillStyle = '#3d444d';
+  ctx.fillStyle = '#74839a';
   const stxt = `${d.projects.length} entries`;
   ctx.fillText(stxt, CW - ctx.measureText(stxt).width - 20, 32);
 
@@ -294,12 +305,12 @@ function buildScreenCanvas(id) {
   ctx.font = '13px "JetBrains Mono","Courier New",monospace';
   let cx = 24;
   ctx.fillStyle = '#28C840'; ctx.fillText('visitor@portfolio', cx, 82); cx += pw('visitor@portfolio');
-  ctx.fillStyle = '#7d8590'; ctx.fillText(':', cx, 82); cx += pw(':');
+  ctx.fillStyle = '#8f9db4'; ctx.fillText(':', cx, 82); cx += pw(':');
   ctx.fillStyle = d.color;   ctx.fillText('~/work', cx, 82);            cx += pw('~/work');
-  ctx.fillStyle = '#e6edf3'; ctx.fillText(' ❯ cat projects.json', cx, 82);
+  ctx.fillStyle = '#edf4ff'; ctx.fillText(' ❯ cat projects.json', cx, 82);
 
   // Divider
-  ctx.fillStyle = '#21262d';
+  ctx.fillStyle = '#253146';
   ctx.fillRect(24, 98, CW - 48, 1);
 
   // ── Category heading ──
@@ -307,7 +318,7 @@ function buildScreenCanvas(id) {
   ctx.fillStyle = d.color;
   ctx.fillText(d.label, 24, 134);
   ctx.font = '12px "JetBrains Mono","Courier New",monospace';
-  ctx.fillStyle = '#3d444d';
+  ctx.fillStyle = '#70829c';
   ctx.fillText(`[ ${d.projects.length} projects ]`, 28 + pw(d.label), 134);
 
   // ── Project rows ──
@@ -322,9 +333,12 @@ function buildScreenCanvas(id) {
     zones.push({ yMin: ry, yMax: ry + rowH });
 
     // Card BG
-    ctx.fillStyle = 'rgba(20,28,46,0.70)';
+    const cardGrad = ctx.createLinearGradient(0, ry, 0, ry + rowH);
+    cardGrad.addColorStop(0, 'rgba(33,45,68,0.92)');
+    cardGrad.addColorStop(1, 'rgba(22,31,49,0.94)');
+    ctx.fillStyle = cardGrad;
     rr(ctx, 14, ry, CW - 28, rowH, 6); ctx.fill();
-    ctx.strokeStyle = '#253055'; ctx.lineWidth = 0.8;
+    ctx.strokeStyle = 'rgba(102,132,190,0.35)'; ctx.lineWidth = 0.9;
     rr(ctx, 14, ry, CW - 28, rowH, 6); ctx.stroke();
 
     // Left accent
@@ -333,45 +347,45 @@ function buildScreenCanvas(id) {
 
     // Index
     ctx.font = '11px "JetBrains Mono","Courier New",monospace';
-    ctx.fillStyle = '#3d444d';
+    ctx.fillStyle = '#8292a7';
     ctx.fillText(`0${i + 1}`, 28, ry + 20);
 
     // Project name
-    ctx.font = 'bold 17px "JetBrains Mono","Courier New",monospace';
-    ctx.fillStyle = '#79c0ff';
-    ctx.fillText(p.name, 60, ry + 22);
+    ctx.font = 'bold 18px "JetBrains Mono","Courier New",monospace';
+    ctx.fillStyle = '#dfeaff';
+    ctx.fillText(p.name, 60, ry + 24);
 
     // "→ open" pill
     const btnLabel = '→ open';
     const btnW     = ctx.measureText(btnLabel).width + 22;
     ctx.font = '12px "JetBrains Mono","Courier New",monospace';
-    ctx.fillStyle = d.color + '22';
+    ctx.fillStyle = d.color + '33';
     rr(ctx, CW - btnW - 16, ry + 7, btnW, 22, 4); ctx.fill();
-    ctx.strokeStyle = d.color + '55'; ctx.lineWidth = 0.7;
+    ctx.strokeStyle = d.color + '88'; ctx.lineWidth = 0.9;
     rr(ctx, CW - btnW - 16, ry + 7, btnW, 22, 4); ctx.stroke();
     ctx.fillStyle = d.color;
     ctx.fillText(btnLabel, CW - btnW - 5, ry + 22);
 
     // Tech stack
     ctx.font = '13px "JetBrains Mono","Courier New",monospace';
-    ctx.fillStyle = '#ffa657';
-    ctx.fillText(p.tech, 60, ry + 44);
+    ctx.fillStyle = '#ffd18e';
+    ctx.fillText(p.tech, 60, ry + 48);
 
     // Description (truncate)
-    ctx.font = '12px "JetBrains Mono","Courier New",monospace';
-    ctx.fillStyle = '#8b949e';
+    ctx.font = '12.5px "JetBrains Mono","Courier New",monospace';
+    ctx.fillStyle = '#b9c5d7';
     const maxW = CW - 60 - btnW - 30;
     let desc = p.desc;
     while (desc.length > 4 && ctx.measureText(desc).width > maxW) desc = desc.slice(0, -1);
     if (desc !== p.desc) desc = desc.trimEnd() + '…';
-    ctx.fillText(desc, 60, ry + 64);
+    ctx.fillText(desc, 60, ry + 68);
 
     // Links
     if (rowH >= 90) {
-      ctx.font = '11px "JetBrains Mono","Courier New",monospace';
+      ctx.font = '11.5px "JetBrains Mono","Courier New",monospace';
       let lx = 60;
       if (p.github) {
-        ctx.fillStyle = '#388bfd';
+        ctx.fillStyle = '#66b2ff';
         ctx.fillText('⌥ GitHub', lx, ry + rowH - 14);
         lx += ctx.measureText('⌥ GitHub').width + 18;
       }
@@ -383,12 +397,12 @@ function buildScreenCanvas(id) {
   });
 
   // ── Footer bar ──
-  ctx.fillStyle = '#161b22';
+  ctx.fillStyle = '#151e2c';
   ctx.fillRect(0, CH - 36, CW, 36);
-  ctx.strokeStyle = '#21262d'; ctx.lineWidth = 0.5;
+  ctx.strokeStyle = '#243044'; ctx.lineWidth = 0.5;
   ctx.beginPath(); ctx.moveTo(0, CH - 36); ctx.lineTo(CW, CH - 36); ctx.stroke();
   ctx.font = '11px "JetBrains Mono","Courier New",monospace';
-  ctx.fillStyle = '#3d444d';
+  ctx.fillStyle = '#7a8da6';
   ctx.fillText('click a project to open details · esc to close', 24, CH - 13);
   ctx.fillStyle = d.color;
   ctx.fillText(' ▮', 24 + ctx.measureText('click a project to open details · esc to close').width, CH - 13);
@@ -1074,14 +1088,44 @@ export default function RoomScene({ activeScreen, onScreenClick, onOpenProject }
       //    regardless of scene lighting (this is correct for monitors)
       const { canvas, zones, canvasH } = buildScreenCanvas(id);
       const screenTex = new THREE.CanvasTexture(canvas);
+      screenTex.colorSpace = THREE.SRGBColorSpace;
+      screenTex.minFilter = THREE.LinearFilter;
+      screenTex.magFilter = THREE.LinearFilter;
       const screenMesh = new THREE.Mesh(
         new THREE.PlaneGeometry(2.22, 1.36),
-        new THREE.MeshBasicMaterial({ map: screenTex }),
+        new THREE.MeshBasicMaterial({ map: screenTex, toneMapped: false }),
       );
       screenMesh.position.z = 0.064;
       screenMesh.userData   = { isScreen: true, screenId: id, zones, canvasH };
       group.add(screenMesh);
       S.clickTargets.push(screenMesh);
+
+      const glassOverlay = new THREE.Mesh(
+        new THREE.PlaneGeometry(2.23, 1.37),
+        new THREE.MeshBasicMaterial({
+          color: 0x9fbfff,
+          transparent: true,
+          opacity: 0.05,
+          blending: THREE.AdditiveBlending,
+          depthWrite: false,
+        }),
+      );
+      glassOverlay.position.z = 0.066;
+      group.add(glassOverlay);
+
+      const glare = new THREE.Mesh(
+        new THREE.PlaneGeometry(0.44, 1.16),
+        new THREE.MeshBasicMaterial({
+          color: 0xffffff,
+          transparent: true,
+          opacity: 0.03,
+          blending: THREE.AdditiveBlending,
+          depthWrite: false,
+        }),
+      );
+      glare.position.set(-0.56, 0.0, 0.067);
+      glare.rotation.z = 0.18;
+      group.add(glare);
 
       // Very subtle edge glow (additive overlay)
       const glowMat = new THREE.MeshBasicMaterial({
@@ -1320,10 +1364,10 @@ export default function RoomScene({ activeScreen, onScreenClick, onOpenProject }
         const m        = S.screens[id];
         const isActive = S.activeId === id;
         const isHover  = S.hovered === id;
-        const baseO    = isActive ? 0.11 : isHover ? 0.07 : 0.03;
+        const baseO    = isActive ? 0.09 : isHover ? 0.06 : 0.025;
         const pulse    = Math.sin(t * 1.9 + idx * 1.4) * 0.016;
         m.glowMat.opacity          = Math.max(0, baseO + pulse);
-        S.monLights[id].intensity  = isActive ? 2.8 : isHover ? 2.0 : 1.45;
+        S.monLights[id].intensity  = isActive ? 2.35 : isHover ? 1.8 : 1.25;
       });
 
       // Lamp flicker
