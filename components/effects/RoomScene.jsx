@@ -57,180 +57,128 @@ function rr(ctx, x, y, w, h, r) {
   ctx.closePath();
 }
 
-// ─── Neon helper for sign strokes ────────────────────────────────────────────
-function neonStroke(ctx, color, outerBlur, innerBlur, lineW, alpha = 1) {
-  ctx.save();
-  ctx.shadowColor = color;
-  ctx.shadowBlur = outerBlur;
-  ctx.strokeStyle = color;
-  ctx.globalAlpha = alpha;
-  ctx.lineWidth = lineW;
-  ctx.stroke();
-  ctx.shadowBlur = innerBlur;
-  ctx.strokeStyle = '#ffffff';
-  ctx.lineWidth = lineW * 0.28;
-  ctx.stroke();
-  ctx.restore();
-}
+function drawMURedDevilToCanvas(ctx, targetCanvas, image, glowCtx) {
+  const fullW = image.width;
+  const fullH = image.height;
+  const sample = document.createElement('canvas');
+  sample.width = fullW;
+  sample.height = fullH;
+  const sampleCtx = sample.getContext('2d');
+  sampleCtx.drawImage(image, 0, 0, fullW, fullH);
 
-// ─── Red devil neon logo canvas ──────────────────────────────────────────────
-function buildMUNeonCanvas() {
-  const W = 520, H = 760;
-  const cv = document.createElement('canvas');
-  cv.width = W; cv.height = H;
-  const ctx = cv.getContext('2d');
-  const cx = W / 2;
-  const neonFill = (fillColor, alpha = 1) => {
-    ctx.save();
-    ctx.globalAlpha = alpha;
-    ctx.shadowColor = '#ff2020';
-    ctx.shadowBlur = 34;
-    ctx.fillStyle = fillColor;
-    ctx.fill();
-    ctx.shadowBlur = 14;
-    ctx.fill();
-    ctx.restore();
-  };
+  const src = sampleCtx.getImageData(0, 0, fullW, fullH);
+  const px = src.data;
+  let minX = fullW;
+  let minY = fullH;
+  let maxX = 0;
+  let maxY = 0;
 
-  const neonOutline = (lineW = 8) => {
-    ctx.save();
-    ctx.shadowColor = '#ffffff';
-    ctx.shadowBlur = 22;
-    ctx.strokeStyle = '#ffffff';
-    ctx.lineWidth = lineW;
-    ctx.lineJoin = 'round';
-    ctx.lineCap = 'round';
-    ctx.stroke();
-    ctx.shadowBlur = 8;
-    ctx.lineWidth = lineW * 0.45;
-    ctx.stroke();
-    ctx.restore();
-  };
+  for (let y = 0; y < fullH; y++) {
+    for (let x = 0; x < fullW; x++) {
+      const i = (y * fullW + x) * 4;
+      const r = px[i];
+      const g = px[i + 1];
+      const b = px[i + 2];
+      const maxC = Math.max(r, g, b);
+      const minC = Math.min(r, g, b);
+      const spread = maxC - minC;
+      const sat = maxC === 0 ? 0 : spread / maxC;
+      const isRed = r > 58 && r > g * 1.28 && r > b * 1.28 && sat > 0.24;
+      const isWhite = maxC > 170 && sat < 0.14;
+      const isForeground = isRed || isWhite;
+      if (isForeground) {
+        if (x < minX) minX = x;
+        if (x > maxX) maxX = x;
+        if (y < minY) minY = y;
+        if (y > maxY) maxY = y;
+      }
+    }
+  }
 
-  // Transparent canvas so only the logo itself shows up on the back wall.
-  ctx.clearRect(0, 0, W, H);
-  ctx.translate(20, 70);
+  if (minX >= maxX || minY >= maxY) {
+    minX = 0;
+    minY = 0;
+    maxX = fullW;
+    maxY = fullH;
+  }
 
-  // Tail / back curve
-  ctx.beginPath();
-  ctx.moveTo(126, 358);
-  ctx.bezierCurveTo(98, 348, 74, 330, 70, 306);
-  ctx.bezierCurveTo(66, 282, 80, 264, 94, 258);
-  ctx.bezierCurveTo(106, 252, 110, 260, 102, 268);
-  ctx.lineTo(86, 260); ctx.lineTo(96, 246); ctx.lineTo(110, 256);
-  ctx.bezierCurveTo(124, 262, 122, 282, 116, 298);
-  ctx.bezierCurveTo(110, 316, 106, 336, 120, 348);
-  ctx.closePath();
-  neonFill('#a40000', 0.92); neonOutline(8);
+  const padX = 34;
+  const padY = 28;
+  minX = Math.max(0, minX - padX);
+  minY = Math.max(0, minY - padY);
+  maxX = Math.min(fullW, maxX + padX);
+  maxY = Math.min(fullH, maxY + padY);
 
-  // Left arm
-  ctx.beginPath();
-  ctx.moveTo(148, 270); ctx.lineTo(128, 282);
-  ctx.lineTo(94, 264); ctx.lineTo(64, 242);
-  ctx.lineTo(40, 212); ctx.lineTo(28, 190);
-  ctx.lineTo(20, 164); ctx.lineTo(33, 172);
-  ctx.lineTo(26, 153); ctx.lineTo(42, 166);
-  ctx.lineTo(40, 151); ctx.lineTo(54, 170);
-  ctx.lineTo(60, 190); ctx.lineTo(82, 215);
-  ctx.lineTo(108, 238); ctx.lineTo(136, 258);
-  ctx.lineTo(150, 272);
-  ctx.closePath();
-  neonFill('#a40000', 0.95); neonOutline(8);
+  const cropW = maxX - minX;
+  const cropH = maxY - minY;
+  ctx.clearRect(0, 0, targetCanvas.width, targetCanvas.height);
+  ctx.drawImage(image, minX, minY, cropW, cropH, 0, 0, targetCanvas.width, targetCanvas.height);
 
-  // Main torso and head block
-  ctx.beginPath();
-  ctx.moveTo(118, 178);
-  ctx.lineTo(102, 115); ctx.lineTo(132, 158);
-  ctx.lineTo(155, 86);  ctx.lineTo(178, 160);
-  ctx.lineTo(196, 115); ctx.lineTo(210, 175);
-  ctx.quadraticCurveTo(226, 186, 224, 216);
-  ctx.lineTo(218, 242); ctx.lineTo(204, 252);
-  ctx.lineTo(210, 258); ctx.lineTo(224, 272);
-  ctx.lineTo(230, 312); ctx.lineTo(234, 358);
-  ctx.lineTo(218, 372); ctx.lineTo(192, 382);
-  ctx.lineTo(174, 382); ctx.lineTo(144, 372);
-  ctx.lineTo(126, 358); ctx.lineTo(128, 312);
-  ctx.lineTo(136, 258); ctx.lineTo(148, 240);
-  ctx.quadraticCurveTo(140, 212, 118, 178);
-  ctx.closePath();
-  neonFill('#b00000', 0.98); neonOutline(9);
+  const keyed = ctx.getImageData(0, 0, targetCanvas.width, targetCanvas.height);
+  const keyedData = keyed.data;
+  for (let i = 0; i < keyedData.length; i += 4) {
+    const r = keyedData[i];
+    const g = keyedData[i + 1];
+    const b = keyedData[i + 2];
+    const maxC = Math.max(r, g, b);
+    const minC = Math.min(r, g, b);
+    const spread = maxC - minC;
+    const sat = maxC === 0 ? 0 : spread / maxC;
+    const redLike = r > 58 && r > g * 1.24 && r > b * 1.24 && sat > 0.22;
+    const whiteLike = maxC > 172 && sat < 0.15;
+    const redEdge = r > 44 && r > g * 1.12 && r > b * 1.12;
+    const softWhite = maxC > 126 && sat < 0.20;
 
-  // Legs
-  ctx.beginPath();
-  ctx.moveTo(174, 382); ctx.lineTo(154, 388);
-  ctx.lineTo(136, 424); ctx.lineTo(126, 460);
-  ctx.lineTo(130, 494); ctx.lineTo(122, 514);
-  ctx.lineTo(84, 518);  ctx.lineTo(78, 508);
-  ctx.lineTo(116, 504); ctx.lineTo(124, 490);
-  ctx.lineTo(150, 462); ctx.lineTo(160, 426);
-  ctx.lineTo(178, 392);
-  ctx.closePath();
-  neonFill('#a40000', 0.95); neonOutline(8);
+    let alpha;
+    if (redLike || whiteLike) {
+      alpha = 1;
+    } else if (redEdge || softWhite) {
+      const aBase = Math.max(0, Math.min(1, (maxC - 36) / 84));
+      alpha = Math.pow(aBase, 1.35) * 0.9;
+    } else {
+      alpha = 0;
+    }
 
-  ctx.beginPath();
-  ctx.moveTo(192, 382); ctx.lineTo(218, 372);
-  ctx.lineTo(230, 388); ctx.lineTo(248, 420);
-  ctx.lineTo(260, 450); ctx.lineTo(250, 478);
-  ctx.lineTo(236, 494); ctx.lineTo(270, 492);
-  ctx.lineTo(284, 482); ctx.lineTo(274, 466);
-  ctx.lineTo(266, 450); ctx.lineTo(280, 420);
-  ctx.lineTo(266, 390); ctx.lineTo(248, 378);
-  ctx.lineTo(224, 368);
-  ctx.closePath();
-  neonFill('#a40000', 0.95); neonOutline(8);
+    if (whiteLike) {
+      keyedData[i] = Math.min(255, r * 1.08 + 14);
+      keyedData[i + 1] = Math.min(255, g * 1.08 + 14);
+      keyedData[i + 2] = Math.min(255, b * 1.08 + 14);
+    } else {
+      keyedData[i] = Math.min(255, r * 1.20 + 18);
+      keyedData[i + 1] = Math.max(0, g * 0.64);
+      keyedData[i + 2] = Math.max(0, b * 0.64);
+    }
 
-  // Right arm holding trident
-  ctx.beginPath();
-  ctx.moveTo(212, 260); ctx.lineTo(230, 270);
-  ctx.lineTo(252, 294); ctx.lineTo(262, 322);
-  ctx.lineTo(256, 344); ctx.lineTo(246, 358);
-  ctx.lineTo(242, 365); ctx.lineTo(254, 368);
-  ctx.lineTo(260, 355); ctx.lineTo(270, 344);
-  ctx.lineTo(278, 326); ctx.lineTo(272, 300);
-  ctx.lineTo(252, 274); ctx.lineTo(234, 260);
-  ctx.closePath();
-  neonFill('#a40000', 0.95); neonOutline(8);
+    keyedData[i + 3] = Math.round(alpha * 255);
+  }
 
-  // Trident shaft and head
-  ctx.beginPath(); ctx.rect(255, 354, 12, 166);
-  neonFill('#a40000', 0.95); neonOutline(8);
+  ctx.putImageData(keyed, 0, 0);
 
-  ctx.beginPath();
-  ctx.moveTo(226, 232); ctx.lineTo(238, 296); ctx.lineTo(250, 296); ctx.lineTo(244, 232);
-  ctx.closePath();
-  neonFill('#a40000', 0.95); neonOutline(7);
+  if (glowCtx) {
+    const gw = targetCanvas.width;
+    const gh = targetCanvas.height;
+    glowCtx.clearRect(0, 0, gw, gh);
+    glowCtx.save();
+    glowCtx.filter = 'blur(20px)';
+    glowCtx.globalAlpha = 0.85;
+    glowCtx.drawImage(targetCanvas, 0, 0);
+    glowCtx.restore();
 
-  ctx.beginPath();
-  ctx.moveTo(261, 186); ctx.lineTo(271, 288); ctx.lineTo(251, 288);
-  ctx.closePath();
-  neonFill('#a40000', 0.95); neonOutline(7);
+    glowCtx.globalCompositeOperation = 'source-in';
+    const glowGrad = glowCtx.createLinearGradient(0, 0, 0, gh);
+    glowGrad.addColorStop(0, 'rgba(255,95,95,1)');
+    glowGrad.addColorStop(0.45, 'rgba(255,45,45,1)');
+    glowGrad.addColorStop(1, 'rgba(205,10,10,1)');
+    glowCtx.fillStyle = glowGrad;
+    glowCtx.fillRect(0, 0, gw, gh);
+    glowCtx.globalCompositeOperation = 'source-over';
 
-  ctx.beginPath();
-  ctx.moveTo(296, 232); ctx.lineTo(278, 232); ctx.lineTo(272, 296); ctx.lineTo(284, 296);
-  ctx.closePath();
-  neonFill('#a40000', 0.95); neonOutline(7);
-
-  // Eye cutouts
-  ctx.save();
-  ctx.fillStyle = '#ffffff';
-  ctx.shadowColor = '#ffffff';
-  ctx.shadowBlur = 18;
-  ctx.beginPath(); ctx.moveTo(151, 196); ctx.lineTo(164, 187); ctx.lineTo(167, 208); ctx.lineTo(154, 210); ctx.closePath(); ctx.fill();
-  ctx.beginPath(); ctx.moveTo(193, 188); ctx.lineTo(206, 196); ctx.lineTo(203, 210); ctx.lineTo(190, 208); ctx.closePath(); ctx.fill();
-  ctx.restore();
-
-  // Mouth / beard cutout highlight
-  ctx.save();
-  ctx.fillStyle = '#ffffff';
-  ctx.shadowColor = '#ffffff';
-  ctx.shadowBlur = 16;
-  ctx.beginPath();
-  ctx.moveTo(176, 226); ctx.lineTo(189, 226); ctx.lineTo(182, 245);
-  ctx.closePath();
-  ctx.fill();
-  ctx.restore();
-
-  return cv;
+    glowCtx.save();
+    glowCtx.filter = 'blur(6px)';
+    glowCtx.globalAlpha = 0.45;
+    glowCtx.drawImage(targetCanvas, 0, 0);
+    glowCtx.restore();
+  }
 }
 
 // ─── Sprite texture for denser mug mist ──────────────────────────────────────
@@ -562,51 +510,35 @@ export default function RoomScene({ activeScreen, onScreenClick, onOpenProject }
     deskLedLight.position.set(0, DESK_Y - 0.08, 0.0);
     scene.add(deskLedLight);
 
-    // Process the JPG into a keyed canvas texture so the black background blends
-    // into the wall while preserving a sharper devil silhouette.
+    // Use the loaded MU red devil asset and key out black background pixels.
     const muCanvas = document.createElement('canvas');
-    muCanvas.width = 520;
-    muCanvas.height = 760;
+    muCanvas.width = 900;
+    muCanvas.height = 1280;
     const muCtx = muCanvas.getContext('2d');
+
+    const muGlowCanvas = document.createElement('canvas');
+    muGlowCanvas.width = muCanvas.width;
+    muGlowCanvas.height = muCanvas.height;
+    const muGlowCtx = muGlowCanvas.getContext('2d');
+
     const muTex = new THREE.CanvasTexture(muCanvas);
     muTex.colorSpace = THREE.SRGBColorSpace;
-    muTex.minFilter = THREE.LinearFilter;
+    muTex.minFilter = THREE.LinearMipmapLinearFilter;
     muTex.magFilter = THREE.LinearFilter;
-    muTex.generateMipmaps = false;
+    muTex.generateMipmaps = true;
+    muTex.anisotropy = Math.min(renderer.capabilities.getMaxAnisotropy(), 8);
+
+    const muGlowTex = new THREE.CanvasTexture(muGlowCanvas);
+    muGlowTex.colorSpace = THREE.SRGBColorSpace;
+    muGlowTex.minFilter = THREE.LinearMipmapLinearFilter;
+    muGlowTex.magFilter = THREE.LinearFilter;
+    muGlowTex.generateMipmaps = true;
+    muGlowTex.anisotropy = Math.min(renderer.capabilities.getMaxAnisotropy(), 8);
 
     new THREE.TextureLoader().load('/785d1f69766098745a997a84fd58212f.jpg', (loadedTexture) => {
-      const img = loadedTexture.image;
-      const drawW = muCanvas.width;
-      const drawH = muCanvas.height;
-      muCtx.clearRect(0, 0, drawW, drawH);
-      muCtx.drawImage(img, 0, 0, drawW, drawH);
-
-      const imgData = muCtx.getImageData(0, 0, drawW, drawH);
-      const data = imgData.data;
-      for (let i = 0; i < data.length; i += 4) {
-        const r = data[i];
-        const g = data[i + 1];
-        const b = data[i + 2];
-        const maxC = Math.max(r, g, b);
-        const minC = Math.min(r, g, b);
-        const spread = maxC - minC;
-        const alphaBase = Math.max(0, Math.min(1, (maxC - 12) / 118));
-        const alpha = Math.pow(alphaBase, 1.28);
-        const isWhite = maxC > 150 && spread < 42;
-
-        if (isWhite) {
-          data[i] = Math.min(255, r * 1.08 + 18);
-          data[i + 1] = Math.min(255, g * 1.08 + 18);
-          data[i + 2] = Math.min(255, b * 1.08 + 18);
-        } else {
-          data[i] = Math.min(255, r * 1.12 + 14);
-          data[i + 1] = g * 0.78;
-          data[i + 2] = b * 0.78;
-        }
-        data[i + 3] = Math.round(alpha * 255);
-      }
-      muCtx.putImageData(imgData, 0, 0);
+      drawMURedDevilToCanvas(muCtx, muCanvas, loadedTexture.image, muGlowCtx);
       muTex.needsUpdate = true;
+      muGlowTex.needsUpdate = true;
       loadedTexture.dispose();
     });
 
@@ -614,54 +546,41 @@ export default function RoomScene({ activeScreen, onScreenClick, onOpenProject }
       map: muTex,
       transparent: true,
       opacity: 1.0,
-      alphaTest: 0.06,
+      alphaTest: 0.03,
       blending: THREE.NormalBlending,
       depthWrite: false,
     });
-    const muMesh = new THREE.Mesh(new THREE.PlaneGeometry(2.08, 3.74), muMat);
-    muMesh.position.set(0, 3.82, -4.52);
-    muMesh.renderOrder = 5;
+    const muMesh = new THREE.Mesh(new THREE.PlaneGeometry(2.08, 2.98), muMat);
+    muMesh.position.set(0, 3.74, -4.518);
+    muMesh.renderOrder = 6;
     scene.add(muMesh);
 
-    const haloCanvas = document.createElement('canvas');
-    haloCanvas.width = 256;
-    haloCanvas.height = 256;
-    const haloCtx = haloCanvas.getContext('2d');
-    const haloGrad = haloCtx.createRadialGradient(128, 128, 14, 128, 128, 128);
-    haloGrad.addColorStop(0, 'rgba(255,64,64,0.42)');
-    haloGrad.addColorStop(0.25, 'rgba(255,48,48,0.26)');
-    haloGrad.addColorStop(0.65, 'rgba(160,24,24,0.10)');
-    haloGrad.addColorStop(1, 'rgba(0,0,0,0)');
-    haloCtx.fillStyle = haloGrad;
-    haloCtx.fillRect(0, 0, 256, 256);
-    const haloTex = new THREE.CanvasTexture(haloCanvas);
-
     const muGlowPlateMat = new THREE.MeshBasicMaterial({
-      map: haloTex,
+      map: muGlowTex,
       color: 0xff4040,
       transparent: true,
-      opacity: 0.25,
+      opacity: 0.30,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
     });
-    const muGlowPlate = new THREE.Mesh(new THREE.PlaneGeometry(3.15, 4.8), muGlowPlateMat);
-    muGlowPlate.position.set(0, 3.82, -4.535);
-    muGlowPlate.renderOrder = 4;
+    const muGlowPlate = new THREE.Mesh(new THREE.PlaneGeometry(2.44, 3.38), muGlowPlateMat);
+    muGlowPlate.position.set(0, 3.74, -4.532);
+    muGlowPlate.renderOrder = 5;
     scene.add(muGlowPlate);
 
     S.muSign = { mesh: muMesh, mat: muMat, glowMat: muGlowPlateMat };
 
     const signFrame = new THREE.Mesh(
-      new THREE.BoxGeometry(2.34, 4.04, 0.03),
+      new THREE.BoxGeometry(2.16, 3.06, 0.03),
       new THREE.MeshStandardMaterial({
         color: 0x080a12,
         roughness: 0.92,
         metalness: 0.12,
         transparent: true,
-        opacity: 0.04,
+        opacity: 0.07,
       }),
     );
-    signFrame.position.set(0, 3.82, -4.57);
+    signFrame.position.set(0, 3.74, -4.565);
     scene.add(signFrame);
 
     // ══════════════════════════════════════════════════
