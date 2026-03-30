@@ -57,7 +57,7 @@ function rr(ctx, x, y, w, h, r) {
   ctx.closePath();
 }
 
-function drawMURedDevilToCanvas(ctx, targetCanvas, image, glowCtx) {
+function drawMURedDevilToCanvas(ctx, targetCanvas, image, glowCtx, tubeCtx) {
   const fullW = image.width;
   const fullH = image.height;
   const sample = document.createElement('canvas');
@@ -68,11 +68,7 @@ function drawMURedDevilToCanvas(ctx, targetCanvas, image, glowCtx) {
 
   const src = sampleCtx.getImageData(0, 0, fullW, fullH);
   const px = src.data;
-  let minX = fullW;
-  let minY = fullH;
-  let maxX = 0;
-  let maxY = 0;
-
+  const mask = new Uint8Array(fullW * fullH);
   for (let y = 0; y < fullH; y++) {
     for (let x = 0; x < fullW; x++) {
       const i = (y * fullW + x) * 4;
@@ -85,17 +81,81 @@ function drawMURedDevilToCanvas(ctx, targetCanvas, image, glowCtx) {
       const sat = maxC === 0 ? 0 : spread / maxC;
       const isRed = r > 58 && r > g * 1.28 && r > b * 1.28 && sat > 0.24;
       const isWhite = maxC > 170 && sat < 0.14;
-      const isForeground = isRed || isWhite;
-      if (isForeground) {
-        if (x < minX) minX = x;
-        if (x > maxX) maxX = x;
-        if (y < minY) minY = y;
-        if (y > maxY) maxY = y;
+      mask[y * fullW + x] = isRed || isWhite ? 1 : 0;
+    }
+  }
+
+  const visited = new Uint8Array(fullW * fullH);
+  const qx = new Int32Array(fullW * fullH);
+  const qy = new Int32Array(fullW * fullH);
+  let bestScore = 0;
+  let minX = 0;
+  let minY = 0;
+  let maxX = fullW;
+  let maxY = fullH;
+
+  for (let y = 0; y < fullH; y++) {
+    for (let x = 0; x < fullW; x++) {
+      const start = y * fullW + x;
+      if (!mask[start] || visited[start]) continue;
+
+      let head = 0;
+      let tail = 0;
+      qx[tail] = x;
+      qy[tail] = y;
+      tail += 1;
+      visited[start] = 1;
+
+      let count = 0;
+      let sumMax = 0;
+      let cMinX = x;
+      let cMinY = y;
+      let cMaxX = x;
+      let cMaxY = y;
+
+      while (head < tail) {
+        const cx = qx[head];
+        const cy = qy[head];
+        head += 1;
+        const ci = cy * fullW + cx;
+        const pi = ci * 4;
+
+        count += 1;
+        sumMax += Math.max(px[pi], px[pi + 1], px[pi + 2]);
+        if (cx < cMinX) cMinX = cx;
+        if (cy < cMinY) cMinY = cy;
+        if (cx > cMaxX) cMaxX = cx;
+        if (cy > cMaxY) cMaxY = cy;
+
+        const neighbors = [
+          [cx + 1, cy], [cx - 1, cy], [cx, cy + 1], [cx, cy - 1],
+        ];
+        for (let n = 0; n < neighbors.length; n++) {
+          const nx = neighbors[n][0];
+          const ny = neighbors[n][1];
+          if (nx < 0 || ny < 0 || nx >= fullW || ny >= fullH) continue;
+          const ni = ny * fullW + nx;
+          if (!mask[ni] || visited[ni]) continue;
+          visited[ni] = 1;
+          qx[tail] = nx;
+          qy[tail] = ny;
+          tail += 1;
+        }
+      }
+
+      const avgMax = sumMax / Math.max(1, count);
+      const score = count * Math.pow(avgMax / 255, 1.8);
+      if (score > bestScore) {
+        bestScore = score;
+        minX = cMinX;
+        minY = cMinY;
+        maxX = cMaxX;
+        maxY = cMaxY;
       }
     }
   }
 
-  if (minX >= maxX || minY >= maxY) {
+  if (bestScore <= 0) {
     minX = 0;
     minY = 0;
     maxX = fullW;
@@ -178,6 +238,33 @@ function drawMURedDevilToCanvas(ctx, targetCanvas, image, glowCtx) {
     glowCtx.globalAlpha = 0.45;
     glowCtx.drawImage(targetCanvas, 0, 0);
     glowCtx.restore();
+  }
+
+  if (tubeCtx) {
+    const tw = targetCanvas.width;
+    const th = targetCanvas.height;
+    tubeCtx.clearRect(0, 0, tw, th);
+
+    tubeCtx.save();
+    tubeCtx.filter = 'blur(1.5px)';
+    tubeCtx.globalAlpha = 0.95;
+    tubeCtx.drawImage(targetCanvas, 0, 0);
+    tubeCtx.restore();
+
+    tubeCtx.globalCompositeOperation = 'source-in';
+    const tubeGrad = tubeCtx.createLinearGradient(0, 0, 0, th);
+    tubeGrad.addColorStop(0, 'rgba(255,250,250,0.92)');
+    tubeGrad.addColorStop(0.42, 'rgba(255,185,185,0.86)');
+    tubeGrad.addColorStop(1, 'rgba(255,120,120,0.74)');
+    tubeCtx.fillStyle = tubeGrad;
+    tubeCtx.fillRect(0, 0, tw, th);
+    tubeCtx.globalCompositeOperation = 'source-over';
+
+    tubeCtx.save();
+    tubeCtx.filter = 'blur(3px)';
+    tubeCtx.globalAlpha = 0.48;
+    tubeCtx.drawImage(targetCanvas, 0, 0);
+    tubeCtx.restore();
   }
 }
 
@@ -521,6 +608,11 @@ export default function RoomScene({ activeScreen, onScreenClick, onOpenProject }
     muGlowCanvas.height = muCanvas.height;
     const muGlowCtx = muGlowCanvas.getContext('2d');
 
+    const muTubeCanvas = document.createElement('canvas');
+    muTubeCanvas.width = muCanvas.width;
+    muTubeCanvas.height = muCanvas.height;
+    const muTubeCtx = muTubeCanvas.getContext('2d');
+
     const muTex = new THREE.CanvasTexture(muCanvas);
     muTex.colorSpace = THREE.SRGBColorSpace;
     muTex.minFilter = THREE.LinearMipmapLinearFilter;
@@ -535,10 +627,18 @@ export default function RoomScene({ activeScreen, onScreenClick, onOpenProject }
     muGlowTex.generateMipmaps = true;
     muGlowTex.anisotropy = Math.min(renderer.capabilities.getMaxAnisotropy(), 8);
 
+    const muTubeTex = new THREE.CanvasTexture(muTubeCanvas);
+    muTubeTex.colorSpace = THREE.SRGBColorSpace;
+    muTubeTex.minFilter = THREE.LinearMipmapLinearFilter;
+    muTubeTex.magFilter = THREE.LinearFilter;
+    muTubeTex.generateMipmaps = true;
+    muTubeTex.anisotropy = Math.min(renderer.capabilities.getMaxAnisotropy(), 8);
+
     new THREE.TextureLoader().load('/785d1f69766098745a997a84fd58212f.jpg', (loadedTexture) => {
-      drawMURedDevilToCanvas(muCtx, muCanvas, loadedTexture.image, muGlowCtx);
+      drawMURedDevilToCanvas(muCtx, muCanvas, loadedTexture.image, muGlowCtx, muTubeCtx);
       muTex.needsUpdate = true;
       muGlowTex.needsUpdate = true;
+      muTubeTex.needsUpdate = true;
       loadedTexture.dispose();
     });
 
@@ -551,9 +651,22 @@ export default function RoomScene({ activeScreen, onScreenClick, onOpenProject }
       depthWrite: false,
     });
     const muMesh = new THREE.Mesh(new THREE.PlaneGeometry(2.08, 2.98), muMat);
-    muMesh.position.set(0, 3.74, -4.518);
+    muMesh.position.set(0, 3.99, -4.518);
     muMesh.renderOrder = 6;
     scene.add(muMesh);
+
+    const muTubeMat = new THREE.MeshBasicMaterial({
+      map: muTubeTex,
+      color: 0xffdcdc,
+      transparent: true,
+      opacity: 0.38,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    });
+    const muTubeMesh = new THREE.Mesh(new THREE.PlaneGeometry(2.08, 2.98), muTubeMat);
+    muTubeMesh.position.set(0, 3.99, -4.525);
+    muTubeMesh.renderOrder = 7;
+    scene.add(muTubeMesh);
 
     const muGlowPlateMat = new THREE.MeshBasicMaterial({
       map: muGlowTex,
@@ -564,11 +677,11 @@ export default function RoomScene({ activeScreen, onScreenClick, onOpenProject }
       depthWrite: false,
     });
     const muGlowPlate = new THREE.Mesh(new THREE.PlaneGeometry(2.44, 3.38), muGlowPlateMat);
-    muGlowPlate.position.set(0, 3.74, -4.532);
+    muGlowPlate.position.set(0, 3.99, -4.532);
     muGlowPlate.renderOrder = 5;
     scene.add(muGlowPlate);
 
-    S.muSign = { mesh: muMesh, mat: muMat, glowMat: muGlowPlateMat };
+    S.muSign = { mesh: muMesh, mat: muMat, glowMat: muGlowPlateMat, tubeMat: muTubeMat };
 
     const signFrame = new THREE.Mesh(
       new THREE.BoxGeometry(2.16, 3.06, 0.03),
@@ -580,7 +693,7 @@ export default function RoomScene({ activeScreen, onScreenClick, onOpenProject }
         opacity: 0.07,
       }),
     );
-    signFrame.position.set(0, 3.74, -4.565);
+    signFrame.position.set(0, 3.99, -4.565);
     scene.add(signFrame);
 
     // ══════════════════════════════════════════════════
