@@ -73,7 +73,7 @@ export default function Darkroom() {
             An eye that wanders.
           </h2>
           <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '15px', color: 'rgba(255,255,255,0.5)', marginTop: '14px' }}>
-            Shot on an iPhone 14&nbsp;Pro &mdash; Canada, Kerala, Kutch, and one very loud night in Ahmedabad.
+            Shot on an iPhone 14&nbsp;Pro — Canada, Kerala, Kutch, and one very loud night in Ahmedabad.
           </p>
         </motion.div>
 

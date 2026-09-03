@@ -95,7 +95,7 @@ export default function Contact() {
           </h2>
 
           <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '16px', lineHeight: 1.75, color: 'var(--text-secondary)', margin: '0 0 24px' }}>
-            A project, a research idea, or just to say hey &mdash; the inbox is open and I reply.
+            A project, a research idea, or just to say hey — the inbox is open and I reply.
           </p>
 
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: '9px', border: '1px solid var(--border-subtle)', borderRadius: '999px', padding: '7px 14px', marginBottom: '36px' }}>

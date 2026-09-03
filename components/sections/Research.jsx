@@ -138,7 +138,7 @@ export default function Research() {
             Building systems that save lives.
           </h2>
           <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '17px', lineHeight: 1.75, color: 'var(--text-secondary)' }}>
-            At IIT Bombay I work on multi-hazard early warning systems &mdash; one pipeline that
+            At IIT Bombay I work on multi-hazard early warning systems — one pipeline that
             carries a reading from a sensor in a river to a warning on someone&apos;s phone before the
             water reaches them.
           </p>

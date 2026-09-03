@@ -56,11 +56,11 @@ export default function CandidMe() {
           </h2>
           <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '16px', lineHeight: 1.8, color: 'var(--text-secondary)', maxWidth: '360px' }}>
             Away from the editor there&apos;s a football team I refuse to give up on, a city that
-            never slows down, and a camera that comes everywhere. It all feeds the same habit &mdash;
+            never slows down, and a camera that comes everywhere. It all feeds the same habit —
             pay attention, then make something of it.
           </p>
           <p style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '12px', color: 'var(--text-tertiary)', marginTop: '28px', letterSpacing: '0.04em' }}>
-            &mdash; Jay, usually up too late
+            — Jay, usually up too late
           </p>
         </motion.div>
 
@@ -102,7 +102,7 @@ export default function CandidMe() {
               <span className="cm-ic"><Camera size={16} strokeWidth={2} /></span>
             </div>
             <h3 className="cm-h">One types, one shoots</h3>
-            <p className="cm-p">Code and photography are the same reflex pointed at different things &mdash; notice it, frame it, keep it before it changes.</p>
+            <p className="cm-p">Code and photography are the same reflex pointed at different things — notice it, frame it, keep it before it changes.</p>
           </motion.div>
 
           {/* Right now */}
