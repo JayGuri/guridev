@@ -3,37 +3,30 @@
 import { motion, useInView } from 'framer-motion';
 import { useState, useRef, useMemo } from 'react';
 import FilmGrain from '@/components/effects/FilmGrain';
-import Lightbox from '@/components/ui/Lightbox';
-import { PHOTOS, REGIONS, photoThumb, photoBlur, hasImage } from '@/lib/photography';
+import DomeGallery from '@/components/ui/DomeGallery';
+import { PHOTOS, REGIONS, photoThumb } from '@/lib/photography';
 
 const EASE = [0.16, 1, 0.3, 1];
 const SHUTTER = [0.76, 0, 0.24, 1];
 
 const FILTERS = ['All', ...REGIONS.map((r) => r.region)];
 
-function Tile({ photo, onOpen }) {
-  const live = hasImage(photo);
-  return (
-    <button
-      onClick={onOpen}
-      className={`dk-tile${live ? '' : ' dk-tile--latent'}`}
-      style={{ aspectRatio: photo.aspect || (photo.orientation === 'portrait' ? 0.75 : 1.5) }}
-    >
-      <img
-        src={live ? photoThumb(photo) : photoBlur(photo)}
-        alt={photo.title}
-        loading="lazy"
-        className="dk-tile-img"
-        style={live ? undefined : { filter: 'blur(14px) saturate(1.1)', transform: 'scale(1.15)' }}
-      />
-      {!live && <span className="dk-tile-dev">developing…</span>}
-      <span className="dk-tile-frame" />
-      <div className="dk-tile-meta">
-        <p className="dk-tile-title">{photo.title}</p>
-        <p className="dk-tile-place">{photo.place}</p>
-      </div>
-    </button>
-  );
+function exifLine(p) {
+  const e = p.exif || {};
+  return [
+    e.camera,
+    e.focalLength ? `${e.focalLength}mm` : null,
+    e.aperture ? `f/${e.aperture}` : null,
+    e.shutter,
+    e.iso ? `ISO ${e.iso}` : null,
+  ].filter(Boolean).join('  ·  ');
+}
+
+function shotDate(p) {
+  if (!p.shotAt) return null;
+  try {
+    return new Date(p.shotAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  } catch { return null; }
 }
 
 export default function Darkroom() {
@@ -41,12 +34,32 @@ export default function Darkroom() {
   const inView = useInView(sectionRef, { once: true, amount: 0.12 });
 
   const [filter, setFilter] = useState('All');
-  const [lightboxIndex, setLightboxIndex] = useState(null);
 
   const shots = useMemo(
     () => (filter === 'All' ? PHOTOS : PHOTOS.filter((p) => p.region === filter)),
     [filter],
   );
+
+  // Feed the dome: real image + everything the enlarged caption needs.
+  const domeImages = useMemo(
+    () =>
+      shots.map((p) => {
+        const date = shotDate(p);
+        return {
+          src: photoThumb(p),
+          alt: p.title,
+          aspect: p.aspect,
+          featured: p.featured,
+          title: p.title,
+          place: [p.place, date].filter(Boolean).join(' · '),
+          exif: exifLine(p),
+          tags: (p.tags || []).slice(0, 5).join(' | '),
+        };
+      }),
+    [shots],
+  );
+
+  const segs = Math.max(9, Math.min(14, Math.round(domeImages.length / 4)));
 
   return (
     <section
@@ -78,7 +91,7 @@ export default function Darkroom() {
         </motion.div>
 
         {/* Region filter */}
-        <div className="dk-filter" style={{ display: 'flex', justifyContent: 'center', gap: '9px', margin: '40px 0 34px', flexWrap: 'wrap' }}>
+        <div className="dk-filter" style={{ display: 'flex', justifyContent: 'center', gap: '9px', margin: '40px 0 26px', flexWrap: 'wrap' }}>
           {FILTERS.map((f) => {
             const active = filter === f;
             return (
@@ -100,67 +113,53 @@ export default function Darkroom() {
           })}
         </div>
 
-        {/* Masonry grid */}
+        {/* The dome */}
         <motion.div
           initial={{ opacity: 0 }} animate={inView ? { opacity: 1 } : { opacity: 0 }}
-          transition={{ duration: 0.8, delay: 0.5, ease: EASE }}
-          className="dk-grid"
+          transition={{ duration: 0.9, delay: 0.45, ease: EASE }}
+          className="dk-dome"
         >
-          {shots.map((photo, i) => (
-            <Tile key={photo.id} photo={photo} onOpen={() => setLightboxIndex(i)} />
-          ))}
+          <div className="dk-dome-glow" />
+          {inView && (
+            <DomeGallery
+              key={filter}
+              images={domeImages}
+              segments={segs}
+              grayscale={false}
+              overlayBlurColor="#080809"
+              imageBorderRadius="14px"
+              openedImageBorderRadius="18px"
+              padFactor={0.11}
+              fit={0.52}
+              maxVerticalRotationDeg={6}
+              autoRotate
+              autoRotateSpeed={0.05}
+            />
+          )}
         </motion.div>
 
-        <p style={{ textAlign: 'center', marginTop: '44px', fontFamily: 'JetBrains Mono, monospace', fontSize: '11px', color: 'rgba(255,255,255,0.28)', letterSpacing: '0.06em' }}>
-          {PHOTOS.length} frames · iPhone 14 Pro · click a frame for the details
+        <p style={{ textAlign: 'center', marginTop: '30px', fontFamily: 'JetBrains Mono, monospace', fontSize: '11px', color: 'rgba(255,255,255,0.3)', letterSpacing: '0.06em' }}>
+          {PHOTOS.length} frames · drag to spin · click one for the details
         </p>
       </div>
 
-      {lightboxIndex != null && (
-        <Lightbox
-          photos={shots}
-          index={lightboxIndex}
-          onClose={() => setLightboxIndex(null)}
-          onNext={() => setLightboxIndex((i) => (i + 1) % shots.length)}
-          onPrev={() => setLightboxIndex((i) => (i - 1 + shots.length) % shots.length)}
-        />
-      )}
-
       <style>{`
-        .dk-grid { columns: 3; column-gap: 14px; }
-        @media (max-width: 900px) { .dk-grid { columns: 2; } }
-        @media (max-width: 560px) { .dk-grid { columns: 1; } }
-
-        .dk-tile {
-          display: block; width: 100%; margin: 0 0 14px; padding: 0;
-          border: 1px solid rgba(255,255,255,0.06); border-radius: 10px;
-          overflow: hidden; position: relative; cursor: pointer;
-          background: #0e0e10; break-inside: avoid;
-          transition: border-color 0.25s ease, transform 0.25s ease;
+        .dk-dome {
+          position: relative;
+          height: clamp(500px, 74vh, 700px);
+          border-radius: 20px;
+          overflow: hidden;
+          border: 1px solid rgba(255,255,255,0.06);
+          background: #060607;
         }
-        .dk-tile:hover { border-color: rgba(232,147,90,0.4); transform: translateY(-3px); }
-        .dk-tile-img { width: 100%; height: 100%; object-fit: cover; display: block; }
-        .dk-tile--latent { background: linear-gradient(135deg, #14100c, #0b0b0d); }
-        .dk-tile-dev {
-          position: absolute; inset: 0; z-index: 2; display: flex; align-items: center; justify-content: center;
-          font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.16em;
-          color: rgba(232,147,90,0.7);
+        .dk-dome-glow {
+          position: absolute; inset: 0; z-index: 0; pointer-events: none;
+          background: radial-gradient(60% 55% at 50% 48%, rgba(232,147,90,0.10), transparent 70%);
         }
-        .dk-tile-frame {
-          position: absolute; inset: 6px; border: 1px solid rgba(255,255,255,0.06);
-          pointer-events: none; border-radius: 6px;
-        }
-        .dk-tile-meta {
-          position: absolute; inset: 0; z-index: 3; display: flex; flex-direction: column; justify-content: flex-end;
-          padding: 32px 14px 12px;
-          background: linear-gradient(transparent, rgba(0,0,0,0.78));
-          opacity: 0; transform: translateY(8px); transition: opacity 0.3s ease, transform 0.3s ease;
-        }
-        .dk-tile:hover .dk-tile-meta { opacity: 1; transform: translateY(0); }
-        .dk-tile-title { font-family: 'Clash Display', sans-serif; font-size: 14px; font-weight: 600; color: #fff; }
-        .dk-tile-place { font-family: 'Inter', sans-serif; font-size: 11px; color: rgba(255,255,255,0.6); margin-top: 2px; }
-
         .dk-filter::-webkit-scrollbar { display: none; }
+        @media (max-width: 560px) {
+          .dk-dome { height: clamp(420px, 62vh, 560px); }
+        }
       `}</style>
     </section>
   );

@@ -11,7 +11,7 @@
 // Re-run any time. New files in lib/Images are picked up; existing ones are
 // left alone unless their bytes changed. Curated edits always win.
 
-import { readFile, writeFile } from 'node:fs/promises';
+import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { existsSync, readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import path from 'node:path';
@@ -24,6 +24,33 @@ import {
 
 const require = createRequire(import.meta.url);
 const CLOUD_FOLDER = 'portfolio/photography';
+
+// ── local web previews ─────────────────────────────────────────────────────
+// A committed 1280px WebP per visible photo so the gallery renders real images
+// with no cloud account. Cloudinary (when configured) supersedes these at load
+// time; until then this is the source. Generated once, then skipped by hash.
+const PUBLIC_PHOTOS = 'public/photos';
+let localMade = 0;
+
+async function ensureLocalPreview(id, buf, ext) {
+  const out = path.join(PUBLIC_PHOTOS, `${id}.webp`);
+  if (existsSync(out)) return true;
+  try {
+    await mkdir(PUBLIC_PHOTOS, { recursive: true });
+    const { data, needsAutoOrient } = await decodeForSharp(buf, ext);
+    let pipe = sharp(data, { failOn: 'none' });
+    if (needsAutoOrient) pipe = pipe.rotate();
+    await pipe
+      .resize(1120, 1120, { fit: 'inside', withoutEnlargement: true })
+      .webp({ quality: 72 })
+      .toFile(out);
+    localMade += 1;
+    return true;
+  } catch (e) {
+    console.error(`\n  local preview failed for ${id}: ${e.message}`);
+    return false;
+  }
+}
 
 // ── tiny .env.local reader (no dep) ─────────────────────────────────────────
 function loadEnv() {
@@ -68,6 +95,7 @@ for (const name of images) {
 
   // unchanged bytes + already analysed -> keep the heavy fields, refresh curation
   if (existing && existing.hash === hash) {
+    const local = cur.hidden ? false : await ensureLocalPreview(id, buf, ext);
     photos.push({
       ...existing,
       title: cur.title || existing.title,
@@ -76,6 +104,7 @@ for (const name of images) {
       hidden: Boolean(cur.hidden),
       tags: mergeTags(cur.tags || existing.subjectTags || [], existing.derivedTags || []),
       subjectTags: cur.tags || existing.subjectTags || [],
+      local,
     });
     continue;
   }
@@ -117,6 +146,7 @@ for (const name of images) {
     derivedTags: derived,
     tags: mergeTags(cur.tags || [], derived),
     blurDataURL: `data:image/webp;base64,${blur.toString('base64')}`,
+    local: cur.hidden ? false : await ensureLocalPreview(id, buf, ext),
     uploaded: false,
   });
   process.stdout.write('.');
@@ -180,6 +210,7 @@ await writeFile(MANIFEST_PATH, JSON.stringify(manifest, null, 2) + '\n');
 
 // ── report ─────────────────────────────────────────────────────────────────
 console.log(`\n${manifest.count} photos in the manifest (${fresh} newly analysed).`);
+console.log(`${photos.filter((p) => p.local && !p.hidden).length}/${manifest.count} have a local preview in public/photos/${localMade ? ` (${localMade} written this run)` : ''}.`);
 console.log(`${manifest.uploadedCount}/${manifest.count} live on Cloudinary${CAN_UPLOAD ? '' : ' — set CLOUDINARY_API_KEY + CLOUDINARY_API_SECRET in .env.local to upload'}.`);
 if (uploaded) console.log(`uploaded ${uploaded} this run.`);
 if (uploadErrors) console.log(`${uploadErrors} uploads failed — rerun to retry.`);
