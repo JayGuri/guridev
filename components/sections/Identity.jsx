@@ -21,7 +21,7 @@ import { VscVscode } from 'react-icons/vsc';
 
 // ── Line icons (lucide) — used in place of emoji on the cards + modals ────────
 import {
-  Gamepad2, Trophy, Disc3, Clapperboard, Music2, ListChecks, Moon,
+  Gamepad2, Trophy, Disc3, Moon, Waves,
   X as CloseIcon,
 } from 'lucide-react';
 
@@ -132,6 +132,30 @@ function Corner({ pos, size = 16, thickness = '1.5px', color = 'var(--accent-pho
     br: { bottom: 0, right: 0, borderBottom: `${thickness} solid ${color}`, borderRight: `${thickness} solid ${color}` },
   };
   return <div style={{ position: 'absolute', width: size, height: size, ...sides[pos] }} />;
+}
+
+// ── Little Spider-Man-ish spider that swings on a web thread ──────────────────
+function SwingingSpider({ className }) {
+  return (
+    <div className={className} aria-hidden="true">
+      <svg width="30" height="70" viewBox="0 0 30 70" fill="none">
+        <line x1="15" y1="0" x2="15" y2="33" stroke="rgba(255,255,255,0.22)" strokeWidth="1" />
+        <g stroke="#101014" strokeWidth="2" strokeLinecap="round" fill="none">
+          <path d="M15 45 C 8 39, 4 43, 1 38" />
+          <path d="M15 46 C 8 47, 3 51, 0 49" />
+          <path d="M15 49 C 9 52, 6 58, 3 59" />
+          <path d="M15 51 C 10 55, 9 63, 7 66" />
+          <path d="M15 45 C 22 39, 26 43, 29 38" />
+          <path d="M15 46 C 22 47, 27 51, 30 49" />
+          <path d="M15 49 C 21 52, 24 58, 27 59" />
+          <path d="M15 51 C 20 55, 21 63, 23 66" />
+        </g>
+        <ellipse cx="15" cy="50" rx="6.5" ry="8" fill="#c81f1f" />
+        <circle cx="15" cy="41" r="4" fill="#9c1616" />
+        <path d="M15 44 l2.6 5 -2.6 -1.8 -2.6 1.8 z" fill="#0b0b0e" />
+      </svg>
+    </div>
+  );
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -274,36 +298,36 @@ function CandidCard({ inView, index, onOpen }) {
         <div className="identity-card identity-card--candid"
           onClick={onOpen} style={{ cursor: 'pointer' }}>
 
+          <SwingingSpider className="cc-spider" />
+
           <div className="cc-strip">
             <span className="cc-online"><span className="cc-online-dot" />PLAYER ONE</span>
-            <span>OFF THE CLOCK</span>
           </div>
 
-          {/* platinum-run panel */}
+          {/* platinum shelf */}
           <div className="cc-run">
-            <span className="cc-run-ring" style={{ '--p': 72 }}>
+            <span className="cc-run-ring cc-run-ring--full">
               <Trophy size={16} strokeWidth={2} />
             </span>
-            <div>
-              <p className="cc-run-k">CHASING PLATINUM</p>
-              <p className="cc-run-v">God of War Ragnarök</p>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <p className="cc-run-k">TROPHY SHELF</p>
+              <p className="cc-run-v"><span className="cc-run-big">8</span> platinums</p>
             </div>
-            <span className="cc-run-pct">72%</span>
           </div>
+          <p className="cc-shelf">GoW · GoWR · Spider-Man · Miles Morales · Uncharted 1&ndash;4</p>
 
-          <div className="cc-chips">
-            <span className="cc-chip"><Gamepad2 size={13} strokeWidth={2.1} />Story games</span>
-            <span className="cc-chip"><Trophy size={13} strokeWidth={2.1} />100% runs</span>
-            <span className="cc-chip"><Disc3 size={13} strokeWidth={2.1} />Post Malone</span>
+          <div className="cc-now2">
+            <span className="cc-now2-tag">NOW</span>
+            <span className="cc-now2-title">The Last of Us Remastered</span>
           </div>
 
           <h3 className="cc-h3">Off the clock</h3>
           <p className="cc-copy">
-            Games are why I got into computers. Now the free hours go into
-            platinuming the big single-player ones &mdash; God of War, Uncharted,
-            the story-heavy stuff.
+            GTA first &mdash; then downloading mods for it. Watching the terminal
+            flash while they installed is when it clicked that there&apos;s more to
+            a computer than the part you see.
           </p>
-          <p className="cc-foot">now: Post Malone · God of War Ragnar&ouml;k · hunting 100%</p>
+          <p className="cc-foot">also &mdash; football · table tennis · swimming · Post Malone on loop</p>
         </div>
       </CometCard>
     </CardReveal>
@@ -698,23 +722,20 @@ function CandidModalContent({ onClose }) {
     next:     { label: 'NEXT UP',     c: '#8A8880' },
   };
   const games = [
-    { title: 'God of War Ragnarök',        sub: 'PS5 · the current grind', s: 'playing',  pct: 72 },
-    { title: 'God of War (2018)',               sub: 'ran it back for the platinum', s: 'platinum' },
-    { title: 'Uncharted 4: A Thief’s End', sub: 'set-piece perfection', s: 'platinum' },
-    { title: 'Uncharted: The Lost Legacy',      sub: 'short, sharp, underrated', s: 'next' },
-    { title: 'Marvel’s Spider-Man',        sub: 'swinging back through it', s: 'next' },
-    { title: 'The Last of Us Part II',          sub: 'on the list, bracing myself', s: 'next' },
+    { title: 'Marvel’s Spider-Man',        sub: 'the one that started the collection', s: 'platinum' },
+    { title: 'Spider-Man: Miles Morales',  sub: 'Sunflower on repeat the whole time', s: 'platinum' },
+    { title: 'God of War (2018)',          sub: 'Leviathan Axe recall never got old', s: 'platinum' },
+    { title: 'God of War Ragnarök',        sub: 'ran it straight back for 100%', s: 'platinum' },
+    { title: 'Uncharted 1–4',              sub: 'the full Drake run, all four platinumed', s: 'platinum' },
+    { title: 'The Last of Us Remastered',  sub: 'current grind', s: 'playing', pct: 34 },
+    { title: 'The Last of Us Part II',     sub: 'next on the shelf', s: 'next' },
   ];
-  const onRepeat = [
-    { name: 'Post Malone', note: 'top of the list, no contest', pinned: true, Icon: Disc3 },
-    { name: 'AP Dhillon', note: 'in the rotation', Icon: Music2 },
-    { name: 'Film + game scores', note: 'default while I work', Icon: Clapperboard },
-  ];
+  const musicRest = ['The Weeknd', 'One Direction', 'Karan Aujla', 'Pritam', 'Atif Aslam'];
   const catchMe = [
     { Icon: Trophy,     text: 'restarting a game I’ve already finished, purely for the platinum' },
-    { Icon: Moon,       text: '“one more chapter” at a time the clock disagrees with' },
-    { Icon: Gamepad2,   text: 'defending single-player games in an argument nobody started' },
-    { Icon: ListChecks, text: 'checking a trophy guide before I’ve finished the story' },
+    { Icon: Moon,       text: '“one more chapter” long past the point that was a good idea' },
+    { Icon: Waves,      text: 'in the pool, or arguing a football formation nobody asked about' },
+    { Icon: Gamepad2,   text: 'defending single-player games in a debate I started' },
   ];
 
   return (
@@ -740,7 +761,7 @@ function CandidModalContent({ onClose }) {
             <div style={{ flex: 1 }}>
               <p style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '10px', letterSpacing: '0.16em', color: ra(0.6), marginBottom: '4px' }}>PLAYER PROFILE</p>
               <p style={{ fontFamily: 'Clash Display, sans-serif', fontSize: '20px', fontWeight: 600, color: 'var(--text-primary)', lineHeight: 1.1 }}>Player One</p>
-              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: 'var(--text-tertiary)', marginTop: '3px' }}>single-player only · platinum hunter · finishes the story first</p>
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: 'var(--text-tertiary)', marginTop: '3px' }}>story first, platinum second · 8 and counting</p>
             </div>
           </div>
         </FadeUp>
@@ -748,18 +769,29 @@ function CandidModalContent({ onClose }) {
         {/* Intro */}
         <FadeUp delay={0.09}>
           <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', lineHeight: 1.85, color: 'var(--text-secondary)', marginBottom: '14px' }}>
-            Games are the reason I ever opened a terminal. A younger me wanted to know how the worlds
-            in God of War and Uncharted were built, and never really stopped asking.
+            It started with GTA &mdash; and then downloading mods for it. Sitting there watching the
+            terminal flash while they installed is the exact moment it clicked that there was a whole
+            machine underneath the part you actually see. I&apos;ve been chasing that ever since.
           </p>
-          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', lineHeight: 1.85, color: 'var(--text-secondary)', marginBottom: '36px' }}>
-            These days the free hours go to the big single-player titles &mdash; play the story, then go
-            back for the platinum. Multiplayer never stuck. A good campaign always does.
+          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', lineHeight: 1.85, color: 'var(--text-secondary)', marginBottom: '30px' }}>
+            The routine now: play a big single-player game for the story, then go back and finish it
+            properly for the platinum. Away from the screen it&apos;s football, table tennis, and
+            swimming &mdash; competitive about all three, better at some than others.
           </p>
+        </FadeUp>
+
+        {/* Pull quote */}
+        <FadeUp delay={0.11}>
+          <div style={{ position: 'relative', margin: '0 0 34px', paddingLeft: '20px', borderLeft: `2px solid ${ra(0.45)}` }}>
+            <p style={{ fontFamily: 'Clash Display, sans-serif', fontSize: 'clamp(16px, 2.4vw, 20px)', fontWeight: 600, color: R, fontStyle: 'italic', lineHeight: 1.45 }}>
+              Sunflower on the speakers while I swing across New York &mdash; forever a top-three feeling.
+            </p>
+          </div>
         </FadeUp>
 
         {/* The platinum list */}
         <FadeUp delay={0.13}>
-          <p style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '10px', color: ra(0.5), letterSpacing: '0.18em', marginBottom: '14px' }}>── THE PLATINUM LIST ───────────</p>
+          <p style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '10px', color: ra(0.5), letterSpacing: '0.18em', marginBottom: '14px' }}>── THE TROPHY SHELF ────────────</p>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: '10px', marginBottom: '36px' }} className="modal-currently-grid">
             {games.map((g) => {
               const st = STATUS[g.s];
@@ -787,22 +819,24 @@ function CandidModalContent({ onClose }) {
         {/* On repeat */}
         <FadeUp delay={0.17}>
           <p style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '10px', color: ra(0.5), letterSpacing: '0.18em', marginBottom: '14px' }}>── ON REPEAT ───────────────────</p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '36px' }}>
-            {onRepeat.map(({ name, note, pinned, Icon }) => (
-              <div key={name} style={{ display: 'flex', alignItems: 'center', gap: '13px', padding: '13px 16px', borderRadius: '11px', background: pinned ? ra(0.09) : ra(0.03), border: `1px solid ${pinned ? ra(0.28) : ra(0.1)}` }}>
-                <Icon size={18} strokeWidth={2} style={{ color: pinned ? R : ra(0.7), flexShrink: 0 }} />
-                <div style={{ flex: 1 }}>
-                  <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13.5px', fontWeight: pinned ? 600 : 500, color: 'var(--text-primary)' }}>{name}</p>
-                  <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11.5px', color: 'var(--text-tertiary)', marginTop: '1px' }}>{note}</p>
-                </div>
-                {pinned && (
-                  <span className="cc-eq" aria-hidden="true" style={{ ['--eq']: R }}>
-                    <span /><span /><span /><span /><span />
-                  </span>
-                )}
-              </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '13px', padding: '13px 16px', borderRadius: '11px', background: ra(0.09), border: `1px solid ${ra(0.28)}`, marginBottom: '10px' }}>
+            <Disc3 size={18} strokeWidth={2} style={{ color: R, flexShrink: 0 }} />
+            <div style={{ flex: 1 }}>
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13.5px', fontWeight: 600, color: 'var(--text-primary)' }}>Post Malone</p>
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11.5px', color: 'var(--text-tertiary)', marginTop: '1px' }}>top of the list, no contest</p>
+            </div>
+            <span className="cc-eq" aria-hidden="true" style={{ ['--eq']: R }}>
+              <span /><span /><span /><span /><span />
+            </span>
+          </div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '7px', marginBottom: '10px' }}>
+            {musicRest.map((m) => (
+              <span key={m} style={{ background: ra(0.06), border: `1px solid ${ra(0.16)}`, color: 'var(--text-secondary)', fontFamily: 'Inter, sans-serif', fontSize: '12px', fontWeight: 500, padding: '4px 11px', borderRadius: '999px' }}>{m}</span>
             ))}
           </div>
+          <p style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '10px', color: ra(0.45), letterSpacing: '0.04em', marginBottom: '36px' }}>
+            // spotify sync coming — this list is about to get honest
+          </p>
         </FadeUp>
 
         {/* You'll catch me */}
@@ -824,12 +858,12 @@ function CandidModalContent({ onClose }) {
         <FadeUp delay={0.25}>
           <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', color: 'var(--text-tertiary)', letterSpacing: '0.18em', textTransform: 'uppercase', marginBottom: '12px' }}>Ask me about</p>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '28px' }}>
-            {['platinum routes', 'God of War lore', 'Post Malone deep cuts', 'why story beats multiplayer', 'Uncharted set pieces', 'football', 'table tennis'].map(t => (
+            {['platinum routes', 'the full Uncharted run', 'why story beats multiplayer', 'Spider-Man traversal', 'Post Malone deep cuts', 'football', 'swimming'].map(t => (
               <span key={t} style={{ background: ra(0.15), border: `1px solid ${ra(0.3)}`, color: R, fontFamily: 'Inter, sans-serif', fontSize: '12px', fontWeight: 500, padding: '4px 12px', borderRadius: '999px' }}>{t}</span>
             ))}
           </div>
           <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', fontStyle: 'italic', color: 'var(--text-tertiary)' }}>
-            now: Post Malone &middot; God of War Ragnar&ouml;k &middot; hunting the platinum
+            now: The Last of Us Remastered &middot; Post Malone &middot; hunting platinum #9
           </p>
         </FadeUp>
       </div>
@@ -1129,11 +1163,17 @@ export default function Identity() {
           background: #100812; border: 1px solid rgba(255,107,138,0.24);
           background-image: radial-gradient(ellipse 90% 55% at 50% 100%, rgba(255,107,138,0.09), transparent 70%);
         }
-        .cc-strip { display: flex; align-items: center; justify-content: space-between; font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.1em; color: rgba(255,107,138,0.6); margin-bottom: 18px; }
+        .cc-spider {
+          position: absolute; top: 0; right: 30px; z-index: 3;
+          transform-origin: 15px 0;
+          animation: cc-swing 4.6s cubic-bezier(0.45,0,0.55,1) infinite;
+          pointer-events: none;
+        }
+        .cc-strip { display: flex; align-items: center; font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.1em; color: rgba(255,107,138,0.6); margin-bottom: 18px; }
         .cc-online { display: inline-flex; align-items: center; gap: 5px; color: rgba(40,200,64,0.8); }
         .cc-online-dot { width: 6px; height: 6px; border-radius: 50%; background: #28C840; animation: rc-blink 1.8s ease-in-out infinite; }
 
-        .cc-run { display: flex; align-items: center; gap: 13px; padding: 14px; border: 1px solid rgba(255,107,138,0.2); border-radius: 12px; background: linear-gradient(135deg, rgba(255,107,138,0.1), rgba(255,107,138,0.03)); }
+        .cc-run { display: flex; align-items: center; gap: 13px; padding: 13px 14px; border: 1px solid rgba(255,107,138,0.2); border-radius: 12px; background: linear-gradient(135deg, rgba(255,107,138,0.12), rgba(255,107,138,0.03)); }
         .cc-run-ring {
           width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0;
           display: flex; align-items: center; justify-content: center; color: #FF6B8A;
@@ -1141,9 +1181,14 @@ export default function Identity() {
             radial-gradient(closest-side, #100812 78%, transparent 79% 100%),
             conic-gradient(#FF6B8A calc(var(--p) * 1%), rgba(255,107,138,0.16) 0);
         }
+        .cc-run-ring--full { background: radial-gradient(closest-side, #100812 74%, transparent 75%), conic-gradient(#FF6B8A 100%, #FF6B8A 0); }
         .cc-run-k { font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: 0.14em; color: rgba(255,107,138,0.65); }
-        .cc-run-v { font-family: 'Clash Display', sans-serif; font-size: 15px; font-weight: 600; color: var(--text-primary); margin-top: 3px; line-height: 1.15; }
-        .cc-run-pct { margin-left: auto; font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; color: #FF6B8A; flex-shrink: 0; }
+        .cc-run-v { font-family: 'Clash Display', sans-serif; font-size: 15px; font-weight: 600; color: var(--text-primary); margin-top: 2px; line-height: 1.05; display: flex; align-items: baseline; gap: 7px; }
+        .cc-run-big { font-size: 26px; color: #FF6B8A; }
+        .cc-shelf { font-family: 'JetBrains Mono', monospace; font-size: 9.5px; letter-spacing: 0.02em; color: var(--text-tertiary); margin-top: 9px; line-height: 1.5; }
+        .cc-now2 { display: flex; align-items: center; gap: 9px; margin-top: 13px; }
+        .cc-now2-tag { font-family: 'JetBrains Mono', monospace; font-size: 8px; font-weight: 700; letter-spacing: 0.12em; color: #FF6B8A; border: 1px solid rgba(255,107,138,0.4); border-radius: 4px; padding: 2px 6px; flex-shrink: 0; }
+        .cc-now2-title { font-family: 'Inter', sans-serif; font-size: 13px; color: var(--text-secondary); }
 
         .cc-eq { display: flex; align-items: flex-end; gap: 2px; height: 20px; flex-shrink: 0; }
         .cc-eq span { width: 3px; min-height: 4px; background: var(--eq, #FF6B8A); border-radius: 1px; animation: cc-eq 0.9s ease-in-out infinite; }
@@ -1165,10 +1210,11 @@ export default function Identity() {
         @keyframes rc-sweep { 0% { transform: translateX(-4px); } 100% { transform: translateX(322px); } }
         @keyframes pc-focus { 0%, 100% { transform: translate(-50%,-50%) scale(1); opacity: 0.8; } 50% { transform: translate(-50%,-50%) scale(0.82); opacity: 1; } }
         @keyframes cc-eq { 0%, 100% { height: 5px; } 50% { height: 20px; } }
+        @keyframes cc-swing { 0%, 100% { transform: rotate(-12deg); } 50% { transform: rotate(12deg); } }
 
         @media (prefers-reduced-motion: reduce) {
           .rc-trace { animation: none; stroke-dashoffset: 0; }
-          .rc-scan, .rc-rec-dot, .pc-af, .pc-hud-rec, .cc-online-dot, .cc-eq span { animation: none !important; }
+          .rc-scan, .rc-rec-dot, .pc-af, .pc-hud-rec, .cc-online-dot, .cc-eq span, .cc-spider { animation: none !important; }
         }
 
         /* ─ Modal panel scrollbar ───────────────── */
