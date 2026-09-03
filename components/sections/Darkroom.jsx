@@ -113,30 +113,25 @@ export default function Darkroom() {
           })}
         </div>
 
-        {/* The dome */}
-        <motion.div
-          initial={{ opacity: 0 }} animate={inView ? { opacity: 1 } : { opacity: 0 }}
-          transition={{ duration: 0.9, delay: 0.45, ease: EASE }}
-          className="dk-dome"
-        >
+        {/* The dome. Mounted unconditionally — it gates its own animation to
+            when it's on screen, so it doesn't lean on a whileInView trigger. */}
+        <div className="dk-dome">
           <div className="dk-dome-glow" />
-          {inView && (
-            <DomeGallery
-              key={filter}
-              images={domeImages}
-              segments={segs}
-              grayscale={false}
-              overlayBlurColor="#080809"
-              imageBorderRadius="14px"
-              openedImageBorderRadius="18px"
-              padFactor={0.11}
-              fit={0.52}
-              maxVerticalRotationDeg={6}
-              autoRotate
-              autoRotateSpeed={0.05}
-            />
-          )}
-        </motion.div>
+          <DomeGallery
+            key={filter}
+            images={domeImages}
+            segments={segs}
+            grayscale={false}
+            overlayBlurColor="#080809"
+            imageBorderRadius="14px"
+            openedImageBorderRadius="18px"
+            padFactor={0.11}
+            fit={0.52}
+            maxVerticalRotationDeg={6}
+            autoRotate
+            autoRotateSpeed={0.05}
+          />
+        </div>
 
         <p style={{ textAlign: 'center', marginTop: '30px', fontFamily: 'JetBrains Mono, monospace', fontSize: '11px', color: 'rgba(255,255,255,0.3)', letterSpacing: '0.06em' }}>
           {PHOTOS.length} frames · drag to spin · click one for the details
