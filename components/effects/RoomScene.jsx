@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
+import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 
 // ─── Project Data (edit this to personalise) ─────────────────────────────────
 export const SCREENS_DATA = {
@@ -417,86 +418,117 @@ function buildScreenCanvas(id) {
 // ─── Rubik's-style desk puzzles ──────────────────────────────────────────────
 // Built entirely from primitives so there's no asset to load. Each returns a
 // THREE.Group centred on its own origin; the scene positions and spins them.
+// Rounded cubie bodies + inset sticker tiles with real gaps so they read as
+// actual puzzles from desk distance, not coloured blocks.
+function roundedRectGeo(w, h, r) {
+  const s = new THREE.Shape();
+  const x = -w / 2, y = -h / 2;
+  s.moveTo(x + r, y);
+  s.lineTo(x + w - r, y);
+  s.quadraticCurveTo(x + w, y, x + w, y + r);
+  s.lineTo(x + w, y + h - r);
+  s.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  s.lineTo(x + r, y + h);
+  s.quadraticCurveTo(x, y + h, x, y + h - r);
+  s.lineTo(x, y + r);
+  s.quadraticCurveTo(x, y, x + r, y);
+  return new THREE.ShapeGeometry(s, 6);
+}
+
+function regularPolyGeo(sides, radius) {
+  const s = new THREE.Shape();
+  for (let i = 0; i < sides; i++) {
+    const a = (i / sides) * Math.PI * 2 - Math.PI / 2;
+    const px = Math.cos(a) * radius, py = Math.sin(a) * radius;
+    i === 0 ? s.moveTo(px, py) : s.lineTo(px, py);
+  }
+  s.closePath();
+  return new THREE.ShapeGeometry(s);
+}
+
 function makeRubiks(type) {
   const g = new THREE.Group();
-  const bodyMat = new THREE.MeshStandardMaterial({ color: 0x0a0a0c, roughness: 0.45, metalness: 0.15 });
-  const edgeMat = new THREE.LineBasicMaterial({ color: 0x050506, transparent: true, opacity: 0.85 });
+  const plasticMat = new THREE.MeshStandardMaterial({ color: 0x08080a, roughness: 0.38, metalness: 0.05 });
+  const edgeMat = new THREE.LineBasicMaterial({ color: 0x040405, transparent: true, opacity: 0.9 });
   const stickerCache = {};
   const sticker = (hex) =>
     (stickerCache[hex] ||= new THREE.MeshStandardMaterial({
-      color: hex, roughness: 0.32, metalness: 0.04,
-      emissive: new THREE.Color(hex), emissiveIntensity: 0.14,
+      color: hex, roughness: 0.28, metalness: 0.03,
+      emissive: new THREE.Color(hex), emissiveIntensity: 0.16,
+      side: THREE.DoubleSide,
     }));
 
   if (type === '3x3') {
-    const S = 0.17, t = S / 3, q = t * 0.82, off = S / 2 + 0.002;
-    const body = new THREE.Mesh(new THREE.BoxGeometry(S, S, S), bodyMat);
-    body.castShadow = true;
-    body.add(new THREE.LineSegments(new THREE.EdgesGeometry(body.geometry), edgeMat));
-    g.add(body);
-    const COL = { U: 0xf5f5f5, D: 0xffd21f, F: 0xd01f1f, B: 0xff7a1a, R: 0x1f5fd0, L: 0x1fa64a };
-    const face = (color, axis, sign) => {
-      for (let a = -1; a <= 1; a++) for (let b = -1; b <= 1; b++) {
-        const m = new THREE.Mesh(new THREE.PlaneGeometry(q, q), sticker(color));
-        if (axis === 'x')      { m.rotation.y = sign * Math.PI / 2;  m.position.set(sign * off, a * t, b * t); }
-        else if (axis === 'y') { m.rotation.x = -sign * Math.PI / 2; m.position.set(a * t, sign * off, b * t); }
-        else                   { m.rotation.y = sign > 0 ? 0 : Math.PI; m.position.set(a * t, b * t, sign * off); }
-        g.add(m);
-      }
-    };
-    face(COL.R, 'x', 1); face(COL.L, 'x', -1);
-    face(COL.U, 'y', 1); face(COL.D, 'y', -1);
-    face(COL.F, 'z', 1); face(COL.B, 'z', -1);
+    const cs = 0.052;                 // cubie edge
+    const p  = cs + 0.006;            // cubie pitch (gap = 0.006)
+    const cubieGeo = new RoundedBoxGeometry(cs, cs, cs, 3, 0.008);
+    const tileGeo  = roundedRectGeo(cs * 0.76, cs * 0.76, cs * 0.14);
+    const COL = { px: 0x1f5fd0, nx: 0x1fa64a, py: 0xf6f6f6, ny: 0xffd21f, pz: 0xd11a1a, nz: 0xff7a1a };
+    const faces = [
+      ['px', [1, 0, 0]], ['nx', [-1, 0, 0]], ['py', [0, 1, 0]],
+      ['ny', [0, -1, 0]], ['pz', [0, 0, 1]], ['nz', [0, 0, -1]],
+    ];
+    for (let x = -1; x <= 1; x++) for (let y = -1; y <= 1; y++) for (let z = -1; z <= 1; z++) {
+      if (x === 0 && y === 0 && z === 0) continue;
+      const cubie = new THREE.Mesh(cubieGeo, plasticMat);
+      cubie.position.set(x * p, y * p, z * p);
+      cubie.castShadow = true;
+      g.add(cubie);
+      faces.forEach(([key, n]) => {
+        if ((n[0] && n[0] === x) || (n[1] && n[1] === y) || (n[2] && n[2] === z)) {
+          const tile = new THREE.Mesh(tileGeo, sticker(COL[key]));
+          tile.position.set(x * p + n[0] * (cs / 2 + 0.001), y * p + n[1] * (cs / 2 + 0.001), z * p + n[2] * (cs / 2 + 0.001));
+          if (n[0]) tile.rotation.y = n[0] * Math.PI / 2;
+          else if (n[1]) tile.rotation.x = -n[1] * Math.PI / 2;
+          else if (n[2] < 0) tile.rotation.y = Math.PI;
+          g.add(tile);
+        }
+      });
+    }
     return g;
   }
 
   if (type === 'mirror') {
-    // Mirror Blocks — gold cubies at deliberately uneven sizes.
-    // One shared material + a thin dark gap frame so the size contrast reads
-    // without a wireframe on every cubie.
-    const gold = new THREE.MeshStandardMaterial({ color: 0xc9a24e, roughness: 0.24, metalness: 0.9 });
-    g.add(new THREE.Mesh(new THREE.BoxGeometry(0.185, 0.185, 0.185), bodyMat));
-    const base = 0.055;
-    for (let x = 0; x < 3; x++) for (let y = 0; y < 3; y++) for (let z = 0; z < 3; z++) {
-      const c = new THREE.Mesh(
-        new THREE.BoxGeometry(
-          base * (0.6 + Math.random() * 0.85),
-          base * (0.6 + Math.random() * 0.85),
-          base * (0.6 + Math.random() * 0.85),
-        ),
-        gold,
-      );
-      c.position.set((x - 1) * base, (y - 1) * base, (z - 1) * base);
+    // Mirror Blocks — rounded gold cubies at deliberately uneven heights.
+    const gold = new THREE.MeshStandardMaterial({ color: 0xcaa74f, roughness: 0.2, metalness: 0.95 });
+    const base = 0.052;
+    for (let x = -1; x <= 1; x++) for (let y = -1; y <= 1; y++) for (let z = -1; z <= 1; z++) {
+      const sx = base * (0.62 + Math.random() * 0.8);
+      const sy = base * (0.62 + Math.random() * 0.8);
+      const sz = base * (0.62 + Math.random() * 0.8);
+      const c = new THREE.Mesh(new RoundedBoxGeometry(sx, sy, sz, 2, 0.006), gold);
+      c.position.set(x * base * 1.04, y * base * 1.04, z * base * 1.04);
       c.castShadow = true;
       g.add(c);
     }
     return g;
   }
 
-  if (type === 'pyraminx') {
-    const geo = new THREE.TetrahedronGeometry(0.135);
-    geo.clearGroups();
-    for (let i = 0; i < 4; i++) geo.addGroup(i * 3, 3, i);
-    const mats = [0x1fa64a, 0xd01f1f, 0x1f5fd0, 0xffd21f].map(sticker);
-    const mesh = new THREE.Mesh(geo, mats);
-    mesh.castShadow = true;
-    mesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo), edgeMat));
-    g.add(mesh);
-    return g;
-  }
-
   if (type === 'megaminx') {
-    const geo = new THREE.DodecahedronGeometry(0.125);
-    geo.clearGroups();
-    for (let i = 0; i < 12; i++) geo.addGroup(i * 9, 9, i);
-    const mats = [
-      0xf5f5f5, 0xffd21f, 0x1436b0, 0xd01f1f, 0x0f7a34, 0x6b2fb0,
-      0x9aa0a6, 0x35a7d0, 0xff7a1a, 0x7ac943, 0xe86ea0, 0xdcc8a0,
-    ].map(sticker);
-    const mesh = new THREE.Mesh(geo, mats);
-    mesh.castShadow = true;
-    mesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo), edgeMat));
-    g.add(mesh);
+    const R = 0.125;
+    const geo = new THREE.DodecahedronGeometry(R);
+    const body = new THREE.Mesh(geo, plasticMat);
+    body.castShadow = true;
+    body.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo), edgeMat));
+    g.add(body);
+    // inset pentagon sticker per face
+    const cols = [
+      0xf6f6f6, 0xffd21f, 0x1436b0, 0xd11a1a, 0x0f7a34, 0x6b2fb0,
+      0x9aa0a6, 0x35a7d0, 0xff7a1a, 0x7ac943, 0xe86ea0, 0xd8c49c,
+    ];
+    const pos = geo.getAttribute('position');
+    const pentGeo = regularPolyGeo(5, R * 0.42);
+    const up = new THREE.Vector3(0, 0, 1);
+    for (let f = 0; f < 12; f++) {
+      const center = new THREE.Vector3();
+      for (let k = 0; k < 9; k++) center.add(new THREE.Vector3().fromBufferAttribute(pos, f * 9 + k));
+      center.multiplyScalar(1 / 9);
+      const normal = center.clone().normalize();
+      const tile = new THREE.Mesh(pentGeo, sticker(cols[f]));
+      tile.position.copy(normal.clone().multiplyScalar(center.length() + 0.002));
+      tile.quaternion.setFromUnitVectors(up, normal);
+      g.add(tile);
+    }
     return g;
   }
 
@@ -549,7 +581,6 @@ export default function RoomScene({ activeScreen, onScreenClick, onOpenProject }
       rubiks: [],
       muSign: null,
       dustGeo: null, dustSpeeds: null,
-      mouseRgbLight: null, mouseGlow: null,
       kbLight: null,
       disposed: false, raf: null,
     };
@@ -846,8 +877,8 @@ export default function RoomScene({ activeScreen, onScreenClick, onOpenProject }
     // ══════════════════════════════════════════════════
     // FOREGROUND MOUSE + MOUSEPAD
     // ══════════════════════════════════════════════════
-    const msMat  = new THREE.MeshStandardMaterial({ color: 0x13172a, roughness: 0.68, metalness: 0.32 });
-    const msBtnMat = new THREE.MeshStandardMaterial({ color: 0x181c2e, roughness: 0.78, metalness: 0.15 });
+    const msMat  = new THREE.MeshStandardMaterial({ color: 0x0e1018, roughness: 0.6, metalness: 0.28 });
+    const msBtnMat = new THREE.MeshStandardMaterial({ color: 0x12151f, roughness: 0.72, metalness: 0.12 });
 
     // Mousepad
     const padMat = new THREE.MeshStandardMaterial({ color: 0x080a10, roughness: 0.97 });
@@ -870,43 +901,22 @@ export default function RoomScene({ activeScreen, onScreenClick, onOpenProject }
     msBtnR.position.set(1.332, DESK_Y + 0.088, 0.855);
     scene.add(msBtnR);
 
-    // Scroll wheel — red-lit, matching the underglow
+    // Scroll wheel — plain dark rubber
     const wheel = new THREE.Mesh(
       new THREE.CylinderGeometry(0.014, 0.014, 0.055, 7),
-      new THREE.MeshStandardMaterial({
-        color: 0x3a1418, roughness: 0.5, metalness: 0.4,
-        emissive: new THREE.Color(0xff1a2e), emissiveIntensity: 0.9,
-      }),
+      new THREE.MeshStandardMaterial({ color: 0x1a1d28, roughness: 0.7, metalness: 0.2 }),
     );
     wheel.position.set(1.30, DESK_Y + 0.093, 0.858);
     scene.add(wheel);
-
-    // Red underglow — the light bleeding out under the mouse onto the pad
-    const msLed = new THREE.PointLight(0xff0a1e, 0.85, 0.95, 2.2);
-    msLed.position.set(1.30, DESK_Y + 0.030, 0.90);
-    scene.add(msLed);
-    S.mouseRgbLight = msLed;
-
-    // Additive glow disc so the underglow reads even where the point light doesn't reach
-    const msGlowMat = new THREE.MeshBasicMaterial({
-      color: 0xff1a2e, transparent: true, opacity: 0.5,
-      blending: THREE.AdditiveBlending, depthWrite: false,
-    });
-    const msGlow = new THREE.Mesh(new THREE.CircleGeometry(0.17, 24), msGlowMat);
-    msGlow.rotation.x = -Math.PI / 2;
-    msGlow.position.set(1.30, DESK_Y + 0.010, 0.90);
-    scene.add(msGlow);
-    S.mouseGlow = msGlowMat;
 
     // ══════════════════════════════════════════════════
     // RUBIK'S PUZZLES — desk toys flanking the keyboard + mouse
     // ══════════════════════════════════════════════════
     const deskSurf = DESK_Y + 0.036;
     [
-      { type: '3x3',      pos: [-1.16, deskSurf + 0.086, 1.00], rotY:  0.5,  baseX:  0.12, spin:  0.13 },
-      { type: 'pyraminx', pos: [-1.60, deskSurf + 0.070, 0.72], rotY: -0.4,  baseX: -0.20, spin: -0.10 },
-      { type: 'mirror',   pos: [ 2.04, deskSurf + 0.100, 0.98], rotY:  0.7,  baseX:  0.12, spin:  0.11 },
-      { type: 'megaminx', pos: [ 2.52, deskSurf + 0.120, 0.70], rotY: -0.6,  baseX:  0.10, spin:  0.16 },
+      { type: '3x3',      pos: [-1.14, deskSurf + 0.086, 1.00], rotY:  0.5,  baseX:  0.12, spin:  0.13 },
+      { type: 'megaminx', pos: [-1.62, deskSurf + 0.120, 0.70], rotY: -0.5,  baseX:  0.10, spin:  0.16 },
+      { type: 'mirror',   pos: [ 2.06, deskSurf + 0.100, 0.96], rotY:  0.7,  baseX:  0.12, spin:  0.11 },
     ].forEach((def) => {
       const grp = makeRubiks(def.type);
       grp.position.set(...def.pos);
@@ -1459,12 +1469,6 @@ export default function RoomScene({ activeScreen, onScreenClick, onOpenProject }
         muDeskSpill.intensity = 0.32 + Math.sin(t * 0.75) * 0.04;
       }
 
-      if (S.mouseRgbLight) {
-        S.mouseRgbLight.intensity = 0.8 + Math.sin(t * 2.4) * 0.16;
-      }
-      if (S.mouseGlow) {
-        S.mouseGlow.opacity = 0.42 + Math.sin(t * 2.4) * 0.12;
-      }
       if (S.kbLight) {
         S.kbLight.intensity = 0.7 + Math.sin(t * 1.8) * 0.2;
       }
