@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import dynamic from 'next/dynamic';
-import { motion, AnimatePresence, useInView } from 'framer-motion';
+import { motion, useInView } from 'framer-motion';
 import ProjectModal from '@/components/ui/ProjectModal';
 
 const EASE = [0.16, 1, 0.3, 1];
@@ -118,50 +118,42 @@ export default function DevStudio() {
             <div style={{ position: 'absolute', inset: 0, zIndex: 2, pointerEvents: 'none', backgroundImage: 'repeating-linear-gradient(0deg, rgba(0,0,0,0.012) 0px, rgba(0,0,0,0.012) 1px, transparent 1px, transparent 3px)' }} />
 
             {/* Back button */}
-            <AnimatePresence>
-              {activeScreen && (
-                <motion.button key="back" initial={{ opacity: 0, x: -14 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -14 }} transition={{ duration: 0.26, ease: EASE }}
-                  onClick={handleBack}
-                  style={{ position: 'absolute', top: '14px', left: '14px', zIndex: 10, background: 'rgba(5,6,12,0.88)', backdropFilter: 'blur(16px)', border: `1px solid ${sl?.color ?? '#555'}30`, borderRadius: '10px', padding: '8px 18px', display: 'flex', alignItems: 'center', gap: '7px', fontFamily: 'JetBrains Mono, monospace', fontSize: '11px', color: sl?.color ?? '#aaa', cursor: 'pointer', letterSpacing: '0.04em', transition: 'background 0.15s' }}
-                  onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(14,16,28,0.94)'; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(5,6,12,0.88)'; }}
-                >
-                  ← overview
-                </motion.button>
-              )}
-            </AnimatePresence>
+            {activeScreen && (
+              <motion.button key="back" initial={{ opacity: 0, x: -14 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.26, ease: EASE }}
+                onClick={handleBack}
+                style={{ position: 'absolute', top: '14px', left: '14px', zIndex: 10, background: 'rgba(5,6,12,0.88)', backdropFilter: 'blur(16px)', border: `1px solid ${sl?.color ?? '#555'}30`, borderRadius: '10px', padding: '8px 18px', display: 'flex', alignItems: 'center', gap: '7px', fontFamily: 'JetBrains Mono, monospace', fontSize: '11px', color: sl?.color ?? '#aaa', cursor: 'pointer', letterSpacing: '0.04em', transition: 'background 0.15s' }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(14,16,28,0.94)'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(5,6,12,0.88)'; }}
+              >
+                ← overview
+              </motion.button>
+            )}
 
             {/* Screen label */}
-            <AnimatePresence>
-              {isZoomedIn && sl && (
-                <motion.div key="label" initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.26, ease: EASE }}
-                  style={{ position: 'absolute', top: '14px', right: '14px', zIndex: 10, background: 'rgba(5,6,12,0.88)', backdropFilter: 'blur(16px)', border: `1px solid ${sl.color}30`, borderRadius: '10px', padding: '6px 14px', display: 'flex', alignItems: 'center', gap: '8px', fontFamily: 'JetBrains Mono, monospace', fontSize: '11px', color: sl.color, pointerEvents: 'none' }}
-                >
-                  <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: sl.color, animation: 'pulse-dot 2s ease-in-out infinite' }} />
-                  {sl.label}
-                </motion.div>
-              )}
-            </AnimatePresence>
+            {isZoomedIn && sl && (
+              <motion.div key="label" initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.26, ease: EASE }}
+                style={{ position: 'absolute', top: '14px', right: '14px', zIndex: 10, background: 'rgba(5,6,12,0.88)', backdropFilter: 'blur(16px)', border: `1px solid ${sl.color}30`, borderRadius: '10px', padding: '6px 14px', display: 'flex', alignItems: 'center', gap: '8px', fontFamily: 'JetBrains Mono, monospace', fontSize: '11px', color: sl.color, pointerEvents: 'none' }}
+              >
+                <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: sl.color, animation: 'pulse-dot 2s ease-in-out infinite' }} />
+                {sl.label}
+              </motion.div>
+            )}
 
             {/* Hints */}
-            <AnimatePresence>
-              {!activeScreen && (
-                <motion.div key="hint-ov" initial={{ opacity: 0 }} animate={{ opacity: 1, transition: { delay: 0.8 } }} exit={{ opacity: 0 }}
-                  style={{ position: 'absolute', bottom: '14px', right: '14px', zIndex: 4, background: 'rgba(5,6,12,0.78)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '8px', padding: '5px 12px', fontFamily: 'JetBrains Mono, monospace', fontSize: '11px', color: '#7d8590', pointerEvents: 'none' }}
-                >
-                  click a monitor to explore →
-                </motion.div>
-              )}
-            </AnimatePresence>
-            <AnimatePresence>
-              {isZoomedIn && (
-                <motion.div key="hint-zo" initial={{ opacity: 0 }} animate={{ opacity: 1, transition: { delay: 0.5 } }} exit={{ opacity: 0 }}
-                  style={{ position: 'absolute', bottom: '14px', right: '14px', zIndex: 4, background: 'rgba(5,6,12,0.78)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '8px', padding: '5px 12px', fontFamily: 'JetBrains Mono, monospace', fontSize: '11px', color: '#7d8590', pointerEvents: 'none' }}
-                >
-                  click a project name →
-                </motion.div>
-              )}
-            </AnimatePresence>
+            {!activeScreen && (
+              <motion.div key="hint-ov" initial={{ opacity: 0 }} animate={{ opacity: 1, transition: { delay: 0.8 } }}
+                style={{ position: 'absolute', bottom: '14px', right: '14px', zIndex: 4, background: 'rgba(5,6,12,0.78)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '8px', padding: '5px 12px', fontFamily: 'JetBrains Mono, monospace', fontSize: '11px', color: '#7d8590', pointerEvents: 'none' }}
+              >
+                click a monitor to explore →
+              </motion.div>
+            )}
+            {isZoomedIn && (
+              <motion.div key="hint-zo" initial={{ opacity: 0 }} animate={{ opacity: 1, transition: { delay: 0.5 } }}
+                style={{ position: 'absolute', bottom: '14px', right: '14px', zIndex: 4, background: 'rgba(5,6,12,0.78)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '8px', padding: '5px 12px', fontFamily: 'JetBrains Mono, monospace', fontSize: '11px', color: '#7d8590', pointerEvents: 'none' }}
+              >
+                click a project name →
+              </motion.div>
+            )}
 
             <div style={{ position: 'absolute', bottom: '14px', left: '14px', zIndex: 4, background: 'rgba(5,6,12,0.78)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '8px', padding: '5px 12px', fontFamily: 'JetBrains Mono, monospace', fontSize: '11px', color: '#3d444d', pointerEvents: 'none' }}>
               three.js · interactive
@@ -193,9 +185,7 @@ export default function DevStudio() {
         </div>
       </div>
 
-      <AnimatePresence>
-        {selectedProject && <ProjectModal project={selectedProject} onClose={() => setSelectedProject(null)} />}
-      </AnimatePresence>
+      {selectedProject && <ProjectModal project={selectedProject} onClose={() => setSelectedProject(null)} />}
 
       <style>{`
         @keyframes th-blink  { 0%,100%{opacity:1} 50%{opacity:0} }

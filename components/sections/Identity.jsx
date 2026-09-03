@@ -1,9 +1,8 @@
 'use client';
 
-import { motion, AnimatePresence, useInView } from 'framer-motion';
+import { motion, useInView } from 'framer-motion';
 import { useState, useRef, useCallback, useEffect } from 'react';
 import CometCard from '@/components/ui/comet-card';
-import StarBorder from '@/components/StarBorder';
 import DecryptedText from '@/components/DecryptedText';
 import SplitText from '@/components/SplitText';
 import LogoLoop from '@/components/LogoLoop';
@@ -19,6 +18,12 @@ import {
   SiVercel, SiPostman, SiLinux, SiGithub,
 } from 'react-icons/si';
 import { VscVscode } from 'react-icons/vsc';
+
+// ── Line icons (lucide) — used in place of emoji on the cards + modals ────────
+import {
+  Gamepad2, Trophy, Disc3, Clapperboard, Music2, ListChecks, Moon,
+  X as CloseIcon,
+} from 'lucide-react';
 
 // ── Full tech-stack logos for the marquee ─────────────────────────────────────
 const techLogos = [
@@ -79,13 +84,14 @@ function FadeUp({ children, delay = 0, style = {} }) {
   );
 }
 
-// ── Scroll-reveal wrapper (unchanged) ────────────────────────────────────────
+// ── Scroll-reveal wrapper — full-height so grid cells stay equal ─────────────
 function CardReveal({ index, inView, children }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 50 }}
       animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 50 }}
       transition={{ delay: index * 0.12, duration: 0.7, ease: E }}
+      style={{ height: '100%' }}
     >
       {children}
     </motion.div>
@@ -136,7 +142,7 @@ function Corner({ pos, size = 16, thickness = '1.5px', color = 'var(--accent-pho
 function BuilderCard({ inView, index, onOpen }) {
   return (
     <CardReveal index={index} inView={inView}>
-      <CometCard>
+      <CometCard className="identity-comet">
         <div className="identity-card identity-card--builder"
           onClick={onOpen} style={{ cursor: 'pointer' }}>
           <div className="terminal-chrome">
@@ -175,7 +181,7 @@ function BuilderCard({ inView, index, onOpen }) {
 function ResearcherCard({ inView, index, onOpen }) {
   return (
     <CardReveal index={index} inView={inView}>
-      <CometCard>
+      <CometCard className="identity-comet">
         <div className="identity-card identity-card--researcher"
           onClick={onOpen} style={{ cursor: 'pointer' }}>
 
@@ -226,7 +232,7 @@ function ResearcherCard({ inView, index, onOpen }) {
 function PhotographerCard({ inView, index, onOpen }) {
   return (
     <CardReveal index={index} inView={inView}>
-      <CometCard>
+      <CometCard className="identity-comet">
         <div className="identity-card identity-card--photographer"
           onClick={onOpen} style={{ cursor: 'pointer' }}>
 
@@ -264,35 +270,40 @@ function PhotographerCard({ inView, index, onOpen }) {
 function CandidCard({ inView, index, onOpen }) {
   return (
     <CardReveal index={index} inView={inView}>
-      <CometCard>
+      <CometCard className="identity-comet">
         <div className="identity-card identity-card--candid"
           onClick={onOpen} style={{ cursor: 'pointer' }}>
 
           <div className="cc-strip">
-            <span className="cc-online"><span className="cc-online-dot" />ONLINE</span>
+            <span className="cc-online"><span className="cc-online-dot" />PLAYER ONE</span>
             <span>OFF THE CLOCK</span>
           </div>
 
-          <div className="cc-now">
-            <div className="cc-eq" aria-hidden="true"><span /><span /><span /><span /><span /></div>
+          {/* platinum-run panel */}
+          <div className="cc-run">
+            <span className="cc-run-ring" style={{ '--p': 72 }}>
+              <Trophy size={16} strokeWidth={2} />
+            </span>
             <div>
-              <p className="cc-now-k">NOW PLAYING</p>
-              <p className="cc-now-v">AP Dhillon &mdash; on repeat</p>
+              <p className="cc-run-k">CHASING PLATINUM</p>
+              <p className="cc-run-v">God of War Ragnarök</p>
             </div>
+            <span className="cc-run-pct">72%</span>
           </div>
 
           <div className="cc-chips">
-            {[['🎮', 'Valorant'], ['⚽', 'Football'], ['🏓', 'Table tennis']].map(([e, l]) => (
-              <span key={l} className="cc-chip"><span>{e}</span>{l}</span>
-            ))}
+            <span className="cc-chip"><Gamepad2 size={13} strokeWidth={2.1} />Story games</span>
+            <span className="cc-chip"><Trophy size={13} strokeWidth={2.1} />100% runs</span>
+            <span className="cc-chip"><Disc3 size={13} strokeWidth={2.1} />Post Malone</span>
           </div>
 
-          <h3 style={{ fontFamily: 'Clash Display, sans-serif', fontSize: '22px', fontWeight: 600, color: '#FF6B8A', margin: '16px 0 10px' }}>Off the clock</h3>
-          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', lineHeight: 1.7, color: 'var(--text-secondary)', flex: 1 }}>
-            Games are why I got into computers &mdash; still one of the better calls
-            I&apos;ve made. Add football, table tennis, and too much White Monster.
+          <h3 className="cc-h3">Off the clock</h3>
+          <p className="cc-copy">
+            Games are why I got into computers. Now the free hours go into
+            platinuming the big single-player ones &mdash; God of War, Uncharted,
+            the story-heavy stuff.
           </p>
-          <p className="cc-foot">currently: Valorant · AP Dhillon · Atomic Habits</p>
+          <p className="cc-foot">now: Post Malone · God of War Ragnar&ouml;k · hunting 100%</p>
         </div>
       </CometCard>
     </CardReveal>
@@ -313,22 +324,21 @@ function ModalCloseBtn({ onClose, color = '#7C6FF7' }) {
       borderRadius: '50%',
       width: '28px', height: '28px',
       color,
-      fontSize: '14px',
       cursor: 'pointer',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       lineHeight: 1,
       flexShrink: 0,
-    }}>✕</button>
+    }}><CloseIcon size={14} strokeWidth={2.5} /></button>
   );
 }
 
 // ── Builder modal ─────────────────────────────────────────────────────────────
 function BuilderModalContent({ onClose }) {
   const projects = [
-    { name: 'async-federated-learning', date: 'Oct 2024', active: true },
-    { name: 'multi-hazard-early-warning', date: 'Aug 2024', active: true },
-    { name: 'placeholder-project-alpha', date: 'Jun 2024', active: false },
-    { name: 'placeholder-project-beta', date: 'Mar 2024', active: false },
+    { name: 'async-federated-learning', date: 'active', active: true },
+    { name: 'multi-hazard-early-warning', date: 'active', active: true },
+    { name: 'eeg-emg-hunger-detection', date: 'archived', active: false },
+    { name: 'cli-portfolio', date: 'this site', active: false },
   ];
   const commits = [
     { hash: 'a3f9c12', msg: 'feat: add async federated aggregation layer' },
@@ -357,16 +367,14 @@ function BuilderModalContent({ onClose }) {
           <span style={{ color: '#e6edf3' }}>./biography.md</span>
         </div>
         <div style={{ borderLeft: '2px solid #21262d', paddingLeft: '16px', color: '#c9d1d9', fontSize: '14px', lineHeight: 1.9 }}>
-          <p style={{ color: '#79c0ff', marginBottom: '8px', fontSize: '12px' }}># The Builder — placeholder</p>
+          <p style={{ color: '#79c0ff', marginBottom: '8px', fontSize: '12px' }}># The Builder</p>
           <p style={{ marginBottom: '12px' }}>
-            Engineering student at DJ Sanghvi College of Engineering, Mumbai. Placeholder copy — replace with real
-            biography text. The kind of person who ships first, documents when necessary, and refactors at 3am
-            because the architecture was bothering them.
+            Engineering student at DJ Sanghvi College of Engineering, Mumbai. I ship first, document
+            when it matters, and go back to refactor once the architecture stops sitting right.
           </p>
           <p>
-            Placeholder second paragraph. Full-stack development, AI/ML pipelines, and federated learning are the
-            daily vocabulary. If there is a system that can be designed better, there is probably already a
-            half-finished branch for it.
+            The day-to-day is full-stack web, AI/ML pipelines, and federated systems &mdash; and if a
+            system could be designed better, there is usually already a half-finished branch for it.
           </p>
         </div>
       </div>
@@ -465,7 +473,7 @@ function ResearcherModalContent({ onClose }) {
             <PipeArrow />
             <PipeNode label="LSTM Model" color="#7C6FF7" />
             <PipeArrow />
-            <PipeNode label="Alert ⚡" color="#E8935A" />
+            <PipeNode label="Alert" color="#E8935A" />
           </div>
           <p style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '10px', color: 'rgba(124,111,247,0.3)', letterSpacing: '0.1em', textAlign: 'right', marginBottom: '32px' }}>3 nodes active · 2 nodes pending</p>
         </FadeUp>
@@ -502,14 +510,14 @@ function ResearcherModalContent({ onClose }) {
         <FadeUp delay={0.2}>
           <h3 style={{ fontFamily: 'Clash Display, sans-serif', fontSize: '18px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '14px' }}>Research Focus</h3>
           <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', lineHeight: 1.85, color: 'var(--text-secondary)', marginBottom: '14px' }}>
-            Placeholder — multi-hazard early warning systems at IIT Bombay. The work involves building an end-to-end
-            pipeline from raw IoT sensor data through stream processing to deep learning inference and real-time alerting.
-            Scale, latency, and reliability are the three constraints everything is optimised against.
+            Multi-hazard early warning systems at IIT Bombay. The work is an end-to-end pipeline &mdash;
+            raw IoT sensor data, through stream processing, into deep-learning inference, out to
+            real-time community alerts. Scale, latency, and reliability are the three constraints
+            everything gets measured against.
           </p>
           <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', lineHeight: 1.85, color: 'var(--text-secondary)', marginBottom: '32px' }}>
-            Placeholder — second paragraph about the research methodology. What makes the problem technically
-            interesting, and the engineering challenges of deploying ML models at the edge under real-world
-            constraints. Replace with actual research details when ready.
+            The interesting part is the edge: models have to stay accurate on cheap hardware, over
+            unreliable networks, with no second chances when a warning actually matters.
           </p>
         </FadeUp>
 
@@ -552,7 +560,7 @@ function PhotographerModalContent({ onClose }) {
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to right, rgba(6,4,6,0.9) 0%, transparent 15%, transparent 75%, rgba(6,4,6,0.9) 100%)' }} />
         <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', padding: '0 20px' }}>
           <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '10px', color: 'rgba(232,147,90,0.55)', letterSpacing: '0.15em' }}>
-            ◐ 35MM · 24EXP · PLACEHOLDER ROLL
+            35MM · 36EXP · MUMBAI
           </span>
           <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '10px', color: 'rgba(232,147,90,0.3)', letterSpacing: '0.1em' }}>
             f/1.8 · 1/250s · ISO 400
@@ -577,11 +585,11 @@ function PhotographerModalContent({ onClose }) {
               <div style={{ position: 'absolute', top: '50%', left: '50%', width: '5px', height: '5px', borderRadius: '50%', background: '#E8935A', transform: 'translate(-50%,-50%)', boxShadow: '0 0 8px rgba(232,147,90,0.6)' }} />
             </div>
             {/* Metadata overlays */}
-            <span style={{ position: 'absolute', top: '10px', left: '50%', transform: 'translateX(-50%)', fontFamily: 'JetBrains Mono, monospace', fontSize: '9px', color: 'rgba(232,147,90,0.35)', letterSpacing: '0.15em', whiteSpace: 'nowrap' }}>
-              ⬡ &nbsp; AUTOFOCUS ACTIVE &nbsp; ⬡
+            <span style={{ position: 'absolute', top: '10px', left: '50%', transform: 'translateX(-50%)', fontFamily: 'JetBrains Mono, monospace', fontSize: '9px', color: 'rgba(232,147,90,0.35)', letterSpacing: '0.22em', whiteSpace: 'nowrap' }}>
+              [ AUTOFOCUS &middot; AF-C ]
             </span>
-            <span style={{ position: 'absolute', bottom: '8px', left: '14px', fontFamily: 'JetBrains Mono, monospace', fontSize: '9px', color: 'rgba(232,147,90,0.3)', letterSpacing: '0.08em' }}>REC ●</span>
-            <span style={{ position: 'absolute', bottom: '8px', right: '14px', fontFamily: 'JetBrains Mono, monospace', fontSize: '9px', color: 'rgba(232,147,90,0.3)', letterSpacing: '0.08em' }}>PLACEHOLDER SERIES</span>
+            <span style={{ position: 'absolute', bottom: '8px', left: '14px', fontFamily: 'JetBrains Mono, monospace', fontSize: '9px', color: 'rgba(232,147,90,0.3)', letterSpacing: '0.08em', display: 'flex', alignItems: 'center', gap: '4px' }}><span style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#E8935A', display: 'inline-block' }} />REC</span>
+            <span style={{ position: 'absolute', bottom: '8px', right: '14px', fontFamily: 'JetBrains Mono, monospace', fontSize: '9px', color: 'rgba(232,147,90,0.3)', letterSpacing: '0.08em' }}>FRAME 0247</span>
           </div>
         </FadeUp>
 
@@ -590,11 +598,11 @@ function PhotographerModalContent({ onClose }) {
           <div style={{ position: 'relative', margin: '0 0 36px', paddingLeft: '22px', borderLeft: '2px solid rgba(232,147,90,0.4)' }}>
             <span style={{ position: 'absolute', top: '-14px', left: '-4px', fontFamily: 'Georgia, serif', fontSize: '80px', color: 'rgba(232,147,90,0.1)', lineHeight: 1, userSelect: 'none' }}>&ldquo;</span>
             <p style={{ fontFamily: 'Clash Display, sans-serif', fontSize: 'clamp(17px, 2.5vw, 22px)', fontWeight: 600, color: '#E8935A', fontStyle: 'italic', lineHeight: 1.45, marginBottom: '12px', position: 'relative', zIndex: 1 }}>
-              Placeholder — an evocative sentence about light and
-              Mumbai streets and why certain moments deserve to be preserved.
+              A photo is just a decision about what to leave out of the frame.
+              Mumbai makes that decision hard in the best way.
             </p>
             <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '11px', color: 'rgba(232,147,90,0.4)', letterSpacing: '0.1em' }}>
-              — Jay Guri · placeholder attribution
+              — how I think about it, anyway
             </span>
           </div>
         </FadeUp>
@@ -638,13 +646,13 @@ function PhotographerModalContent({ onClose }) {
         <FadeUp delay={0.21}>
           <h3 style={{ fontFamily: 'Clash Display, sans-serif', fontSize: '18px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '14px' }}>Behind the lens</h3>
           <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', lineHeight: 1.85, color: 'var(--text-secondary)', marginBottom: '14px' }}>
-            Placeholder — the philosophy behind the photography practice. Why Mumbai, why street, why point a camera
-            at ordinary things. The relationship between observation and image-making. Replace this with actual
-            writing about the work.
+            I mostly shoot street and portraits, on foot, in Mumbai. The interesting stuff is rarely
+            posing for you &mdash; it&apos;s the half-second before someone notices the camera, or the
+            way light lands on a wall nobody looks at twice.
           </p>
           <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', lineHeight: 1.85, color: 'var(--text-secondary)', marginBottom: '28px' }}>
-            Placeholder — second paragraph. The Sony α7 III and the lenses that live on it. The editing process.
-            What the camera sees that the eye misses. The difference between taking a photograph and making one.
+            The Sony α7 III does the seeing; the editing is where I decide what the frame was actually
+            about. Taking a photo is easy. Making one you&apos;d hang on a wall is the hard, slow part.
           </p>
         </FadeUp>
 
@@ -653,10 +661,10 @@ function PhotographerModalContent({ onClose }) {
           <div style={{ background: 'rgba(232,147,90,0.04)', border: '1px solid rgba(232,147,90,0.12)', borderRadius: '12px', padding: '20px', marginBottom: '28px' }}>
             <p style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '10px', color: 'rgba(232,147,90,0.45)', letterSpacing: '0.15em', marginBottom: '14px' }}>── EQUIPMENT ────────────────────</p>
             {[
-              { label: 'Body', value: 'Sony α7 III (Placeholder)' },
-              { label: 'Primary lens', value: '35mm f/1.8 (Placeholder)' },
-              { label: 'Portrait lens', value: '85mm f/1.4 (Placeholder)' },
-              { label: 'Editing', value: 'Lightroom — placeholder preset' },
+              { label: 'Body', value: 'Sony α7 III' },
+              { label: 'Shoots', value: 'Street · Portrait' },
+              { label: 'Base', value: 'Mumbai, on foot' },
+              { label: 'Edit', value: 'Lightroom' },
             ].map((e, i, arr) => (
               <div key={e.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '9px 0', borderBottom: i < arr.length - 1 ? '1px solid rgba(232,147,90,0.07)' : 'none', gap: '12px' }}>
                 <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: 'var(--text-tertiary)' }}>{e.label}</span>
@@ -679,29 +687,34 @@ function PhotographerModalContent({ onClose }) {
   );
 }
 
-// ── Candid modal ──────────────────────────────────────────────────────────────
+// ── Candid modal — a player profile / trophy cabinet ─────────────────────────
 function CandidModalContent({ onClose }) {
   const R = '#FF6B8A';
   const ra = (a) => `rgba(255,107,138,${a})`;
 
-  const currently = [
-    { icon: '🎮', label: 'Playing', value: 'Valorant' },
-    { icon: '🎵', label: 'Listening', value: 'AP Dhillon' },
-    { icon: '📖', label: 'Reading', value: 'Atomic Habits' },
-    { icon: '⚽', label: 'Watching', value: 'Whatever match is on' },
+  const STATUS = {
+    playing:  { label: 'IN PROGRESS', c: '#FF6B8A' },
+    platinum: { label: 'PLATINUM',    c: '#C9B7FF' },
+    next:     { label: 'NEXT UP',     c: '#8A8880' },
+  };
+  const games = [
+    { title: 'God of War Ragnarök',        sub: 'PS5 · the current grind', s: 'playing',  pct: 72 },
+    { title: 'God of War (2018)',               sub: 'ran it back for the platinum', s: 'platinum' },
+    { title: 'Uncharted 4: A Thief’s End', sub: 'set-piece perfection', s: 'platinum' },
+    { title: 'Uncharted: The Lost Legacy',      sub: 'short, sharp, underrated', s: 'next' },
+    { title: 'Marvel’s Spider-Man',        sub: 'swinging back through it', s: 'next' },
+    { title: 'The Last of Us Part II',          sub: 'on the list, bracing myself', s: 'next' },
   ];
-  const chaosCards = [
-    { emoji: '🎮', text: 'Started on GTA and FIFA. Ended up writing ML pipelines. I still think that is the best possible origin story.', rotate: -2.5 },
-    { emoji: '🥤', text: 'Runs on White Monster in quantities a cardiologist would want to talk about. This is non-negotiable.', rotate: 1.8 },
-    { emoji: '🏓', text: 'Convinced table tennis reflexes carry over to debugging. No data supports this. I am not looking for any.', rotate: -1.4 },
-    { emoji: '🌙', text: 'Best system-design ideas arrive between 1am and 4am. This is a feature, not a sleep disorder.', rotate: 2.2 },
+  const onRepeat = [
+    { name: 'Post Malone', note: 'top of the list, no contest', pinned: true, Icon: Disc3 },
+    { name: 'AP Dhillon', note: 'in the rotation', Icon: Music2 },
+    { name: 'Film + game scores', note: 'default while I work', Icon: Clapperboard },
   ];
   const catchMe = [
-    { emoji: '⚽', text: 'arguing about football formations' },
-    { emoji: '🎵', text: 'recommending songs nobody asked for' },
-    { emoji: '🤔', text: 'overthinking an already-working system' },
-    { emoji: '☕', text: 'at the chai tapri past midnight' },
-    { emoji: '🕹️', text: 'on a Valorant ranked grind' },
+    { Icon: Trophy,     text: 'restarting a game I’ve already finished, purely for the platinum' },
+    { Icon: Moon,       text: '“one more chapter” at a time the clock disagrees with' },
+    { Icon: Gamepad2,   text: 'defending single-player games in an argument nobody started' },
+    { Icon: ListChecks, text: 'checking a trophy guide before I’ve finished the story' },
   ];
 
   return (
@@ -709,88 +722,84 @@ function CandidModalContent({ onClose }) {
 
       {/* Sticky header */}
       <div style={{ position: 'sticky', top: 0, zIndex: 10, background: 'rgba(16,8,18,0.97)', backdropFilter: 'blur(16px)', borderBottom: `1px solid ${ra(0.12)}`, padding: '14px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <span style={{ fontSize: '18px', userSelect: 'none' }}>🕹️</span>
-          <span style={{ fontFamily: 'Clash Display, sans-serif', fontSize: '16px', fontWeight: 600, color: R }}>Off the clock</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: R }}>
+          <Gamepad2 size={18} strokeWidth={2} />
+          <span style={{ fontFamily: 'Clash Display, sans-serif', fontSize: '16px', fontWeight: 600 }}>Off the clock</span>
         </div>
         <ModalCloseBtn onClose={onClose} color={R} />
       </div>
 
       <div style={{ padding: '32px' }}>
 
-        {/* Emoji header */}
+        {/* Player banner */}
         <FadeUp delay={0.04}>
-          <div style={{ display: 'flex', justifyContent: 'space-around', marginBottom: '32px', padding: '20px 0', borderBottom: `1px solid ${ra(0.1)}` }}>
-            <motion.span
-              animate={{ rotate: [-10, -13, -10] }}
-              transition={{ repeat: Infinity, duration: 4, ease: 'easeInOut' }}
-              style={{ fontSize: '44px', display: 'inline-block', userSelect: 'none' }}>🎮</motion.span>
-            <motion.span
-              animate={{ rotate: [0, 360] }}
-              transition={{ repeat: Infinity, duration: 6, ease: 'linear' }}
-              style={{ fontSize: '38px', display: 'inline-block', marginTop: '10px', userSelect: 'none' }}>⚽</motion.span>
-            <motion.span
-              animate={{ y: [0, -6, 0] }}
-              transition={{ repeat: Infinity, duration: 2.5, ease: 'easeInOut' }}
-              style={{ fontSize: '40px', display: 'inline-block', userSelect: 'none' }}>🎵</motion.span>
-            <motion.span
-              animate={{ rotate: [6, 10, 6] }}
-              transition={{ repeat: Infinity, duration: 3.5, ease: 'easeInOut' }}
-              style={{ fontSize: '34px', display: 'inline-block', marginTop: '8px', userSelect: 'none' }}>🏓</motion.span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '18px', padding: '22px', marginBottom: '32px', borderRadius: '16px', border: `1px solid ${ra(0.2)}`, background: `linear-gradient(135deg, ${ra(0.12)}, ${ra(0.03)})` }}>
+            <div style={{ width: '58px', height: '58px', borderRadius: '14px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: R, background: ra(0.14), border: `1px solid ${ra(0.3)}` }}>
+              <Trophy size={26} strokeWidth={1.8} />
+            </div>
+            <div style={{ flex: 1 }}>
+              <p style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '10px', letterSpacing: '0.16em', color: ra(0.6), marginBottom: '4px' }}>PLAYER PROFILE</p>
+              <p style={{ fontFamily: 'Clash Display, sans-serif', fontSize: '20px', fontWeight: 600, color: 'var(--text-primary)', lineHeight: 1.1 }}>Player One</p>
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: 'var(--text-tertiary)', marginTop: '3px' }}>single-player only · platinum hunter · finishes the story first</p>
+            </div>
           </div>
         </FadeUp>
 
         {/* Intro */}
         <FadeUp delay={0.09}>
           <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', lineHeight: 1.85, color: 'var(--text-secondary)', marginBottom: '14px' }}>
-            This is the part where the engineering stops and the person shows up. Video games came
-            first &mdash; they are the reason I ever opened a terminal &mdash; then football, then table
-            tennis, then a chai habit that has never once let me down.
+            Games are the reason I ever opened a terminal. A younger me wanted to know how the worlds
+            in God of War and Uncharted were built, and never really stopped asking.
           </p>
           <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', lineHeight: 1.85, color: 'var(--text-secondary)', marginBottom: '36px' }}>
-            I am competitive about all of it, and slightly worse than I think I am at most of it. That
-            gap is where the fun lives.
+            These days the free hours go to the big single-player titles &mdash; play the story, then go
+            back for the platinum. Multiplayer never stuck. A good campaign always does.
           </p>
         </FadeUp>
 
-        {/* Chaos cards — rotated sticky-note style */}
+        {/* The platinum list */}
         <FadeUp delay={0.13}>
-          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', color: 'var(--text-tertiary)', letterSpacing: '0.18em', textTransform: 'uppercase', marginBottom: '16px' }}>
-            Things you should probably know
-          </p>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: '12px', marginBottom: '36px' }}>
-            {chaosCards.map((card, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 20, rotate: 0 }}
-                animate={{ opacity: 1, y: 0, rotate: card.rotate }}
-                transition={{ delay: 0.15 + i * 0.07, duration: 0.5, ease: E }}
-                style={{
-                  background: ra(0.05),
-                  border: `1px solid ${ra(0.16)}`,
-                  borderRadius: '12px',
-                  padding: '18px',
-                  transformOrigin: 'center center',
-                }}
-              >
-                <span style={{ fontSize: '26px', display: 'block', marginBottom: '10px', userSelect: 'none' }}>{card.emoji}</span>
-                <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', lineHeight: 1.7, color: 'var(--text-secondary)', fontStyle: 'italic' }}>{card.text}</p>
-              </motion.div>
-            ))}
+          <p style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '10px', color: ra(0.5), letterSpacing: '0.18em', marginBottom: '14px' }}>── THE PLATINUM LIST ───────────</p>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: '10px', marginBottom: '36px' }} className="modal-currently-grid">
+            {games.map((g) => {
+              const st = STATUS[g.s];
+              return (
+                <div key={g.title} style={{ background: ra(0.04), border: `1px solid ${ra(0.14)}`, borderRadius: '12px', padding: '15px 16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '10px' }}>
+                    <Gamepad2 size={15} strokeWidth={2} style={{ color: ra(0.7), flexShrink: 0, marginTop: '2px' }} />
+                    <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '8.5px', fontWeight: 700, letterSpacing: '0.08em', color: st.c, border: `1px solid ${st.c}55`, background: `${st.c}18`, borderRadius: '4px', padding: '2px 6px', flexShrink: 0 }}>{st.label}</span>
+                  </div>
+                  <div>
+                    <p style={{ fontFamily: 'Clash Display, sans-serif', fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)', lineHeight: 1.25 }}>{g.title}</p>
+                    <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11.5px', color: 'var(--text-tertiary)', marginTop: '3px' }}>{g.sub}</p>
+                  </div>
+                  {g.pct != null && (
+                    <div style={{ height: '3px', borderRadius: '2px', background: ra(0.14), overflow: 'hidden', marginTop: '2px' }}>
+                      <div style={{ width: `${g.pct}%`, height: '100%', background: R, borderRadius: '2px' }} />
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </FadeUp>
 
-        {/* Currently */}
+        {/* On repeat */}
         <FadeUp delay={0.17}>
-          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', color: 'var(--text-tertiary)', letterSpacing: '0.18em', textTransform: 'uppercase', marginBottom: '14px' }}>Currently</p>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: '10px', marginBottom: '32px' }} className="modal-currently-grid">
-            {currently.map(c => (
-              <div key={c.label} style={{ background: ra(0.04), border: `1px solid ${ra(0.12)}`, borderRadius: '12px', padding: '16px', transition: 'border-color 0.2s' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                  <span style={{ fontSize: '18px' }}>{c.icon}</span>
-                  <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', letterSpacing: '0.1em', textTransform: 'uppercase', color: ra(0.55) }}>{c.label}</span>
+          <p style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '10px', color: ra(0.5), letterSpacing: '0.18em', marginBottom: '14px' }}>── ON REPEAT ───────────────────</p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '36px' }}>
+            {onRepeat.map(({ name, note, pinned, Icon }) => (
+              <div key={name} style={{ display: 'flex', alignItems: 'center', gap: '13px', padding: '13px 16px', borderRadius: '11px', background: pinned ? ra(0.09) : ra(0.03), border: `1px solid ${pinned ? ra(0.28) : ra(0.1)}` }}>
+                <Icon size={18} strokeWidth={2} style={{ color: pinned ? R : ra(0.7), flexShrink: 0 }} />
+                <div style={{ flex: 1 }}>
+                  <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13.5px', fontWeight: pinned ? 600 : 500, color: 'var(--text-primary)' }}>{name}</p>
+                  <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11.5px', color: 'var(--text-tertiary)', marginTop: '1px' }}>{note}</p>
                 </div>
-                <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: 'var(--text-secondary)', lineHeight: 1.4 }}>{c.value}</p>
+                {pinned && (
+                  <span className="cc-eq" aria-hidden="true" style={{ ['--eq']: R }}>
+                    <span /><span /><span /><span /><span />
+                  </span>
+                )}
               </div>
             ))}
           </div>
@@ -802,10 +811,10 @@ function CandidModalContent({ onClose }) {
             You&apos;ll catch me...
           </p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '32px' }}>
-            {catchMe.map((item, i) => (
-              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 14px', background: ra(0.03), border: `1px solid ${ra(0.09)}`, borderRadius: '10px' }}>
-                <span style={{ fontSize: '18px', userSelect: 'none' }}>{item.emoji}</span>
-                <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: 'var(--text-secondary)' }}>{item.text}</span>
+            {catchMe.map(({ Icon, text }, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '11px 14px', background: ra(0.03), border: `1px solid ${ra(0.09)}`, borderRadius: '10px' }}>
+                <Icon size={16} strokeWidth={2} style={{ color: ra(0.75), flexShrink: 0 }} />
+                <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: 'var(--text-secondary)' }}>{text}</span>
               </div>
             ))}
           </div>
@@ -815,12 +824,12 @@ function CandidModalContent({ onClose }) {
         <FadeUp delay={0.25}>
           <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', color: 'var(--text-tertiary)', letterSpacing: '0.18em', textTransform: 'uppercase', marginBottom: '12px' }}>Ask me about</p>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '28px' }}>
-            {['football formations', 'table tennis serves', 'Mumbai street food', 'Valorant agents', 'what I\'m building', 'chai at 3am'].map(t => (
+            {['platinum routes', 'God of War lore', 'Post Malone deep cuts', 'why story beats multiplayer', 'Uncharted set pieces', 'football', 'table tennis'].map(t => (
               <span key={t} style={{ background: ra(0.15), border: `1px solid ${ra(0.3)}`, color: R, fontFamily: 'Inter, sans-serif', fontSize: '12px', fontWeight: 500, padding: '4px 12px', borderRadius: '999px' }}>{t}</span>
             ))}
           </div>
           <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', fontStyle: 'italic', color: 'var(--text-tertiary)' }}>
-            currently: Valorant · AP Dhillon · Atomic Habits · and probably overthinking a system design
+            now: Post Malone &middot; God of War Ragnar&ouml;k &middot; hunting the platinum
           </p>
         </FadeUp>
       </div>
@@ -865,55 +874,51 @@ function IdentityModal({ activeModal, onClose }) {
     };
   }, [activeModal, onClose]);
 
-  return (
-    <AnimatePresence mode="wait">
-      {activeModal && (
-        <motion.div
-          key={activeModal}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.22 }}
-          onClick={onClose}
-          style={{
-            position: 'fixed', inset: 0, zIndex: 9000,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            padding: '20px',
-          }}
-        >
-          {/* Dark blurred backdrop */}
-          <div style={{
-            position: 'absolute', inset: 0,
-            background: 'rgba(8,8,9,0.88)',
-            backdropFilter: 'blur(16px)',
-            WebkitBackdropFilter: 'blur(16px)',
-          }} />
+  if (!activeModal) return null;
 
-          {/* Sliding panel */}
-          <motion.div
-            initial={{ y: 48, scale: 0.97 }}
-            animate={{ y: 0, scale: 1 }}
-            exit={{ y: 28, scale: 0.98 }}
-            transition={{ duration: 0.38, ease: E }}
-            onClick={(e) => e.stopPropagation()}
-            className="identity-modal-panel"
-            style={{
-              position: 'relative', zIndex: 1,
-              width: '100%', maxWidth: '760px',
-              maxHeight: '85vh',
-              overflowY: 'auto',
-              overscrollBehavior: 'contain',
-              borderRadius: '20px',
-            }}
-          >
-            {activeModal === 'builder'      && <BuilderModalContent     onClose={onClose} />}
-            {activeModal === 'researcher'   && <ResearcherModalContent  onClose={onClose} />}
-            {activeModal === 'photographer' && <PhotographerModalContent onClose={onClose} />}
-            {activeModal === 'candid'       && <CandidModalContent      onClose={onClose} />}
-          </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+  return (
+    <motion.div
+      key={activeModal}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.22 }}
+      onClick={onClose}
+      style={{
+        position: 'fixed', inset: 0, zIndex: 9000,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        padding: '20px',
+      }}
+    >
+      {/* Dark blurred backdrop */}
+      <div style={{
+        position: 'absolute', inset: 0,
+        background: 'rgba(8,8,9,0.88)',
+        backdropFilter: 'blur(16px)',
+        WebkitBackdropFilter: 'blur(16px)',
+      }} />
+
+      {/* Sliding panel */}
+      <motion.div
+        initial={{ y: 48, scale: 0.97, opacity: 0 }}
+        animate={{ y: 0, scale: 1, opacity: 1 }}
+        transition={{ duration: 0.38, ease: E }}
+        onClick={(e) => e.stopPropagation()}
+        className="identity-modal-panel"
+        style={{
+          position: 'relative', zIndex: 1,
+          width: '100%', maxWidth: '760px',
+          maxHeight: '85vh',
+          overflowY: 'auto',
+          overscrollBehavior: 'contain',
+          borderRadius: '20px',
+        }}
+      >
+        {activeModal === 'builder'      && <BuilderModalContent     onClose={onClose} />}
+        {activeModal === 'researcher'   && <ResearcherModalContent  onClose={onClose} />}
+        {activeModal === 'photographer' && <PhotographerModalContent onClose={onClose} />}
+        {activeModal === 'candid'       && <CandidModalContent      onClose={onClose} />}
+      </motion.div>
+    </motion.div>
   );
 }
 
@@ -944,7 +949,7 @@ export default function Identity() {
             <span style={{ opacity: 0.35 }}>/</span>
             <span>what drives me</span>
           </p>
-          <div style={{ display: 'inline-flex', alignItems: 'flex-end', justifyContent: 'center', flexWrap: 'wrap', columnGap: '4px' }}>
+          <div className="identity-heading-row">
             <SplitText
               text="Four things that drive me"
               className="identity-heading"
@@ -955,14 +960,14 @@ export default function Identity() {
             <span className="identity-heading-dot" aria-hidden="true" />
           </div>
           <p className="identity-sub">
-            Builder, researcher, photographer &mdash; and whatever I turn into at 3am.
+            Builder, researcher, photographer &mdash; and whatever I turn into once it&apos;s dark.
             They overlap more than they probably should.
           </p>
         </motion.div>
 
         {/* Cards grid */}
         <div ref={gridRef} className="identity-grid"
-          style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: '20px' }}>
+          style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gridAutoRows: '1fr', gap: '20px' }}>
           <BuilderCard      inView={inView} index={0} onOpen={() => setActiveModal('builder')} />
           <ResearcherCard   inView={inView} index={1} onOpen={() => setActiveModal('researcher')} />
           <PhotographerCard inView={inView} index={2} onOpen={() => setActiveModal('photographer')} />
@@ -1016,10 +1021,12 @@ export default function Identity() {
       {/* ── Scoped styles ─────────────────────────────────────────────── */}
       <style>{`
         /* ─ Shared card shell ──────────────────── */
+        .identity-comet { height: 100%; }
+        .identity-comet > div { height: 100%; }
         .identity-card {
           border-radius: 20px; padding: 32px;
           position: relative; overflow: hidden;
-          min-height: 320px; transition: transform 0.25s ease;
+          height: 100%; min-height: 400px; transition: transform 0.25s ease;
           display: flex; flex-direction: column;
         }
 
@@ -1050,14 +1057,18 @@ export default function Identity() {
           font-family: 'JetBrains Mono', monospace;
           font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase;
           color: var(--text-tertiary);
-          display: inline-flex; align-items: center; gap: 8px;
-          margin-bottom: 22px;
+          display: flex; justify-content: center; align-items: center; gap: 8px;
+          margin: 0 0 22px;
         }
-        .identity-kicker-sq { width: 7px; height: 7px; border-radius: 2px; background: var(--accent-dev); display: inline-block; }
+        .identity-kicker-sq { width: 7px; height: 7px; border-radius: 2px; background: var(--accent-dev); display: inline-block; flex-shrink: 0; }
+        .identity-heading-row {
+          display: flex; justify-content: center; align-items: flex-end;
+          flex-wrap: wrap; column-gap: 6px;
+        }
         .identity-heading-dot {
           width: clamp(11px, 1.4vw, 17px); height: clamp(11px, 1.4vw, 17px);
           border-radius: 3px; background: var(--accent-dev); display: inline-block;
-          margin-bottom: clamp(7px, 1vw, 13px);
+          margin-bottom: clamp(9px, 1.1vw, 15px); flex-shrink: 0;
         }
         .identity-sub {
           font-family: 'Inter', sans-serif; font-size: 15px; line-height: 1.7;
@@ -1118,21 +1129,35 @@ export default function Identity() {
           background: #100812; border: 1px solid rgba(255,107,138,0.24);
           background-image: radial-gradient(ellipse 90% 55% at 50% 100%, rgba(255,107,138,0.09), transparent 70%);
         }
-        .cc-strip { display: flex; align-items: center; justify-content: space-between; font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.1em; color: rgba(255,107,138,0.6); margin-bottom: 16px; }
+        .cc-strip { display: flex; align-items: center; justify-content: space-between; font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.1em; color: rgba(255,107,138,0.6); margin-bottom: 18px; }
         .cc-online { display: inline-flex; align-items: center; gap: 5px; color: rgba(40,200,64,0.8); }
         .cc-online-dot { width: 6px; height: 6px; border-radius: 50%; background: #28C840; animation: rc-blink 1.8s ease-in-out infinite; }
-        .cc-now { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border: 1px solid rgba(255,107,138,0.18); border-radius: 10px; background: rgba(255,107,138,0.05); }
+
+        .cc-run { display: flex; align-items: center; gap: 13px; padding: 14px; border: 1px solid rgba(255,107,138,0.2); border-radius: 12px; background: linear-gradient(135deg, rgba(255,107,138,0.1), rgba(255,107,138,0.03)); }
+        .cc-run-ring {
+          width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0;
+          display: flex; align-items: center; justify-content: center; color: #FF6B8A;
+          background:
+            radial-gradient(closest-side, #100812 78%, transparent 79% 100%),
+            conic-gradient(#FF6B8A calc(var(--p) * 1%), rgba(255,107,138,0.16) 0);
+        }
+        .cc-run-k { font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: 0.14em; color: rgba(255,107,138,0.65); }
+        .cc-run-v { font-family: 'Clash Display', sans-serif; font-size: 15px; font-weight: 600; color: var(--text-primary); margin-top: 3px; line-height: 1.15; }
+        .cc-run-pct { margin-left: auto; font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; color: #FF6B8A; flex-shrink: 0; }
+
         .cc-eq { display: flex; align-items: flex-end; gap: 2px; height: 20px; flex-shrink: 0; }
-        .cc-eq span { width: 3px; min-height: 4px; background: #FF6B8A; border-radius: 1px; animation: cc-eq 0.9s ease-in-out infinite; }
+        .cc-eq span { width: 3px; min-height: 4px; background: var(--eq, #FF6B8A); border-radius: 1px; animation: cc-eq 0.9s ease-in-out infinite; }
         .cc-eq span:nth-child(1) { animation-delay: -0.10s; }
         .cc-eq span:nth-child(2) { animation-delay: -0.42s; }
         .cc-eq span:nth-child(3) { animation-delay: -0.20s; }
         .cc-eq span:nth-child(4) { animation-delay: -0.55s; }
         .cc-eq span:nth-child(5) { animation-delay: -0.30s; }
-        .cc-now-k { font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: 0.14em; color: rgba(255,107,138,0.6); }
-        .cc-now-v { font-family: 'Inter', sans-serif; font-size: 13px; color: var(--text-secondary); margin-top: 3px; }
-        .cc-chips { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 14px; }
+
+        .cc-chips { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 16px; }
         .cc-chip { display: inline-flex; align-items: center; gap: 6px; font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 500; color: #FF8FA6; background: rgba(255,107,138,0.1); border: 1px solid rgba(255,107,138,0.24); border-radius: 999px; padding: 4px 11px; }
+        .cc-chip svg { flex-shrink: 0; color: #FF6B8A; }
+        .cc-h3 { font-family: 'Clash Display', sans-serif; font-size: 22px; font-weight: 600; color: #FF6B8A; margin: 18px 0 10px; }
+        .cc-copy { font-family: 'Inter', sans-serif; font-size: 14px; line-height: 1.7; color: var(--text-secondary); flex: 1; }
         .cc-foot { margin-top: auto; padding-top: 16px; font-family: 'Inter', sans-serif; font-size: 12px; font-style: italic; color: var(--text-tertiary); }
 
         @keyframes rc-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.25; } }
