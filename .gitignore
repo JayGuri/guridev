@@ -42,3 +42,7 @@ next-env.d.ts
 
 # claude code local tooling
 .claude/
+
+# raw photo originals (converted + hosted via the photos pipeline)
+lib/Images/
+lib/images/
