@@ -1,314 +1,159 @@
 'use client';
 
-import Image from 'next/image';
-import { motion, AnimatePresence, useInView } from 'framer-motion';
-import { useState, useRef } from 'react';
+import { motion, useInView } from 'framer-motion';
+import { useState, useRef, useMemo } from 'react';
 import FilmGrain from '@/components/effects/FilmGrain';
-import Lightbox from '@/components/ui/Lightbox';
-import { PHOTOS, CATEGORIES, cld, blurUrl } from '@/lib/photography';
+import DomeGallery from '@/components/ui/DomeGallery';
+import { PHOTOS, REGIONS, photoThumb } from '@/lib/photography';
 
-const EASE_OUT_EXPO = [0.16, 1, 0.3, 1];
-const SHUTTER_EASE = [0.76, 0, 0.24, 1];
+const EASE = [0.16, 1, 0.3, 1];
+const SHUTTER = [0.76, 0, 0.24, 1];
 
-function PhotoCard({ photo, index, onClick }) {
-  return (
-    <div
-      onClick={onClick}
-      className="darkroom-photo"
-      style={{
-        breakInside: 'avoid',
-        marginBottom: '12px',
-        borderRadius: '12px',
-        overflow: 'hidden',
-        cursor: 'pointer',
-        position: 'relative',
-      }}
-    >
-      <Image
-        src={cld(photo.publicId, 'w_800,c_fill,f_auto,q_80')}
-        blurDataURL={blurUrl(photo.publicId)}
-        placeholder="blur"
-        width={800}
-        height={600}
-        style={{ width: '100%', height: 'auto', display: 'block' }}
-        alt={photo.title}
-      />
+const FILTERS = ['All', ...REGIONS.map((r) => r.region)];
 
-      {/* Hover overlay */}
-      <div className="darkroom-overlay">
-        <div className="darkroom-overlay-text">
-          <p
-            style={{
-              fontFamily: 'Inter, sans-serif',
-              fontSize: '14px',
-              color: '#fff',
-              fontWeight: 500,
-            }}
-          >
-            {photo.title}
-          </p>
-          <p
-            style={{
-              fontFamily: 'Inter, sans-serif',
-              fontSize: '12px',
-              color: 'rgba(255,255,255,0.6)',
-              marginTop: '2px',
-            }}
-          >
-            {photo.location}
-          </p>
-        </div>
-      </div>
-    </div>
-  );
+function exifLine(p) {
+  const e = p.exif || {};
+  return [
+    e.camera,
+    e.focalLength ? `${e.focalLength}mm` : null,
+    e.aperture ? `f/${e.aperture}` : null,
+    e.shutter,
+    e.iso ? `ISO ${e.iso}` : null,
+  ].filter(Boolean).join('  ·  ');
+}
+
+function shotDate(p) {
+  if (!p.shotAt) return null;
+  try {
+    return new Date(p.shotAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  } catch { return null; }
 }
 
 export default function Darkroom() {
   const sectionRef = useRef(null);
-  const inView = useInView(sectionRef, { once: true, amount: 0.15 });
+  const inView = useInView(sectionRef, { once: true, amount: 0.12 });
 
-  const [activeCategory, setActiveCategory] = useState('all');
-  const [lightboxOpen, setLightboxOpen] = useState(false);
-  const [lightboxIndex, setLightboxIndex] = useState(0);
+  const [filter, setFilter] = useState('All');
 
-  const filteredPhotos =
-    activeCategory === 'all'
-      ? PHOTOS
-      : PHOTOS.filter((p) => p.category === activeCategory);
+  const shots = useMemo(
+    () => (filter === 'All' ? PHOTOS : PHOTOS.filter((p) => p.region === filter)),
+    [filter],
+  );
+
+  // Feed the dome: real image + everything the enlarged caption needs.
+  const domeImages = useMemo(
+    () =>
+      shots.map((p) => {
+        const date = shotDate(p);
+        return {
+          src: photoThumb(p),
+          alt: p.title,
+          aspect: p.aspect,
+          featured: p.featured,
+          title: p.title,
+          place: [p.place, date].filter(Boolean).join(' · '),
+          exif: exifLine(p),
+          tags: (p.tags || []).slice(0, 5).join(' | '),
+        };
+      }),
+    [shots],
+  );
+
+  const segs = Math.max(9, Math.min(14, Math.round(domeImages.length / 4)));
 
   return (
     <section
       ref={sectionRef}
       id="photography"
-      style={{
-        background: '#080809',
-        position: 'relative',
-        overflow: 'hidden',
-        padding: '120px 24px',
-      }}
+      style={{ background: '#080809', position: 'relative', overflow: 'hidden', padding: '120px 24px' }}
     >
       <FilmGrain />
 
-      {/* ── Shutter panels ── */}
-      <motion.div
-        initial={{ y: 0 }}
-        animate={inView ? { y: '-100%' } : { y: 0 }}
-        transition={{ duration: 0.9, delay: 0.1, ease: SHUTTER_EASE }}
-        style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          height: '50%',
-          background: '#080809',
-          zIndex: 10,
-        }}
-      />
-      <motion.div
-        initial={{ y: 0 }}
-        animate={inView ? { y: '100%' } : { y: 0 }}
-        transition={{ duration: 0.9, delay: 0.1, ease: SHUTTER_EASE }}
-        style={{
-          position: 'absolute',
-          bottom: 0,
-          left: 0,
-          right: 0,
-          height: '50%',
-          background: '#080809',
-          zIndex: 10,
-        }}
-      />
+      <motion.div initial={{ y: 0 }} animate={inView ? { y: '-100%' } : { y: 0 }} transition={{ duration: 0.9, delay: 0.1, ease: SHUTTER }}
+        style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '50%', background: '#080809', zIndex: 10 }} />
+      <motion.div initial={{ y: 0 }} animate={inView ? { y: '100%' } : { y: 0 }} transition={{ duration: 0.9, delay: 0.1, ease: SHUTTER }}
+        style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '50%', background: '#080809', zIndex: 10 }} />
 
-      {/* ── Header ── */}
       <div style={{ position: 'relative', zIndex: 20, maxWidth: '1200px', margin: '0 auto' }}>
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
-          transition={{ duration: 0.8, delay: 0.3, ease: EASE_OUT_EXPO }}
-          style={{ textAlign: 'center' }}
+          initial={{ opacity: 0, y: 28 }} animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 28 }}
+          transition={{ duration: 0.8, delay: 0.3, ease: EASE }} style={{ textAlign: 'center' }}
         >
-          <p
-            style={{
-              fontFamily: 'Inter, sans-serif',
-              fontSize: '11px',
-              letterSpacing: '0.2em',
-              textTransform: 'uppercase',
-              color: 'var(--accent-photo)',
-              marginBottom: '16px',
-            }}
-          >
+          <p style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '11px', letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--accent-photo)', marginBottom: '16px' }}>
             · photography ·
           </p>
-          <h2
-            style={{
-              fontFamily: 'Clash Display, sans-serif',
-              fontSize: 'clamp(36px, 5vw, 64px)',
-              fontWeight: 600,
-              color: '#fff',
-            }}
-          >
-            Stories the eye misses.
+          <h2 style={{ fontFamily: 'Clash Display, sans-serif', fontSize: 'clamp(36px, 5vw, 64px)', fontWeight: 600, color: '#fff', letterSpacing: '-0.02em', lineHeight: 1.03 }}>
+            An eye that wanders.
           </h2>
-          <p
-            style={{
-              fontFamily: 'Inter, sans-serif',
-              fontSize: '15px',
-              color: 'rgba(255,255,255,0.5)',
-              marginTop: '12px',
-            }}
-          >
-            Mumbai through a Sony &alpha;7 III.
+          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '15px', color: 'rgba(255,255,255,0.5)', marginTop: '14px' }}>
+            Shot on an iPhone 14&nbsp;Pro — Canada, Kerala, Kutch, and one very loud night in Ahmedabad.
           </p>
         </motion.div>
 
-        {/* ── Category filter ── */}
-        <div
-          className="darkroom-filter"
-          style={{
-            display: 'flex',
-            justifyContent: 'center',
-            gap: '10px',
-            margin: '48px 0',
-            overflowX: 'auto',
-            scrollbarWidth: 'none',
-            msOverflowStyle: 'none',
-            WebkitOverflowScrolling: 'touch',
-          }}
-        >
-          {CATEGORIES.map((cat) => {
-            const active = activeCategory === cat;
+        {/* Region filter */}
+        <div className="dk-filter" style={{ display: 'flex', justifyContent: 'center', gap: '9px', margin: '40px 0 26px', flexWrap: 'wrap' }}>
+          {FILTERS.map((f) => {
+            const active = filter === f;
             return (
-              <button
-                key={cat}
-                onClick={() => setActiveCategory(cat)}
-                onMouseEnter={(e) => {
-                  if (!active) e.currentTarget.style.borderColor = 'rgba(255,255,255,0.35)';
-                }}
-                onMouseLeave={(e) => {
-                  if (!active) e.currentTarget.style.borderColor = 'rgba(255,255,255,0.15)';
-                }}
+              <button key={f} onClick={() => setFilter(f)}
                 style={{
-                  flexShrink: 0,
                   background: active ? 'var(--accent-photo)' : 'transparent',
                   color: active ? '#fff' : 'rgba(255,255,255,0.5)',
-                  border: active
-                    ? '1px solid var(--accent-photo)'
-                    : '1px solid rgba(255,255,255,0.15)',
-                  padding: '8px 20px',
-                  borderRadius: '999px',
-                  fontFamily: 'Inter, sans-serif',
-                  fontSize: '13px',
-                  fontWeight: 500,
-                  cursor: 'pointer',
-                  textTransform: 'capitalize',
-                  transition: 'all 0.2s ease',
+                  border: `1px solid ${active ? 'var(--accent-photo)' : 'rgba(255,255,255,0.15)'}`,
+                  padding: '7px 16px', borderRadius: '999px',
+                  fontFamily: 'Inter, sans-serif', fontSize: '12.5px', fontWeight: 500,
+                  cursor: 'pointer', transition: 'all 0.2s ease',
                 }}
+                onMouseEnter={(e) => { if (!active) e.currentTarget.style.borderColor = 'rgba(255,255,255,0.35)'; }}
+                onMouseLeave={(e) => { if (!active) e.currentTarget.style.borderColor = 'rgba(255,255,255,0.15)'; }}
               >
-                {cat}
+                {f}
               </button>
             );
           })}
         </div>
 
-        {/* ── Photo grid ── */}
-        <div
-          className="darkroom-grid"
-          style={{
-            columns: '3',
-            columnGap: '12px',
-          }}
-        >
-          <AnimatePresence mode="popLayout">
-            {filteredPhotos.map((photo, i) => (
-              <motion.div
-                key={photo.id}
-                layout
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                transition={{ duration: 0.35, ease: EASE_OUT_EXPO }}
-              >
-                <PhotoCard
-                  photo={photo}
-                  index={i}
-                  onClick={() => {
-                    setLightboxIndex(i);
-                    setLightboxOpen(true);
-                  }}
-                />
-              </motion.div>
-            ))}
-          </AnimatePresence>
+        {/* The dome. Mounted unconditionally — it gates its own animation to
+            when it's on screen, so it doesn't lean on a whileInView trigger. */}
+        <div className="dk-dome">
+          <div className="dk-dome-glow" />
+          <DomeGallery
+            key={filter}
+            images={domeImages}
+            segments={segs}
+            grayscale={false}
+            overlayBlurColor="#080809"
+            imageBorderRadius="14px"
+            openedImageBorderRadius="18px"
+            padFactor={0.11}
+            fit={0.52}
+            maxVerticalRotationDeg={6}
+            autoRotate
+            autoRotateSpeed={0.05}
+          />
         </div>
 
-        {/* ── Footer note ── */}
-        <p
-          style={{
-            textAlign: 'center',
-            marginTop: '60px',
-            fontFamily: 'Inter, sans-serif',
-            fontSize: '12px',
-            color: 'rgba(255,255,255,0.25)',
-            fontStyle: 'italic',
-          }}
-        >
-          Shot on Sony &alpha;7 III &middot; All photos &copy; Jay Guri
+        <p style={{ textAlign: 'center', marginTop: '30px', fontFamily: 'JetBrains Mono, monospace', fontSize: '11px', color: 'rgba(255,255,255,0.3)', letterSpacing: '0.06em' }}>
+          {PHOTOS.length} frames · drag to spin · click one for the details
         </p>
       </div>
 
-      {/* ── Lightbox ── */}
-      <AnimatePresence>
-        {lightboxOpen && (
-          <Lightbox
-            photos={filteredPhotos}
-            currentIndex={lightboxIndex}
-            onClose={() => setLightboxOpen(false)}
-            onNext={() =>
-              setLightboxIndex((i) => (i + 1) % filteredPhotos.length)
-            }
-            onPrev={() =>
-              setLightboxIndex(
-                (i) => (i - 1 + filteredPhotos.length) % filteredPhotos.length
-              )
-            }
-          />
-        )}
-      </AnimatePresence>
-
-      {/* ── Responsive + hover styles ── */}
       <style>{`
-        .darkroom-filter::-webkit-scrollbar { display: none; }
-
-        .darkroom-overlay {
-          position: absolute;
-          inset: 0;
-          background: rgba(0,0,0,0);
-          transition: background 0.3s ease;
+        .dk-dome {
+          position: relative;
+          height: clamp(500px, 74vh, 700px);
+          border-radius: 20px;
+          overflow: hidden;
+          border: 1px solid rgba(255,255,255,0.06);
+          background: #060607;
         }
-        .darkroom-overlay-text {
-          position: absolute;
-          bottom: 0;
-          left: 0;
-          right: 0;
-          padding: 40px 16px 16px;
-          background: linear-gradient(transparent, rgba(0,0,0,0.7));
-          transform: translateY(10px);
-          opacity: 0;
-          transition: transform 0.3s ease, opacity 0.3s ease;
+        .dk-dome-glow {
+          position: absolute; inset: 0; z-index: 0; pointer-events: none;
+          background: radial-gradient(60% 55% at 50% 48%, rgba(232,147,90,0.10), transparent 70%);
         }
-        .darkroom-photo:hover .darkroom-overlay {
-          background: rgba(0,0,0,0.5);
-        }
-        .darkroom-photo:hover .darkroom-overlay-text {
-          transform: translateY(0);
-          opacity: 1;
-        }
-
-        @media (max-width: 1023px) {
-          .darkroom-grid { columns: 2 !important; }
-        }
-        @media (max-width: 639px) {
-          .darkroom-grid { columns: 1 !important; }
+        .dk-filter::-webkit-scrollbar { display: none; }
+        @media (max-width: 560px) {
+          .dk-dome { height: clamp(420px, 62vh, 560px); }
         }
       `}</style>
     </section>
