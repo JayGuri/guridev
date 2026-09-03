@@ -178,25 +178,43 @@ function ResearcherCard({ inView, index, onOpen }) {
       <CometCard>
         <div className="identity-card identity-card--researcher"
           onClick={onOpen} style={{ cursor: 'pointer' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', marginBottom: '20px' }}>
-            <PipeNode label="IoT" color="#E8935A" />
-            <PipeArrow />
-            <PipeNode label="Kafka" color="#7C6FF7" />
-            <PipeArrow />
-            <PipeNode label="ML" color="#7C6FF7" />
+
+          <div className="rc-strip">
+            <span className="rc-rec"><span className="rc-rec-dot" />REC</span>
+            <span className="rc-strip-mid">IIT BOMBAY · MULTI-HAZARD LAB</span>
+            <span className="rc-strip-val">● LIVE</span>
           </div>
-          <h3 style={{ fontFamily: 'Clash Display, sans-serif', fontSize: '22px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '12px' }}>
+
+          <div className="rc-scope">
+            <svg viewBox="0 0 320 90" preserveAspectRatio="none" width="100%" height="100%">
+              <g stroke="rgba(124,111,247,0.14)" strokeWidth="1">
+                <line x1="0" y1="22.5" x2="320" y2="22.5" />
+                <line x1="0" y1="45" x2="320" y2="45" />
+                <line x1="0" y1="67.5" x2="320" y2="67.5" />
+              </g>
+              <path className="rc-trace"
+                d="M0,45 L18,45 L26,20 L34,66 L42,38 L54,45 L92,45 L100,30 L108,58 L116,45 L150,45 L158,14 L166,72 L174,40 L186,45 L232,45 L240,26 L248,60 L256,45 L292,45 L300,33 L308,52 L320,45"
+                fill="none" stroke="#7C6FF7" strokeWidth="1.6"
+                strokeLinecap="round" strokeLinejoin="round" />
+              <rect className="rc-scan" x="0" y="0" width="2" height="90" fill="rgba(124,111,247,0.5)" />
+            </svg>
+          </div>
+
+          <h3 style={{ fontFamily: 'Clash Display, sans-serif', fontSize: '22px', fontWeight: 600, color: 'var(--text-primary)', margin: '18px 0 10px' }}>
             <DecryptedText text="The Researcher" animateOn="view" speed={50}
               maxIterations={12} sequential className="researcher-title" />
           </h3>
-          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', lineHeight: 1.75, color: 'var(--text-secondary)', marginBottom: '24px', flex: 1 }}>
-            IIT Bombay. Multi-hazard early warning systems.
-            IoT → Kafka → Flink → deep learning → save lives.
-            That&apos;s a pipeline worth debugging.
+          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', lineHeight: 1.75, color: 'var(--text-secondary)', flex: 1 }}>
+            Research intern at IIT Bombay, building the pipeline that turns
+            IoT sensor noise into a flood warning before the water moves.
           </p>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-            {['IIT Bombay', 'Kafka', 'Deep Learning'].map(t => (
-              <span key={t} style={{ background: '#7C6FF726', border: '1px solid #7C6FF74D', color: '#7C6FF7', fontFamily: 'Inter, sans-serif', fontSize: '12px', fontWeight: 500, padding: '4px 12px', borderRadius: '999px' }}>{t}</span>
+
+          <div className="rc-readout">
+            {[['<1s', 'LATENCY'], ['5', 'NODES'], ['Kafka→Flink', 'STREAM']].map(([v, k]) => (
+              <div key={k} className="rc-stat">
+                <span className="rc-stat-v">{v}</span>
+                <span className="rc-stat-k">{k}</span>
+              </div>
             ))}
           </div>
         </div>
@@ -211,26 +229,30 @@ function PhotographerCard({ inView, index, onOpen }) {
       <CometCard>
         <div className="identity-card identity-card--photographer"
           onClick={onOpen} style={{ cursor: 'pointer' }}>
-          <div style={{ width: '100%', height: '80px', position: 'relative', marginBottom: '20px' }}>
-            <Corner pos="tl" /><Corner pos="tr" /><Corner pos="bl" /><Corner pos="br" />
-            <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: '20px', height: '20px' }}>
-              <div style={{ position: 'absolute', top: '50%', left: 0, width: '100%', height: '1px', background: 'rgba(232,147,90,0.6)', transform: 'translateY(-50%)' }} />
-              <div style={{ position: 'absolute', left: '50%', top: 0, width: '1px', height: '100%', background: 'rgba(232,147,90,0.6)', transform: 'translateX(-50%)' }} />
-              <div style={{ position: 'absolute', top: '50%', left: '50%', width: '4px', height: '4px', borderRadius: '50%', background: '#E8935A', transform: 'translate(-50%,-50%)' }} />
-            </div>
-            <span style={{ position: 'absolute', bottom: 0, right: 0, fontFamily: 'JetBrains Mono, monospace', fontSize: '10px', color: 'rgba(232,147,90,0.6)', letterSpacing: '0.05em' }}>
-              f/1.8&nbsp;&nbsp;1/250s&nbsp;&nbsp;ISO 400
+
+          <div className="pc-vf">
+            <span className="pc-vf-c pc-vf-tl" /><span className="pc-vf-c pc-vf-tr" />
+            <span className="pc-vf-c pc-vf-bl" /><span className="pc-vf-c pc-vf-br" />
+            <span className="pc-third pc-third-v1" /><span className="pc-third pc-third-v2" />
+            <span className="pc-third pc-third-h1" /><span className="pc-third pc-third-h2" />
+            <span className="pc-af">
+              <span className="pc-af-b pc-af-tl" /><span className="pc-af-b pc-af-tr" />
+              <span className="pc-af-b pc-af-bl" /><span className="pc-af-b pc-af-br" />
             </span>
+            <span className="pc-hud pc-hud-tl"><span className="pc-hud-rec" />REC</span>
+            <span className="pc-hud pc-hud-tr">1/250 · f1.8 · ISO400</span>
+            <span className="pc-hud pc-hud-bl">AF-C</span>
+            <span className="pc-hud pc-hud-br">[0247]</span>
           </div>
-          <h3 style={{ fontFamily: 'Clash Display, sans-serif', fontSize: '22px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '12px' }}>The Photographer</h3>
-          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '15px', lineHeight: 1.75, color: 'var(--text-secondary)', marginBottom: '24px', flex: 1 }}>
-            I point cameras at things most people walk past.
-            Mumbai has a thousand stories in a single frame.
-            I&apos;m still finding them.
+
+          <h3 style={{ fontFamily: 'Clash Display, sans-serif', fontSize: '22px', fontWeight: 600, color: 'var(--text-primary)', margin: '18px 0 10px' }}>The Photographer</h3>
+          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', lineHeight: 1.75, color: 'var(--text-secondary)', flex: 1 }}>
+            I point a camera at the half-second everyone else walks past.
+            Mumbai hands me a few thousand of those a day.
           </p>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '16px' }}>
             {['Street', 'Portrait', 'Sony α7 III'].map(t => (
-              <span key={t} style={{ background: '#E8935A26', border: '1px solid #E8935A4D', color: '#E8935A', fontFamily: 'Inter, sans-serif', fontSize: '12px', fontWeight: 500, padding: '4px 12px', borderRadius: '999px' }}>{t}</span>
+              <span key={t} className="pc-tag">{t}</span>
             ))}
           </div>
         </div>
@@ -245,21 +267,32 @@ function CandidCard({ inView, index, onOpen }) {
       <CometCard>
         <div className="identity-card identity-card--candid"
           onClick={onOpen} style={{ cursor: 'pointer' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-around', marginBottom: '16px' }}>
-            <span style={{ fontSize: '32px', display: 'inline-block', transform: 'rotate(-8deg)', userSelect: 'none' }}>🎮</span>
-            <span style={{ fontSize: '28px', display: 'inline-block', marginTop: '8px', animation: 'football-spin 6s linear infinite', userSelect: 'none' }}>⚽</span>
-            <span style={{ fontSize: '26px', display: 'inline-block', transform: 'rotate(-3deg)', userSelect: 'none' }}>🎵</span>
+
+          <div className="cc-strip">
+            <span className="cc-online"><span className="cc-online-dot" />ONLINE</span>
+            <span>OFF THE CLOCK</span>
           </div>
-          <h3 style={{ fontFamily: 'Clash Display, sans-serif', fontSize: '22px', fontWeight: 600, color: '#E8935A', marginBottom: '12px' }}>Off the clock</h3>
-          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '15px', lineHeight: 1.75, color: 'var(--text-secondary)', flex: 1 }}>
-            Video games are why I got into computers.
-            Football, table tennis, and enough White Monster
-            to constitute a health concern.
-            No regrets on any of it.
+
+          <div className="cc-now">
+            <div className="cc-eq" aria-hidden="true"><span /><span /><span /><span /><span /></div>
+            <div>
+              <p className="cc-now-k">NOW PLAYING</p>
+              <p className="cc-now-v">AP Dhillon &mdash; on repeat</p>
+            </div>
+          </div>
+
+          <div className="cc-chips">
+            {[['🎮', 'Valorant'], ['⚽', 'Football'], ['🏓', 'Table tennis']].map(([e, l]) => (
+              <span key={l} className="cc-chip"><span>{e}</span>{l}</span>
+            ))}
+          </div>
+
+          <h3 style={{ fontFamily: 'Clash Display, sans-serif', fontSize: '22px', fontWeight: 600, color: '#FF6B8A', margin: '16px 0 10px' }}>Off the clock</h3>
+          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', lineHeight: 1.7, color: 'var(--text-secondary)', flex: 1 }}>
+            Games are why I got into computers &mdash; still one of the better calls
+            I&apos;ve made. Add football, table tennis, and too much White Monster.
           </p>
-          <p style={{ marginTop: 'auto', paddingTop: '20px', fontFamily: 'Inter, sans-serif', fontSize: '12px', fontStyle: 'italic', color: 'var(--text-tertiary)' }}>
-            currently: Valorant · AP Dhillon · Atomic Habits
-          </p>
+          <p className="cc-foot">currently: Valorant · AP Dhillon · Atomic Habits</p>
         </div>
       </CometCard>
     </CardReveal>
@@ -648,43 +681,46 @@ function PhotographerModalContent({ onClose }) {
 
 // ── Candid modal ──────────────────────────────────────────────────────────────
 function CandidModalContent({ onClose }) {
+  const R = '#FF6B8A';
+  const ra = (a) => `rgba(255,107,138,${a})`;
+
   const currently = [
-    { icon: '🎮', label: 'Playing', value: 'Valorant (Placeholder)' },
-    { icon: '🎵', label: 'Listening', value: 'AP Dhillon, Placeholder' },
-    { icon: '📖', label: 'Reading', value: 'Atomic Habits (Placeholder)' },
-    { icon: '📺', label: 'Watching', value: 'Placeholder Series' },
+    { icon: '🎮', label: 'Playing', value: 'Valorant' },
+    { icon: '🎵', label: 'Listening', value: 'AP Dhillon' },
+    { icon: '📖', label: 'Reading', value: 'Atomic Habits' },
+    { icon: '⚽', label: 'Watching', value: 'Whatever match is on' },
   ];
   const chaosCards = [
-    { emoji: '🎮', text: 'Once played FIFA for 6 hours straight and called it "studying game theory". Would do it again without hesitation.', rotate: -2.5 },
-    { emoji: '🍵', text: 'Has strong opinions about chai-to-milk ratios. Will explain this unprompted at any social gathering.', rotate: 1.8 },
-    { emoji: '🏓', text: 'Genuinely believes table tennis reflexes have improved debug reaction time. No empirical data to support this.', rotate: -1.4 },
-    { emoji: '🌙', text: 'Best system design ideas arrive between 1am–4am. This is a feature, not a sleep disorder.', rotate: 2.2 },
+    { emoji: '🎮', text: 'Started on GTA and FIFA. Ended up writing ML pipelines. I still think that is the best possible origin story.', rotate: -2.5 },
+    { emoji: '🥤', text: 'Runs on White Monster in quantities a cardiologist would want to talk about. This is non-negotiable.', rotate: 1.8 },
+    { emoji: '🏓', text: 'Convinced table tennis reflexes carry over to debugging. No data supports this. I am not looking for any.', rotate: -1.4 },
+    { emoji: '🌙', text: 'Best system-design ideas arrive between 1am and 4am. This is a feature, not a sleep disorder.', rotate: 2.2 },
   ];
   const catchMe = [
     { emoji: '⚽', text: 'arguing about football formations' },
     { emoji: '🎵', text: 'recommending songs nobody asked for' },
     { emoji: '🤔', text: 'overthinking an already-working system' },
-    { emoji: '☕', text: 'at the chai tapri at midnight' },
+    { emoji: '☕', text: 'at the chai tapri past midnight' },
     { emoji: '🕹️', text: 'on a Valorant ranked grind' },
   ];
 
   return (
-    <div style={{ background: '#0F0A08', border: '1px solid rgba(232,147,90,0.2)', borderRadius: '20px', overflow: 'hidden', backgroundImage: 'radial-gradient(ellipse 80% 40% at 50% 100%, rgba(232,147,90,0.05), transparent)' }}>
+    <div style={{ background: '#100812', border: `1px solid ${ra(0.22)}`, borderRadius: '20px', overflow: 'hidden', backgroundImage: `radial-gradient(ellipse 80% 40% at 50% 100%, ${ra(0.07)}, transparent)` }}>
 
       {/* Sticky header */}
-      <div style={{ position: 'sticky', top: 0, zIndex: 10, background: 'rgba(15,10,8,0.97)', backdropFilter: 'blur(16px)', borderBottom: '1px solid rgba(232,147,90,0.1)', padding: '14px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div style={{ position: 'sticky', top: 0, zIndex: 10, background: 'rgba(16,8,18,0.97)', backdropFilter: 'blur(16px)', borderBottom: `1px solid ${ra(0.12)}`, padding: '14px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <span style={{ fontSize: '18px', userSelect: 'none' }}>🙃</span>
-          <span style={{ fontFamily: 'Clash Display, sans-serif', fontSize: '16px', fontWeight: 600, color: '#E8935A' }}>Off the clock</span>
+          <span style={{ fontSize: '18px', userSelect: 'none' }}>🕹️</span>
+          <span style={{ fontFamily: 'Clash Display, sans-serif', fontSize: '16px', fontWeight: 600, color: R }}>Off the clock</span>
         </div>
-        <ModalCloseBtn onClose={onClose} color="#E8935A" />
+        <ModalCloseBtn onClose={onClose} color={R} />
       </div>
 
       <div style={{ padding: '32px' }}>
 
         {/* Emoji header */}
         <FadeUp delay={0.04}>
-          <div style={{ display: 'flex', justifyContent: 'space-around', marginBottom: '32px', padding: '20px 0', borderBottom: '1px solid rgba(232,147,90,0.08)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-around', marginBottom: '32px', padding: '20px 0', borderBottom: `1px solid ${ra(0.1)}` }}>
             <motion.span
               animate={{ rotate: [-10, -13, -10] }}
               transition={{ repeat: Infinity, duration: 4, ease: 'easeInOut' }}
@@ -707,13 +743,13 @@ function CandidModalContent({ onClose }) {
         {/* Intro */}
         <FadeUp delay={0.09}>
           <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', lineHeight: 1.85, color: 'var(--text-secondary)', marginBottom: '14px' }}>
-            Placeholder — the off-duty version. Video games first, then table tennis, then football, then enough
-            White Monster to keep a small data centre running. This is the section where the engineering stops
-            and the human begins. Replace with actual copy.
+            This is the part where the engineering stops and the person shows up. Video games came
+            first &mdash; they are the reason I ever opened a terminal &mdash; then football, then table
+            tennis, then a chai habit that has never once let me down.
           </p>
           <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', lineHeight: 1.85, color: 'var(--text-secondary)', marginBottom: '36px' }}>
-            Placeholder — what the hobbies mean. What table tennis taught about reflex and pattern recognition.
-            Why football makes more sense than most software architectures. The game theory of FIFA career mode.
+            I am competitive about all of it, and slightly worse than I think I am at most of it. That
+            gap is where the fun lives.
           </p>
         </FadeUp>
 
@@ -730,8 +766,8 @@ function CandidModalContent({ onClose }) {
                 animate={{ opacity: 1, y: 0, rotate: card.rotate }}
                 transition={{ delay: 0.15 + i * 0.07, duration: 0.5, ease: E }}
                 style={{
-                  background: 'rgba(232,147,90,0.05)',
-                  border: '1px solid rgba(232,147,90,0.16)',
+                  background: ra(0.05),
+                  border: `1px solid ${ra(0.16)}`,
                   borderRadius: '12px',
                   padding: '18px',
                   transformOrigin: 'center center',
@@ -749,10 +785,10 @@ function CandidModalContent({ onClose }) {
           <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', color: 'var(--text-tertiary)', letterSpacing: '0.18em', textTransform: 'uppercase', marginBottom: '14px' }}>Currently</p>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: '10px', marginBottom: '32px' }} className="modal-currently-grid">
             {currently.map(c => (
-              <div key={c.label} style={{ background: 'rgba(232,147,90,0.04)', border: '1px solid rgba(232,147,90,0.12)', borderRadius: '12px', padding: '16px', transition: 'border-color 0.2s' }}>
+              <div key={c.label} style={{ background: ra(0.04), border: `1px solid ${ra(0.12)}`, borderRadius: '12px', padding: '16px', transition: 'border-color 0.2s' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
                   <span style={{ fontSize: '18px' }}>{c.icon}</span>
-                  <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(232,147,90,0.5)' }}>{c.label}</span>
+                  <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', letterSpacing: '0.1em', textTransform: 'uppercase', color: ra(0.55) }}>{c.label}</span>
                 </div>
                 <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: 'var(--text-secondary)', lineHeight: 1.4 }}>{c.value}</p>
               </div>
@@ -767,7 +803,7 @@ function CandidModalContent({ onClose }) {
           </p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '32px' }}>
             {catchMe.map((item, i) => (
-              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 14px', background: 'rgba(232,147,90,0.03)', border: '1px solid rgba(232,147,90,0.08)', borderRadius: '10px' }}>
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 14px', background: ra(0.03), border: `1px solid ${ra(0.09)}`, borderRadius: '10px' }}>
                 <span style={{ fontSize: '18px', userSelect: 'none' }}>{item.emoji}</span>
                 <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: 'var(--text-secondary)' }}>{item.text}</span>
               </div>
@@ -779,8 +815,8 @@ function CandidModalContent({ onClose }) {
         <FadeUp delay={0.25}>
           <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '10px', color: 'var(--text-tertiary)', letterSpacing: '0.18em', textTransform: 'uppercase', marginBottom: '12px' }}>Ask me about</p>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '28px' }}>
-            {['FIFA tactics', 'table tennis serves', 'Mumbai street food', 'anime', 'what I\'m building', 'chai at 3am'].map(t => (
-              <span key={t} style={{ background: '#E8935A26', border: '1px solid #E8935A4D', color: '#E8935A', fontFamily: 'Inter, sans-serif', fontSize: '12px', fontWeight: 500, padding: '4px 12px', borderRadius: '999px' }}>{t}</span>
+            {['football formations', 'table tennis serves', 'Mumbai street food', 'Valorant agents', 'what I\'m building', 'chai at 3am'].map(t => (
+              <span key={t} style={{ background: ra(0.15), border: `1px solid ${ra(0.3)}`, color: R, fontFamily: 'Inter, sans-serif', fontSize: '12px', fontWeight: 500, padding: '4px 12px', borderRadius: '999px' }}>{t}</span>
             ))}
           </div>
           <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', fontStyle: 'italic', color: 'var(--text-tertiary)' }}>
@@ -900,18 +936,28 @@ export default function Identity() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, amount: 0.5 }}
           transition={{ duration: 0.7, ease: E }}
-          style={{ textAlign: 'center', marginBottom: '80px' }}
+          style={{ textAlign: 'center', marginBottom: '72px' }}
         >
-          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--text-tertiary)', marginBottom: '16px' }}>
-            · about ·
+          <p className="identity-kicker">
+            <span className="identity-kicker-sq" />
+            <span>04</span>
+            <span style={{ opacity: 0.35 }}>/</span>
+            <span>what drives me</span>
           </p>
-          <SplitText
-            text="Four things that drive me."
-            className="identity-heading"
-            delay={60} duration={1.0} ease="power3.out"
-            splitType="words" from={{ opacity: 0, y: 30 }} to={{ opacity: 1, y: 0 }}
-            threshold={0.2} textAlign="center" tag="h2"
-          />
+          <div style={{ display: 'inline-flex', alignItems: 'flex-end', justifyContent: 'center', flexWrap: 'wrap', columnGap: '4px' }}>
+            <SplitText
+              text="Four things that drive me"
+              className="identity-heading"
+              delay={60} duration={1.0} ease="power3.out"
+              splitType="words" from={{ opacity: 0, y: 30 }} to={{ opacity: 1, y: 0 }}
+              threshold={0.2} textAlign="center" tag="h2"
+            />
+            <span className="identity-heading-dot" aria-hidden="true" />
+          </div>
+          <p className="identity-sub">
+            Builder, researcher, photographer &mdash; and whatever I turn into at 3am.
+            They overlap more than they probably should.
+          </p>
         </motion.div>
 
         {/* Cards grid */}
@@ -999,18 +1045,106 @@ export default function Identity() {
         .terminal-comment { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #7d8590; line-height: 1.8; margin-bottom: 4px; }
         .terminal-cursor { display: inline-block; width: 8px; height: 14px; background: #28C840; animation: cursor-blink 1s step-end infinite; vertical-align: middle; }
 
-        /* ─ Card 2: Researcher ──────────────────── */
+        /* ─ Section header ─────────────────────── */
+        .identity-kicker {
+          font-family: 'JetBrains Mono', monospace;
+          font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase;
+          color: var(--text-tertiary);
+          display: inline-flex; align-items: center; gap: 8px;
+          margin-bottom: 22px;
+        }
+        .identity-kicker-sq { width: 7px; height: 7px; border-radius: 2px; background: var(--accent-dev); display: inline-block; }
+        .identity-heading-dot {
+          width: clamp(11px, 1.4vw, 17px); height: clamp(11px, 1.4vw, 17px);
+          border-radius: 3px; background: var(--accent-dev); display: inline-block;
+          margin-bottom: clamp(7px, 1vw, 13px);
+        }
+        .identity-sub {
+          font-family: 'Inter', sans-serif; font-size: 15px; line-height: 1.7;
+          color: var(--text-secondary); max-width: 500px; margin: 20px auto 0;
+        }
+
+        /* ─ Card 2: Researcher — signal lab ────── */
         .identity-card--researcher {
-          background: #08090F; border: 1px solid rgba(124,111,247,0.25);
-          background-image: radial-gradient(ellipse 60% 60% at 50% 50%, rgba(124,111,247,0.04), transparent);
+          background: #07080f; border: 1px solid rgba(124,111,247,0.25);
+          background-image: radial-gradient(ellipse 90% 55% at 50% 0%, rgba(124,111,247,0.08), transparent 70%);
         }
         .pipe-dash { animation: dash-flow 0.6s linear infinite; }
+        .rc-strip { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.08em; color: rgba(124,111,247,0.55); margin-bottom: 16px; }
+        .rc-strip-mid { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .rc-rec { display: inline-flex; align-items: center; gap: 5px; color: rgba(255,90,90,0.85); flex-shrink: 0; }
+        .rc-rec-dot { width: 6px; height: 6px; border-radius: 50%; background: #ff5a5a; animation: rc-blink 1.4s ease-in-out infinite; }
+        .rc-strip-val { color: rgba(40,200,64,0.75); flex-shrink: 0; }
+        .rc-scope { position: relative; height: 90px; border: 1px solid rgba(124,111,247,0.18); border-radius: 10px; overflow: hidden; background: rgba(124,111,247,0.04); }
+        .rc-trace { stroke-dasharray: 640; stroke-dashoffset: 640; animation: rc-draw 2.6s ease-out forwards; filter: drop-shadow(0 0 4px rgba(124,111,247,0.5)); }
+        .rc-scan { animation: rc-sweep 3.4s linear infinite; }
+        .rc-readout { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-top: 18px; }
+        .rc-stat { border: 1px solid rgba(124,111,247,0.16); border-radius: 9px; padding: 10px 4px; text-align: center; background: rgba(124,111,247,0.04); }
+        .rc-stat-v { display: block; font-family: 'Clash Display', sans-serif; font-size: 14px; font-weight: 600; color: #7C6FF7; line-height: 1; }
+        .rc-stat-k { display: block; font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: 0.1em; color: var(--text-tertiary); margin-top: 5px; }
 
-        /* ─ Card 3: Photographer ────────────────── */
-        .identity-card--photographer { background: #0A080A; border: 1px solid rgba(232,147,90,0.25); }
+        /* ─ Card 3: Photographer — viewfinder ─── */
+        .identity-card--photographer {
+          background: #0a0806; border: 1px solid rgba(232,147,90,0.28);
+          background-image: radial-gradient(ellipse 80% 50% at 50% 0%, rgba(232,147,90,0.07), transparent 70%);
+        }
+        .pc-vf { position: relative; width: 100%; height: 138px; border-radius: 10px; background: rgba(232,147,90,0.03); border: 1px solid rgba(232,147,90,0.12); overflow: hidden; }
+        .pc-vf-c { position: absolute; width: 16px; height: 16px; border: 2px solid rgba(232,147,90,0.75); }
+        .pc-vf-tl { top: 8px; left: 8px; border-right: 0; border-bottom: 0; }
+        .pc-vf-tr { top: 8px; right: 8px; border-left: 0; border-bottom: 0; }
+        .pc-vf-bl { bottom: 8px; left: 8px; border-right: 0; border-top: 0; }
+        .pc-vf-br { bottom: 8px; right: 8px; border-left: 0; border-top: 0; }
+        .pc-third { position: absolute; background: rgba(232,147,90,0.13); }
+        .pc-third-v1 { left: 33.33%; top: 0; bottom: 0; width: 1px; }
+        .pc-third-v2 { left: 66.66%; top: 0; bottom: 0; width: 1px; }
+        .pc-third-h1 { top: 33.33%; left: 0; right: 0; height: 1px; }
+        .pc-third-h2 { top: 66.66%; left: 0; right: 0; height: 1px; }
+        .pc-af { position: absolute; top: 50%; left: 50%; width: 44px; height: 44px; transform: translate(-50%,-50%); animation: pc-focus 3s ease-in-out infinite; }
+        .pc-af-b { position: absolute; width: 9px; height: 9px; border: 1.5px solid #E8935A; }
+        .pc-af-tl { top: 0; left: 0; border-right: 0; border-bottom: 0; }
+        .pc-af-tr { top: 0; right: 0; border-left: 0; border-bottom: 0; }
+        .pc-af-bl { bottom: 0; left: 0; border-right: 0; border-top: 0; }
+        .pc-af-br { bottom: 0; right: 0; border-left: 0; border-top: 0; }
+        .pc-hud { position: absolute; font-family: 'JetBrains Mono', monospace; font-size: 8.5px; letter-spacing: 0.06em; color: rgba(232,147,90,0.7); display: flex; align-items: center; gap: 4px; }
+        .pc-hud-tl { top: 14px; left: 32px; }
+        .pc-hud-tr { top: 14px; right: 16px; }
+        .pc-hud-bl { bottom: 14px; left: 32px; }
+        .pc-hud-br { bottom: 14px; right: 16px; }
+        .pc-hud-rec { width: 6px; height: 6px; border-radius: 50%; background: #E8935A; animation: rc-blink 1.4s ease-in-out infinite; }
+        .pc-tag { background: rgba(232,147,90,0.15); border: 1px solid rgba(232,147,90,0.32); color: #E8935A; font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 500; padding: 4px 12px; border-radius: 999px; }
 
-        /* ─ Card 4: Candid ──────────────────────── */
-        .identity-card--candid { background: #0F0A08; border: 1px solid rgba(232,147,90,0.2); }
+        /* ─ Card 4: Candid — now playing ───────── */
+        .identity-card--candid {
+          background: #100812; border: 1px solid rgba(255,107,138,0.24);
+          background-image: radial-gradient(ellipse 90% 55% at 50% 100%, rgba(255,107,138,0.09), transparent 70%);
+        }
+        .cc-strip { display: flex; align-items: center; justify-content: space-between; font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.1em; color: rgba(255,107,138,0.6); margin-bottom: 16px; }
+        .cc-online { display: inline-flex; align-items: center; gap: 5px; color: rgba(40,200,64,0.8); }
+        .cc-online-dot { width: 6px; height: 6px; border-radius: 50%; background: #28C840; animation: rc-blink 1.8s ease-in-out infinite; }
+        .cc-now { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border: 1px solid rgba(255,107,138,0.18); border-radius: 10px; background: rgba(255,107,138,0.05); }
+        .cc-eq { display: flex; align-items: flex-end; gap: 2px; height: 20px; flex-shrink: 0; }
+        .cc-eq span { width: 3px; min-height: 4px; background: #FF6B8A; border-radius: 1px; animation: cc-eq 0.9s ease-in-out infinite; }
+        .cc-eq span:nth-child(1) { animation-delay: -0.10s; }
+        .cc-eq span:nth-child(2) { animation-delay: -0.42s; }
+        .cc-eq span:nth-child(3) { animation-delay: -0.20s; }
+        .cc-eq span:nth-child(4) { animation-delay: -0.55s; }
+        .cc-eq span:nth-child(5) { animation-delay: -0.30s; }
+        .cc-now-k { font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: 0.14em; color: rgba(255,107,138,0.6); }
+        .cc-now-v { font-family: 'Inter', sans-serif; font-size: 13px; color: var(--text-secondary); margin-top: 3px; }
+        .cc-chips { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 14px; }
+        .cc-chip { display: inline-flex; align-items: center; gap: 6px; font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 500; color: #FF8FA6; background: rgba(255,107,138,0.1); border: 1px solid rgba(255,107,138,0.24); border-radius: 999px; padding: 4px 11px; }
+        .cc-foot { margin-top: auto; padding-top: 16px; font-family: 'Inter', sans-serif; font-size: 12px; font-style: italic; color: var(--text-tertiary); }
+
+        @keyframes rc-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.25; } }
+        @keyframes rc-draw { to { stroke-dashoffset: 0; } }
+        @keyframes rc-sweep { 0% { transform: translateX(-4px); } 100% { transform: translateX(322px); } }
+        @keyframes pc-focus { 0%, 100% { transform: translate(-50%,-50%) scale(1); opacity: 0.8; } 50% { transform: translate(-50%,-50%) scale(0.82); opacity: 1; } }
+        @keyframes cc-eq { 0%, 100% { height: 5px; } 50% { height: 20px; } }
+
+        @media (prefers-reduced-motion: reduce) {
+          .rc-trace { animation: none; stroke-dashoffset: 0; }
+          .rc-scan, .rc-rec-dot, .pc-af, .pc-hud-rec, .cc-online-dot, .cc-eq span { animation: none !important; }
+        }
 
         /* ─ Modal panel scrollbar ───────────────── */
         .identity-modal-panel::-webkit-scrollbar { width: 4px; }

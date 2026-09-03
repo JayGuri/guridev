@@ -49,14 +49,14 @@ function TerminalHeader() {
       <div style={{ display: 'flex', gap: '7px', marginBottom: '14px' }}>
         {['#FF5F57', '#FEBC2E', '#28C840'].map((c) => <div key={c} style={{ width: '11px', height: '11px', borderRadius: '50%', background: c }} />)}
       </div>
-      <Line show={step >= 1}><span style={{ color: '#28C840' }}>visitor@portfolio</span><span style={{ color: '#7d8590' }}>:</span><span style={{ color: '#ffa657' }}>~/work</span><span style={{ color: '#e6edf3' }}> ❯ ls -la ./projects</span></Line>
+      <Line show={step >= 1}><span style={{ color: '#28C840' }}>visitor@portfolio</span><span style={{ color: '#7d8590' }}>:</span><span style={{ color: '#ffa657' }}>~/work</span><span style={{ color: '#e6edf3' }}> ❯ ls ./projects</span></Line>
       {step >= 2 && <div style={{ height: '4px' }} />}
-      <Line show={step >= 2}><span style={{ color: '#28C840' }}>total 7 projects · last updated 2025</span></Line>
+      <Line show={step >= 2}><span style={{ color: '#7d8590' }}>4 projects · 3 screens · click a monitor to open one</span></Line>
       {step >= 2 && <div style={{ height: '4px' }} />}
-      <Line show={step >= 3}><span style={{ color: '#28C840' }}>-rw-r--r--</span><span style={{ color: '#79c0ff' }}> 01 · CLIfolio           </span><span style={{ color: '#7C6FF7' }}>[dev]</span></Line>
-      <Line show={step >= 4}><span style={{ color: '#28C840' }}>-rw-r--r--</span><span style={{ color: '#79c0ff' }}> 02 · ARFL Platform      </span><span style={{ color: '#28C840' }}>[aiml]</span></Line>
-      <Line show={step >= 5}><span style={{ color: '#28C840' }}>-rw-r--r--</span><span style={{ color: '#79c0ff' }}> 03 · Multi-Hazard EWS   </span><span style={{ color: '#E8935A' }}>[research]</span></Line>
-      <Line show={step >= 6}><span style={{ color: '#28C840' }}>-rw-r--r--</span><span style={{ color: '#79c0ff' }}> 04 · EEG/EMG Detection  </span><span style={{ color: '#E8935A' }}>[research]</span></Line>
+      <Line show={step >= 3}><span style={{ color: '#79c0ff' }}>01 · CLIfolio                </span><span style={{ color: '#7C6FF7' }}>[dev]</span></Line>
+      <Line show={step >= 4}><span style={{ color: '#79c0ff' }}>02 · ARFL Platform           </span><span style={{ color: '#7C6FF7' }}>[dev · aiml]</span></Line>
+      <Line show={step >= 5}><span style={{ color: '#79c0ff' }}>03 · Multi-Hazard EWS        </span><span style={{ color: '#E8935A' }}>[research]</span></Line>
+      <Line show={step >= 6}><span style={{ color: '#79c0ff' }}>04 · EEG/EMG Detection       </span><span style={{ color: '#28C840' }}>[aiml · research]</span></Line>
       {step >= 7 && <div style={{ height: '4px' }} />}
       {step >= 7 && (
         <motion.div initial={{ opacity: 0, x: -5 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.2 }} style={{ ...mono, display: 'flex', alignItems: 'center', gap: '3px' }}>
@@ -113,9 +113,9 @@ export default function DevStudio() {
             <RoomScene activeScreen={activeScreen} isZoomedIn={isZoomedIn} onScreenClick={handleScreenClick} onOpenProject={(p) => setSelectedProject(p)} />
 
             {/* Vignette */}
-            <div style={{ position: 'absolute', inset: 0, zIndex: 2, pointerEvents: 'none', background: 'radial-gradient(ellipse 84% 60% at 50% 52%, transparent 40%, rgba(0,0,0,0.50) 100%)' }} />
+            <div style={{ position: 'absolute', inset: 0, zIndex: 2, pointerEvents: 'none', background: 'radial-gradient(ellipse 88% 66% at 50% 50%, transparent 48%, rgba(0,0,0,0.34) 100%)' }} />
             {/* Scanlines */}
-            <div style={{ position: 'absolute', inset: 0, zIndex: 2, pointerEvents: 'none', backgroundImage: 'repeating-linear-gradient(0deg, rgba(0,0,0,0.015) 0px, rgba(0,0,0,0.015) 1px, transparent 1px, transparent 3px)' }} />
+            <div style={{ position: 'absolute', inset: 0, zIndex: 2, pointerEvents: 'none', backgroundImage: 'repeating-linear-gradient(0deg, rgba(0,0,0,0.012) 0px, rgba(0,0,0,0.012) 1px, transparent 1px, transparent 3px)' }} />
 
             {/* Back button */}
             <AnimatePresence>
@@ -158,7 +158,7 @@ export default function DevStudio() {
                 <motion.div key="hint-zo" initial={{ opacity: 0 }} animate={{ opacity: 1, transition: { delay: 0.5 } }} exit={{ opacity: 0 }}
                   style={{ position: 'absolute', bottom: '14px', right: '14px', zIndex: 4, background: 'rgba(5,6,12,0.78)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '8px', padding: '5px 12px', fontFamily: 'JetBrains Mono, monospace', fontSize: '11px', color: '#7d8590', pointerEvents: 'none' }}
                 >
-                  click a project card →
+                  click a project name →
                 </motion.div>
               )}
             </AnimatePresence>

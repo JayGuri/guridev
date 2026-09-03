@@ -5,7 +5,7 @@
 @import "shadcn/tailwind.css";
 
 @custom-variant dark (&:is(.dark *));
-@config "../tailwind.config.js";
+@config "../tailwind.config.mjs";
 
 /* ─── Clash Display — Self-hosted variable font ──────────────────────── */
 @font-face {
@@ -302,9 +302,11 @@ body.terminal-open .main-content {
 /* ─── Identity section — SplitText heading ───────────────────────────────── */
 .identity-heading {
   font-family: 'Clash Display', sans-serif;
-  font-size: clamp(36px, 5vw, 56px);
+  font-size: clamp(38px, 5.4vw, 60px);
   font-weight: 600;
   color: var(--text-primary);
+  letter-spacing: -0.025em;
+  line-height: 1.02;
   display: block;
 }
 

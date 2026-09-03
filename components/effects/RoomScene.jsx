@@ -8,23 +8,22 @@ export const SCREENS_DATA = {
   dev: {
     label: 'The Builder', tab: '--dev', color: '#7C6FF7', hex: 0x7C6FF7,
     projects: [
-      { name: 'CLIfolio',  tech: 'Next.js · Three.js · Framer', desc: 'Terminal portfolio with immersive 3D room', github: '#', live: '#' },
-      { name: 'DataPulse', tech: 'React · D3 · Node.js',        desc: 'Real-time analytics dashboard - 1.2k *',   github: '#', live: '#' },
-      { name: 'APIForge',  tech: 'Node.js · PostgreSQL · Redis', desc: 'Developer API management platform',        github: '#', live: null },
+      { name: 'CLIfolio', tech: 'Next.js · Three.js · Framer Motion', desc: 'This site — a terminal-styled portfolio with an interactive 3D room you can walk your cursor around.', github: 'https://github.com/jayguri', live: null },
+      { name: 'ARFL Platform', tech: 'Python · PyTorch · Flower · FastAPI · Docker', desc: 'Privacy-preserving federated learning with Byzantine fault tolerance — clients train locally and share only model updates, never raw data.', github: 'https://github.com/jayguri', live: null },
     ],
   },
   research: {
     label: 'The Researcher', tab: '--research', color: '#E8935A', hex: 0xE8935A,
     projects: [
-      { name: 'Multi-Hazard EWS',  tech: 'Python · ML · GIS',      desc: 'Early warning system for disasters', github: '#', live: null },
-      { name: 'EEG/EMG Detection', tech: 'Signal Processing · CNN', desc: 'Neural signal classification',       github: '#', live: null },
+      { name: 'Multi-Hazard EWS', tech: 'Kafka · Apache Flink · TensorFlow · IoT', desc: 'Real-time disaster nowcasting at IIT Bombay — IoT sensor networks feeding stream-processing pipelines that drive deep-learning models for community alerting.', github: null, live: null },
+      { name: 'EEG / EMG Hunger Detection', tech: 'Signal Processing · MNE · CNN', desc: 'Where neuromorphic computing meets human physiology — a pipeline classifying raw neural and muscular signals into hunger states.', github: 'https://github.com/jayguri', live: null },
     ],
   },
   aiml: {
     label: 'AI / ML', tab: '--aiml', color: '#28C840', hex: 0x28C840,
     projects: [
-      { name: 'ARFL Platform',   tech: 'PyTorch · FastAPI · FL',  desc: 'Adaptive federated learning platform',  github: '#', live: '#' },
-      { name: 'Vision Pipeline', tech: 'YOLOv8 · OpenCV · CUDA',  desc: 'Real-time multi-class detection',       github: '#', live: null },
+      { name: 'ARFL Platform', tech: 'PyTorch · FastAPI · Federated Learning', desc: 'Adaptive aggregation that keeps the global model stable even when a share of participants are adversarial.', github: 'https://github.com/jayguri', live: null },
+      { name: 'EEG / EMG Hunger Detection', tech: 'Python · NumPy · scikit-learn', desc: 'Biosignal-driven ML — preprocessing raw EEG and EMG through to inference on hunger state.', github: 'https://github.com/jayguri', live: null },
     ],
   },
 };
@@ -57,180 +56,215 @@ function rr(ctx, x, y, w, h, r) {
   ctx.closePath();
 }
 
-// ─── Neon helper for sign strokes ────────────────────────────────────────────
-function neonStroke(ctx, color, outerBlur, innerBlur, lineW, alpha = 1) {
-  ctx.save();
-  ctx.shadowColor = color;
-  ctx.shadowBlur = outerBlur;
-  ctx.strokeStyle = color;
-  ctx.globalAlpha = alpha;
-  ctx.lineWidth = lineW;
-  ctx.stroke();
-  ctx.shadowBlur = innerBlur;
-  ctx.strokeStyle = '#ffffff';
-  ctx.lineWidth = lineW * 0.28;
-  ctx.stroke();
-  ctx.restore();
-}
+function drawMURedDevilToCanvas(ctx, targetCanvas, image, glowCtx, tubeCtx) {
+  const fullW = image.width;
+  const fullH = image.height;
+  const sample = document.createElement('canvas');
+  sample.width = fullW;
+  sample.height = fullH;
+  const sampleCtx = sample.getContext('2d');
+  sampleCtx.drawImage(image, 0, 0, fullW, fullH);
 
-// ─── Red devil neon logo canvas ──────────────────────────────────────────────
-function buildMUNeonCanvas() {
-  const W = 520, H = 760;
-  const cv = document.createElement('canvas');
-  cv.width = W; cv.height = H;
-  const ctx = cv.getContext('2d');
-  const cx = W / 2;
-  const neonFill = (fillColor, alpha = 1) => {
-    ctx.save();
-    ctx.globalAlpha = alpha;
-    ctx.shadowColor = '#ff2020';
-    ctx.shadowBlur = 34;
-    ctx.fillStyle = fillColor;
-    ctx.fill();
-    ctx.shadowBlur = 14;
-    ctx.fill();
-    ctx.restore();
-  };
+  const src = sampleCtx.getImageData(0, 0, fullW, fullH);
+  const px = src.data;
+  const mask = new Uint8Array(fullW * fullH);
+  for (let y = 0; y < fullH; y++) {
+    for (let x = 0; x < fullW; x++) {
+      const i = (y * fullW + x) * 4;
+      const r = px[i];
+      const g = px[i + 1];
+      const b = px[i + 2];
+      const maxC = Math.max(r, g, b);
+      const minC = Math.min(r, g, b);
+      const spread = maxC - minC;
+      const sat = maxC === 0 ? 0 : spread / maxC;
+      const isRed = r > 58 && r > g * 1.28 && r > b * 1.28 && sat > 0.24;
+      const isWhite = maxC > 170 && sat < 0.14;
+      mask[y * fullW + x] = isRed || isWhite ? 1 : 0;
+    }
+  }
 
-  const neonOutline = (lineW = 8) => {
-    ctx.save();
-    ctx.shadowColor = '#ffffff';
-    ctx.shadowBlur = 22;
-    ctx.strokeStyle = '#ffffff';
-    ctx.lineWidth = lineW;
-    ctx.lineJoin = 'round';
-    ctx.lineCap = 'round';
-    ctx.stroke();
-    ctx.shadowBlur = 8;
-    ctx.lineWidth = lineW * 0.45;
-    ctx.stroke();
-    ctx.restore();
-  };
+  const visited = new Uint8Array(fullW * fullH);
+  const qx = new Int32Array(fullW * fullH);
+  const qy = new Int32Array(fullW * fullH);
+  let bestScore = 0;
+  let minX = 0;
+  let minY = 0;
+  let maxX = fullW;
+  let maxY = fullH;
 
-  // Transparent canvas so only the logo itself shows up on the back wall.
-  ctx.clearRect(0, 0, W, H);
-  ctx.translate(20, 70);
+  for (let y = 0; y < fullH; y++) {
+    for (let x = 0; x < fullW; x++) {
+      const start = y * fullW + x;
+      if (!mask[start] || visited[start]) continue;
 
-  // Tail / back curve
-  ctx.beginPath();
-  ctx.moveTo(126, 358);
-  ctx.bezierCurveTo(98, 348, 74, 330, 70, 306);
-  ctx.bezierCurveTo(66, 282, 80, 264, 94, 258);
-  ctx.bezierCurveTo(106, 252, 110, 260, 102, 268);
-  ctx.lineTo(86, 260); ctx.lineTo(96, 246); ctx.lineTo(110, 256);
-  ctx.bezierCurveTo(124, 262, 122, 282, 116, 298);
-  ctx.bezierCurveTo(110, 316, 106, 336, 120, 348);
-  ctx.closePath();
-  neonFill('#a40000', 0.92); neonOutline(8);
+      let head = 0;
+      let tail = 0;
+      qx[tail] = x;
+      qy[tail] = y;
+      tail += 1;
+      visited[start] = 1;
 
-  // Left arm
-  ctx.beginPath();
-  ctx.moveTo(148, 270); ctx.lineTo(128, 282);
-  ctx.lineTo(94, 264); ctx.lineTo(64, 242);
-  ctx.lineTo(40, 212); ctx.lineTo(28, 190);
-  ctx.lineTo(20, 164); ctx.lineTo(33, 172);
-  ctx.lineTo(26, 153); ctx.lineTo(42, 166);
-  ctx.lineTo(40, 151); ctx.lineTo(54, 170);
-  ctx.lineTo(60, 190); ctx.lineTo(82, 215);
-  ctx.lineTo(108, 238); ctx.lineTo(136, 258);
-  ctx.lineTo(150, 272);
-  ctx.closePath();
-  neonFill('#a40000', 0.95); neonOutline(8);
+      let count = 0;
+      let sumMax = 0;
+      let cMinX = x;
+      let cMinY = y;
+      let cMaxX = x;
+      let cMaxY = y;
 
-  // Main torso and head block
-  ctx.beginPath();
-  ctx.moveTo(118, 178);
-  ctx.lineTo(102, 115); ctx.lineTo(132, 158);
-  ctx.lineTo(155, 86);  ctx.lineTo(178, 160);
-  ctx.lineTo(196, 115); ctx.lineTo(210, 175);
-  ctx.quadraticCurveTo(226, 186, 224, 216);
-  ctx.lineTo(218, 242); ctx.lineTo(204, 252);
-  ctx.lineTo(210, 258); ctx.lineTo(224, 272);
-  ctx.lineTo(230, 312); ctx.lineTo(234, 358);
-  ctx.lineTo(218, 372); ctx.lineTo(192, 382);
-  ctx.lineTo(174, 382); ctx.lineTo(144, 372);
-  ctx.lineTo(126, 358); ctx.lineTo(128, 312);
-  ctx.lineTo(136, 258); ctx.lineTo(148, 240);
-  ctx.quadraticCurveTo(140, 212, 118, 178);
-  ctx.closePath();
-  neonFill('#b00000', 0.98); neonOutline(9);
+      while (head < tail) {
+        const cx = qx[head];
+        const cy = qy[head];
+        head += 1;
+        const ci = cy * fullW + cx;
+        const pi = ci * 4;
 
-  // Legs
-  ctx.beginPath();
-  ctx.moveTo(174, 382); ctx.lineTo(154, 388);
-  ctx.lineTo(136, 424); ctx.lineTo(126, 460);
-  ctx.lineTo(130, 494); ctx.lineTo(122, 514);
-  ctx.lineTo(84, 518);  ctx.lineTo(78, 508);
-  ctx.lineTo(116, 504); ctx.lineTo(124, 490);
-  ctx.lineTo(150, 462); ctx.lineTo(160, 426);
-  ctx.lineTo(178, 392);
-  ctx.closePath();
-  neonFill('#a40000', 0.95); neonOutline(8);
+        count += 1;
+        sumMax += Math.max(px[pi], px[pi + 1], px[pi + 2]);
+        if (cx < cMinX) cMinX = cx;
+        if (cy < cMinY) cMinY = cy;
+        if (cx > cMaxX) cMaxX = cx;
+        if (cy > cMaxY) cMaxY = cy;
 
-  ctx.beginPath();
-  ctx.moveTo(192, 382); ctx.lineTo(218, 372);
-  ctx.lineTo(230, 388); ctx.lineTo(248, 420);
-  ctx.lineTo(260, 450); ctx.lineTo(250, 478);
-  ctx.lineTo(236, 494); ctx.lineTo(270, 492);
-  ctx.lineTo(284, 482); ctx.lineTo(274, 466);
-  ctx.lineTo(266, 450); ctx.lineTo(280, 420);
-  ctx.lineTo(266, 390); ctx.lineTo(248, 378);
-  ctx.lineTo(224, 368);
-  ctx.closePath();
-  neonFill('#a40000', 0.95); neonOutline(8);
+        const neighbors = [
+          [cx + 1, cy], [cx - 1, cy], [cx, cy + 1], [cx, cy - 1],
+        ];
+        for (let n = 0; n < neighbors.length; n++) {
+          const nx = neighbors[n][0];
+          const ny = neighbors[n][1];
+          if (nx < 0 || ny < 0 || nx >= fullW || ny >= fullH) continue;
+          const ni = ny * fullW + nx;
+          if (!mask[ni] || visited[ni]) continue;
+          visited[ni] = 1;
+          qx[tail] = nx;
+          qy[tail] = ny;
+          tail += 1;
+        }
+      }
 
-  // Right arm holding trident
-  ctx.beginPath();
-  ctx.moveTo(212, 260); ctx.lineTo(230, 270);
-  ctx.lineTo(252, 294); ctx.lineTo(262, 322);
-  ctx.lineTo(256, 344); ctx.lineTo(246, 358);
-  ctx.lineTo(242, 365); ctx.lineTo(254, 368);
-  ctx.lineTo(260, 355); ctx.lineTo(270, 344);
-  ctx.lineTo(278, 326); ctx.lineTo(272, 300);
-  ctx.lineTo(252, 274); ctx.lineTo(234, 260);
-  ctx.closePath();
-  neonFill('#a40000', 0.95); neonOutline(8);
+      const avgMax = sumMax / Math.max(1, count);
+      const score = count * Math.pow(avgMax / 255, 1.8);
+      if (score > bestScore) {
+        bestScore = score;
+        minX = cMinX;
+        minY = cMinY;
+        maxX = cMaxX;
+        maxY = cMaxY;
+      }
+    }
+  }
 
-  // Trident shaft and head
-  ctx.beginPath(); ctx.rect(255, 354, 12, 166);
-  neonFill('#a40000', 0.95); neonOutline(8);
+  if (bestScore <= 0) {
+    minX = 0;
+    minY = 0;
+    maxX = fullW;
+    maxY = fullH;
+  }
 
-  ctx.beginPath();
-  ctx.moveTo(226, 232); ctx.lineTo(238, 296); ctx.lineTo(250, 296); ctx.lineTo(244, 232);
-  ctx.closePath();
-  neonFill('#a40000', 0.95); neonOutline(7);
+  const padX = 34;
+  const padY = 28;
+  minX = Math.max(0, minX - padX);
+  minY = Math.max(0, minY - padY);
+  maxX = Math.min(fullW, maxX + padX);
+  maxY = Math.min(fullH, maxY + padY);
 
-  ctx.beginPath();
-  ctx.moveTo(261, 186); ctx.lineTo(271, 288); ctx.lineTo(251, 288);
-  ctx.closePath();
-  neonFill('#a40000', 0.95); neonOutline(7);
+  const cropW = maxX - minX;
+  const cropH = maxY - minY;
+  ctx.clearRect(0, 0, targetCanvas.width, targetCanvas.height);
+  ctx.drawImage(image, minX, minY, cropW, cropH, 0, 0, targetCanvas.width, targetCanvas.height);
 
-  ctx.beginPath();
-  ctx.moveTo(296, 232); ctx.lineTo(278, 232); ctx.lineTo(272, 296); ctx.lineTo(284, 296);
-  ctx.closePath();
-  neonFill('#a40000', 0.95); neonOutline(7);
+  const keyed = ctx.getImageData(0, 0, targetCanvas.width, targetCanvas.height);
+  const keyedData = keyed.data;
+  for (let i = 0; i < keyedData.length; i += 4) {
+    const r = keyedData[i];
+    const g = keyedData[i + 1];
+    const b = keyedData[i + 2];
+    const maxC = Math.max(r, g, b);
+    const minC = Math.min(r, g, b);
+    const spread = maxC - minC;
+    const sat = maxC === 0 ? 0 : spread / maxC;
+    const redLike = r > 58 && r > g * 1.24 && r > b * 1.24 && sat > 0.22;
+    const whiteLike = maxC > 172 && sat < 0.15;
+    const redEdge = r > 44 && r > g * 1.12 && r > b * 1.12;
+    const softWhite = maxC > 126 && sat < 0.20;
 
-  // Eye cutouts
-  ctx.save();
-  ctx.fillStyle = '#ffffff';
-  ctx.shadowColor = '#ffffff';
-  ctx.shadowBlur = 18;
-  ctx.beginPath(); ctx.moveTo(151, 196); ctx.lineTo(164, 187); ctx.lineTo(167, 208); ctx.lineTo(154, 210); ctx.closePath(); ctx.fill();
-  ctx.beginPath(); ctx.moveTo(193, 188); ctx.lineTo(206, 196); ctx.lineTo(203, 210); ctx.lineTo(190, 208); ctx.closePath(); ctx.fill();
-  ctx.restore();
+    let alpha;
+    if (redLike || whiteLike) {
+      alpha = 1;
+    } else if (redEdge || softWhite) {
+      const aBase = Math.max(0, Math.min(1, (maxC - 36) / 84));
+      alpha = Math.pow(aBase, 1.35) * 0.9;
+    } else {
+      alpha = 0;
+    }
 
-  // Mouth / beard cutout highlight
-  ctx.save();
-  ctx.fillStyle = '#ffffff';
-  ctx.shadowColor = '#ffffff';
-  ctx.shadowBlur = 16;
-  ctx.beginPath();
-  ctx.moveTo(176, 226); ctx.lineTo(189, 226); ctx.lineTo(182, 245);
-  ctx.closePath();
-  ctx.fill();
-  ctx.restore();
+    if (whiteLike) {
+      keyedData[i] = Math.min(255, r * 1.08 + 14);
+      keyedData[i + 1] = Math.min(255, g * 1.08 + 14);
+      keyedData[i + 2] = Math.min(255, b * 1.08 + 14);
+    } else {
+      keyedData[i] = Math.min(255, r * 1.20 + 18);
+      keyedData[i + 1] = Math.max(0, g * 0.64);
+      keyedData[i + 2] = Math.max(0, b * 0.64);
+    }
 
-  return cv;
+    keyedData[i + 3] = Math.round(alpha * 255);
+  }
+
+  ctx.putImageData(keyed, 0, 0);
+
+  if (glowCtx) {
+    const gw = targetCanvas.width;
+    const gh = targetCanvas.height;
+    glowCtx.clearRect(0, 0, gw, gh);
+    glowCtx.save();
+    glowCtx.filter = 'blur(20px)';
+    glowCtx.globalAlpha = 0.85;
+    glowCtx.drawImage(targetCanvas, 0, 0);
+    glowCtx.restore();
+
+    glowCtx.globalCompositeOperation = 'source-in';
+    const glowGrad = glowCtx.createLinearGradient(0, 0, 0, gh);
+    glowGrad.addColorStop(0, 'rgba(255,95,95,1)');
+    glowGrad.addColorStop(0.45, 'rgba(255,45,45,1)');
+    glowGrad.addColorStop(1, 'rgba(205,10,10,1)');
+    glowCtx.fillStyle = glowGrad;
+    glowCtx.fillRect(0, 0, gw, gh);
+    glowCtx.globalCompositeOperation = 'source-over';
+
+    glowCtx.save();
+    glowCtx.filter = 'blur(6px)';
+    glowCtx.globalAlpha = 0.45;
+    glowCtx.drawImage(targetCanvas, 0, 0);
+    glowCtx.restore();
+  }
+
+  if (tubeCtx) {
+    const tw = targetCanvas.width;
+    const th = targetCanvas.height;
+    tubeCtx.clearRect(0, 0, tw, th);
+
+    tubeCtx.save();
+    tubeCtx.filter = 'blur(1.5px)';
+    tubeCtx.globalAlpha = 0.95;
+    tubeCtx.drawImage(targetCanvas, 0, 0);
+    tubeCtx.restore();
+
+    tubeCtx.globalCompositeOperation = 'source-in';
+    const tubeGrad = tubeCtx.createLinearGradient(0, 0, 0, th);
+    tubeGrad.addColorStop(0, 'rgba(255,250,250,0.92)');
+    tubeGrad.addColorStop(0.42, 'rgba(255,185,185,0.86)');
+    tubeGrad.addColorStop(1, 'rgba(255,120,120,0.74)');
+    tubeCtx.fillStyle = tubeGrad;
+    tubeCtx.fillRect(0, 0, tw, th);
+    tubeCtx.globalCompositeOperation = 'source-over';
+
+    tubeCtx.save();
+    tubeCtx.filter = 'blur(3px)';
+    tubeCtx.globalAlpha = 0.48;
+    tubeCtx.drawImage(targetCanvas, 0, 0);
+    tubeCtx.restore();
+  }
 }
 
 // ─── Sprite texture for denser mug mist ──────────────────────────────────────
@@ -249,6 +283,11 @@ function buildSteamTexture() {
   return new THREE.CanvasTexture(cv);
 }
 
+function hexA(hex, a) {
+  const n = parseInt(hex.slice(1), 16);
+  return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${a})`;
+}
+
 function buildScreenCanvas(id) {
   const CW = 1024, CH = 620;
   const cv  = document.createElement('canvas');
@@ -256,144 +295,212 @@ function buildScreenCanvas(id) {
   const ctx = cv.getContext('2d');
   const d   = SCREENS_DATA[id];
 
-  // Background
-  ctx.fillStyle = '#0d1117';
+  // Background — soft vertical falloff so the panel feels lit from within.
+  const bgGrad = ctx.createLinearGradient(0, 0, 0, CH);
+  bgGrad.addColorStop(0, '#0f1621');
+  bgGrad.addColorStop(0.55, '#0c131d');
+  bgGrad.addColorStop(1, '#090f18');
+  ctx.fillStyle = bgGrad;
   ctx.fillRect(0, 0, CW, CH);
 
-  // Subtle CRT scanlines
-  for (let sy = 0; sy < CH; sy += 3) {
-    ctx.fillStyle = 'rgba(0,0,0,0.055)';
+  const bloom = ctx.createRadialGradient(CW * 0.5, CH * 0.05, 10, CW * 0.5, CH * 0.05, CW * 0.75);
+  bloom.addColorStop(0, hexA(d.color, 0.10));
+  bloom.addColorStop(0.5, hexA(d.color, 0.04));
+  bloom.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = bloom;
+  ctx.fillRect(0, 0, CW, CH);
+
+  for (let sy = 0; sy < CH; sy += 4) {
+    ctx.fillStyle = 'rgba(255,255,255,0.014)';
     ctx.fillRect(0, sy, CW, 1);
   }
 
   // ── Title bar ──
-  ctx.fillStyle = '#161b22';
+  ctx.fillStyle = '#131b28';
   ctx.fillRect(0, 0, CW, 52);
-  ctx.strokeStyle = '#30363d'; ctx.lineWidth = 1;
+  ctx.strokeStyle = '#232f42'; ctx.lineWidth = 1;
   ctx.beginPath(); ctx.moveTo(0, 52); ctx.lineTo(CW, 52); ctx.stroke();
 
-  // Traffic lights
-  [['#FF5F57', 22], ['#FEBC2E', 46], ['#28C840', 70]].forEach(([c, x]) => {
+  [['#FF5F57', 24], ['#FEBC2E', 48], ['#28C840', 72]].forEach(([c, x]) => {
     ctx.fillStyle = c;
-    ctx.beginPath(); ctx.arc(x, 26, 7, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(x, 26, 6.5, 0, Math.PI * 2); ctx.fill();
   });
 
-  // Tab label
   ctx.font = '600 14px "JetBrains Mono","Courier New",monospace';
   ctx.fillStyle = d.color;
-  ctx.fillText(d.tab, 96, 32);
+  ctx.fillText(`jay@studio ${d.tab}`, 100, 32);
 
-  // Right status
   ctx.font = '12px "JetBrains Mono","Courier New",monospace';
-  ctx.fillStyle = '#3d444d';
-  const stxt = `${d.projects.length} entries`;
-  ctx.fillText(stxt, CW - ctx.measureText(stxt).width - 20, 32);
+  ctx.fillStyle = '#6b7c94';
+  const cnt = `${d.projects.length} ${d.projects.length === 1 ? 'project' : 'projects'}`;
+  ctx.fillText(cnt, CW - ctx.measureText(cnt).width - 22, 32);
+
+  const pw = (s) => ctx.measureText(s).width;
 
   // ── Prompt line ──
-  const pw = (s) => ctx.measureText(s).width;
   ctx.font = '13px "JetBrains Mono","Courier New",monospace';
-  let cx = 24;
-  ctx.fillStyle = '#28C840'; ctx.fillText('visitor@portfolio', cx, 82); cx += pw('visitor@portfolio');
-  ctx.fillStyle = '#7d8590'; ctx.fillText(':', cx, 82); cx += pw(':');
-  ctx.fillStyle = d.color;   ctx.fillText('~/work', cx, 82);            cx += pw('~/work');
-  ctx.fillStyle = '#e6edf3'; ctx.fillText(' ❯ cat projects.json', cx, 82);
-
-  // Divider
-  ctx.fillStyle = '#21262d';
-  ctx.fillRect(24, 98, CW - 48, 1);
+  let cx = 26;
+  ctx.fillStyle = '#28C840'; ctx.fillText('visitor@portfolio', cx, 88); cx += pw('visitor@portfolio');
+  ctx.fillStyle = '#8f9db4'; ctx.fillText(':', cx, 88); cx += pw(':');
+  ctx.fillStyle = d.color;   ctx.fillText('~/work', cx, 88);            cx += pw('~/work');
+  ctx.fillStyle = '#dfe8f5'; ctx.fillText(` ❯ ls ./${id}`, cx, 88);
 
   // ── Category heading ──
-  ctx.font = 'bold 22px "JetBrains Mono","Courier New",monospace';
+  ctx.font = 'bold 30px "JetBrains Mono","Courier New",monospace';
   ctx.fillStyle = d.color;
-  ctx.fillText(d.label, 24, 134);
-  ctx.font = '12px "JetBrains Mono","Courier New",monospace';
-  ctx.fillStyle = '#3d444d';
-  ctx.fillText(`[ ${d.projects.length} projects ]`, 28 + pw(d.label), 134);
+  ctx.fillText(d.label, 26, 138);
+  ctx.font = '13px "JetBrains Mono","Courier New",monospace';
+  ctx.fillStyle = '#5f7089';
+  ctx.fillText('pick a project to open the details', 28, 166);
 
-  // ── Project rows ──
-  const total     = d.projects.length;
-  const available = CH - 154 - 40;
-  const rowGap    = Math.floor(available / total);
-  const rowH      = Math.min(rowGap - 10, 128);
-  const zones     = [];
+  ctx.strokeStyle = hexA(d.color, 0.22); ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(26, 186); ctx.lineTo(CW - 26, 186); ctx.stroke();
+
+  // ── Project name list ──
+  const top    = 208;
+  const bottom = CH - 52;
+  const total  = d.projects.length;
+  const rowH   = Math.min((bottom - top) / total, 132);
+  const listH  = rowH * total;
+  const startY = top + ((bottom - top) - listH) / 2;
+  const zones  = [];
 
   d.projects.forEach((p, i) => {
-    const ry = 154 + i * rowGap;
-    zones.push({ yMin: ry, yMax: ry + rowH });
+    const ry = startY + i * rowH;
+    const cy = ry + rowH / 2;
+    zones.push({ yMin: ry + 6, yMax: ry + rowH - 6 });
 
-    // Card BG
-    ctx.fillStyle = 'rgba(20,28,46,0.70)';
-    rr(ctx, 14, ry, CW - 28, rowH, 6); ctx.fill();
-    ctx.strokeStyle = '#253055'; ctx.lineWidth = 0.8;
-    rr(ctx, 14, ry, CW - 28, rowH, 6); ctx.stroke();
+    // row plate
+    ctx.fillStyle = hexA(d.color, 0.05);
+    rr(ctx, 22, ry + 8, CW - 44, rowH - 16, 12); ctx.fill();
+    ctx.strokeStyle = hexA(d.color, 0.18); ctx.lineWidth = 1;
+    rr(ctx, 22, ry + 8, CW - 44, rowH - 16, 12); ctx.stroke();
 
-    // Left accent
+    // left accent tick
     ctx.fillStyle = d.color;
-    ctx.fillRect(14, ry, 3, rowH);
+    rr(ctx, 22, cy - 20, 4, 40, 2); ctx.fill();
 
-    // Index
-    ctx.font = '11px "JetBrains Mono","Courier New",monospace';
-    ctx.fillStyle = '#3d444d';
-    ctx.fillText(`0${i + 1}`, 28, ry + 20);
+    // index
+    ctx.font = '600 15px "JetBrains Mono","Courier New",monospace';
+    ctx.fillStyle = hexA(d.color, 0.7);
+    ctx.textBaseline = 'middle';
+    ctx.fillText(String(i + 1).padStart(2, '0'), 52, cy);
 
-    // Project name
-    ctx.font = 'bold 17px "JetBrains Mono","Courier New",monospace';
-    ctx.fillStyle = '#79c0ff';
-    ctx.fillText(p.name, 60, ry + 22);
+    // name
+    ctx.font = 'bold 30px "JetBrains Mono","Courier New",monospace';
+    ctx.fillStyle = '#eaf1fb';
+    ctx.fillText(p.name, 104, cy + 1);
 
-    // "→ open" pill
-    const btnLabel = '→ open';
-    const btnW     = ctx.measureText(btnLabel).width + 22;
-    ctx.font = '12px "JetBrains Mono","Courier New",monospace';
-    ctx.fillStyle = d.color + '22';
-    rr(ctx, CW - btnW - 16, ry + 7, btnW, 22, 4); ctx.fill();
-    ctx.strokeStyle = d.color + '55'; ctx.lineWidth = 0.7;
-    rr(ctx, CW - btnW - 16, ry + 7, btnW, 22, 4); ctx.stroke();
-    ctx.fillStyle = d.color;
-    ctx.fillText(btnLabel, CW - btnW - 5, ry + 22);
+    // chevron
+    ctx.font = '600 30px "JetBrains Mono","Courier New",monospace';
+    ctx.fillStyle = hexA(d.color, 0.8);
+    ctx.fillText('›', CW - 58, cy);
 
-    // Tech stack
-    ctx.font = '13px "JetBrains Mono","Courier New",monospace';
-    ctx.fillStyle = '#ffa657';
-    ctx.fillText(p.tech, 60, ry + 44);
-
-    // Description (truncate)
-    ctx.font = '12px "JetBrains Mono","Courier New",monospace';
-    ctx.fillStyle = '#8b949e';
-    const maxW = CW - 60 - btnW - 30;
-    let desc = p.desc;
-    while (desc.length > 4 && ctx.measureText(desc).width > maxW) desc = desc.slice(0, -1);
-    if (desc !== p.desc) desc = desc.trimEnd() + '…';
-    ctx.fillText(desc, 60, ry + 64);
-
-    // Links
-    if (rowH >= 90) {
-      ctx.font = '11px "JetBrains Mono","Courier New",monospace';
-      let lx = 60;
-      if (p.github) {
-        ctx.fillStyle = '#388bfd';
-        ctx.fillText('⌥ GitHub', lx, ry + rowH - 14);
-        lx += ctx.measureText('⌥ GitHub').width + 18;
-      }
-      if (p.live) {
-        ctx.fillStyle = d.color;
-        ctx.fillText('↗ Live', lx, ry + rowH - 14);
-      }
-    }
+    ctx.textBaseline = 'alphabetic';
   });
 
   // ── Footer bar ──
-  ctx.fillStyle = '#161b22';
+  ctx.fillStyle = '#111925';
   ctx.fillRect(0, CH - 36, CW, 36);
-  ctx.strokeStyle = '#21262d'; ctx.lineWidth = 0.5;
+  ctx.strokeStyle = '#212d3f'; ctx.lineWidth = 0.5;
   ctx.beginPath(); ctx.moveTo(0, CH - 36); ctx.lineTo(CW, CH - 36); ctx.stroke();
   ctx.font = '11px "JetBrains Mono","Courier New",monospace';
-  ctx.fillStyle = '#3d444d';
-  ctx.fillText('click a project to open details · esc to close', 24, CH - 13);
+  ctx.fillStyle = '#6b7c94';
+  const foot = 'click a project name to open details · esc to close';
+  ctx.fillText(foot, 26, CH - 13);
   ctx.fillStyle = d.color;
-  ctx.fillText(' ▮', 24 + ctx.measureText('click a project to open details · esc to close').width, CH - 13);
+  ctx.fillText(' ▮', 26 + pw(foot), CH - 13);
 
   return { canvas: cv, zones, canvasH: CH };
+}
+
+// ─── Rubik's-style desk puzzles ──────────────────────────────────────────────
+// Built entirely from primitives so there's no asset to load. Each returns a
+// THREE.Group centred on its own origin; the scene positions and spins them.
+function makeRubiks(type) {
+  const g = new THREE.Group();
+  const bodyMat = new THREE.MeshStandardMaterial({ color: 0x0a0a0c, roughness: 0.45, metalness: 0.15 });
+  const edgeMat = new THREE.LineBasicMaterial({ color: 0x050506, transparent: true, opacity: 0.85 });
+  const stickerCache = {};
+  const sticker = (hex) =>
+    (stickerCache[hex] ||= new THREE.MeshStandardMaterial({
+      color: hex, roughness: 0.32, metalness: 0.04,
+      emissive: new THREE.Color(hex), emissiveIntensity: 0.14,
+    }));
+
+  if (type === '3x3') {
+    const S = 0.17, t = S / 3, q = t * 0.82, off = S / 2 + 0.002;
+    const body = new THREE.Mesh(new THREE.BoxGeometry(S, S, S), bodyMat);
+    body.castShadow = true;
+    body.add(new THREE.LineSegments(new THREE.EdgesGeometry(body.geometry), edgeMat));
+    g.add(body);
+    const COL = { U: 0xf5f5f5, D: 0xffd21f, F: 0xd01f1f, B: 0xff7a1a, R: 0x1f5fd0, L: 0x1fa64a };
+    const face = (color, axis, sign) => {
+      for (let a = -1; a <= 1; a++) for (let b = -1; b <= 1; b++) {
+        const m = new THREE.Mesh(new THREE.PlaneGeometry(q, q), sticker(color));
+        if (axis === 'x')      { m.rotation.y = sign * Math.PI / 2;  m.position.set(sign * off, a * t, b * t); }
+        else if (axis === 'y') { m.rotation.x = -sign * Math.PI / 2; m.position.set(a * t, sign * off, b * t); }
+        else                   { m.rotation.y = sign > 0 ? 0 : Math.PI; m.position.set(a * t, b * t, sign * off); }
+        g.add(m);
+      }
+    };
+    face(COL.R, 'x', 1); face(COL.L, 'x', -1);
+    face(COL.U, 'y', 1); face(COL.D, 'y', -1);
+    face(COL.F, 'z', 1); face(COL.B, 'z', -1);
+    return g;
+  }
+
+  if (type === 'mirror') {
+    // Mirror Blocks — gold cubies at deliberately uneven sizes.
+    // One shared material + a thin dark gap frame so the size contrast reads
+    // without a wireframe on every cubie.
+    const gold = new THREE.MeshStandardMaterial({ color: 0xc9a24e, roughness: 0.24, metalness: 0.9 });
+    g.add(new THREE.Mesh(new THREE.BoxGeometry(0.185, 0.185, 0.185), bodyMat));
+    const base = 0.055;
+    for (let x = 0; x < 3; x++) for (let y = 0; y < 3; y++) for (let z = 0; z < 3; z++) {
+      const c = new THREE.Mesh(
+        new THREE.BoxGeometry(
+          base * (0.6 + Math.random() * 0.85),
+          base * (0.6 + Math.random() * 0.85),
+          base * (0.6 + Math.random() * 0.85),
+        ),
+        gold,
+      );
+      c.position.set((x - 1) * base, (y - 1) * base, (z - 1) * base);
+      c.castShadow = true;
+      g.add(c);
+    }
+    return g;
+  }
+
+  if (type === 'pyraminx') {
+    const geo = new THREE.TetrahedronGeometry(0.135);
+    geo.clearGroups();
+    for (let i = 0; i < 4; i++) geo.addGroup(i * 3, 3, i);
+    const mats = [0x1fa64a, 0xd01f1f, 0x1f5fd0, 0xffd21f].map(sticker);
+    const mesh = new THREE.Mesh(geo, mats);
+    mesh.castShadow = true;
+    mesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo), edgeMat));
+    g.add(mesh);
+    return g;
+  }
+
+  if (type === 'megaminx') {
+    const geo = new THREE.DodecahedronGeometry(0.125);
+    geo.clearGroups();
+    for (let i = 0; i < 12; i++) geo.addGroup(i * 9, 9, i);
+    const mats = [
+      0xf5f5f5, 0xffd21f, 0x1436b0, 0xd01f1f, 0x0f7a34, 0x6b2fb0,
+      0x9aa0a6, 0x35a7d0, 0xff7a1a, 0x7ac943, 0xe86ea0, 0xdcc8a0,
+    ].map(sticker);
+    const mesh = new THREE.Mesh(geo, mats);
+    mesh.castShadow = true;
+    mesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo), edgeMat));
+    g.add(mesh);
+    return g;
+  }
+
+  return g;
 }
 
 // ─── Main Component ───────────────────────────────────────────────────────────
@@ -439,9 +546,10 @@ export default function RoomScene({ activeScreen, onScreenClick, onOpenProject }
       screens:      {},
       monLights: {},
       steamPuffs: [],
+      rubiks: [],
       muSign: null,
       dustGeo: null, dustSpeeds: null,
-      mouseRgbLight: null,
+      mouseRgbLight: null, mouseGlow: null,
       kbLight: null,
       disposed: false, raf: null,
     };
@@ -452,8 +560,8 @@ export default function RoomScene({ activeScreen, onScreenClick, onOpenProject }
     // ══════════════════════════════════════════════════
 
     // Base ambient — room is dark but not black
-    scene.add(new THREE.AmbientLight(0x1a1828, 4.5));
-    scene.add(new THREE.HemisphereLight(0x182040, 0x080610, 2.8));
+    scene.add(new THREE.AmbientLight(0x1a1828, 5.2));
+    scene.add(new THREE.HemisphereLight(0x182040, 0x080610, 3.2));
 
     // Overhead warm fill (simulates ceiling track light)
     const overheadLight = new THREE.PointLight(0xffd090, 8.0, 12, 1.6);
@@ -548,51 +656,48 @@ export default function RoomScene({ activeScreen, onScreenClick, onOpenProject }
     deskLedLight.position.set(0, DESK_Y - 0.08, 0.0);
     scene.add(deskLedLight);
 
-    // Process the JPG into a keyed canvas texture so the black background blends
-    // into the wall while preserving a sharper devil silhouette.
+    // Use the loaded MU red devil asset and key out black background pixels.
     const muCanvas = document.createElement('canvas');
-    muCanvas.width = 520;
-    muCanvas.height = 760;
+    muCanvas.width = 900;
+    muCanvas.height = 1280;
     const muCtx = muCanvas.getContext('2d');
+
+    const muGlowCanvas = document.createElement('canvas');
+    muGlowCanvas.width = muCanvas.width;
+    muGlowCanvas.height = muCanvas.height;
+    const muGlowCtx = muGlowCanvas.getContext('2d');
+
+    const muTubeCanvas = document.createElement('canvas');
+    muTubeCanvas.width = muCanvas.width;
+    muTubeCanvas.height = muCanvas.height;
+    const muTubeCtx = muTubeCanvas.getContext('2d');
+
     const muTex = new THREE.CanvasTexture(muCanvas);
     muTex.colorSpace = THREE.SRGBColorSpace;
-    muTex.minFilter = THREE.LinearFilter;
+    muTex.minFilter = THREE.LinearMipmapLinearFilter;
     muTex.magFilter = THREE.LinearFilter;
-    muTex.generateMipmaps = false;
+    muTex.generateMipmaps = true;
+    muTex.anisotropy = Math.min(renderer.capabilities.getMaxAnisotropy(), 8);
+
+    const muGlowTex = new THREE.CanvasTexture(muGlowCanvas);
+    muGlowTex.colorSpace = THREE.SRGBColorSpace;
+    muGlowTex.minFilter = THREE.LinearMipmapLinearFilter;
+    muGlowTex.magFilter = THREE.LinearFilter;
+    muGlowTex.generateMipmaps = true;
+    muGlowTex.anisotropy = Math.min(renderer.capabilities.getMaxAnisotropy(), 8);
+
+    const muTubeTex = new THREE.CanvasTexture(muTubeCanvas);
+    muTubeTex.colorSpace = THREE.SRGBColorSpace;
+    muTubeTex.minFilter = THREE.LinearMipmapLinearFilter;
+    muTubeTex.magFilter = THREE.LinearFilter;
+    muTubeTex.generateMipmaps = true;
+    muTubeTex.anisotropy = Math.min(renderer.capabilities.getMaxAnisotropy(), 8);
 
     new THREE.TextureLoader().load('/785d1f69766098745a997a84fd58212f.jpg', (loadedTexture) => {
-      const img = loadedTexture.image;
-      const drawW = muCanvas.width;
-      const drawH = muCanvas.height;
-      muCtx.clearRect(0, 0, drawW, drawH);
-      muCtx.drawImage(img, 0, 0, drawW, drawH);
-
-      const imgData = muCtx.getImageData(0, 0, drawW, drawH);
-      const data = imgData.data;
-      for (let i = 0; i < data.length; i += 4) {
-        const r = data[i];
-        const g = data[i + 1];
-        const b = data[i + 2];
-        const maxC = Math.max(r, g, b);
-        const minC = Math.min(r, g, b);
-        const spread = maxC - minC;
-        const alphaBase = Math.max(0, Math.min(1, (maxC - 12) / 118));
-        const alpha = Math.pow(alphaBase, 1.28);
-        const isWhite = maxC > 150 && spread < 42;
-
-        if (isWhite) {
-          data[i] = Math.min(255, r * 1.08 + 18);
-          data[i + 1] = Math.min(255, g * 1.08 + 18);
-          data[i + 2] = Math.min(255, b * 1.08 + 18);
-        } else {
-          data[i] = Math.min(255, r * 1.12 + 14);
-          data[i + 1] = g * 0.78;
-          data[i + 2] = b * 0.78;
-        }
-        data[i + 3] = Math.round(alpha * 255);
-      }
-      muCtx.putImageData(imgData, 0, 0);
+      drawMURedDevilToCanvas(muCtx, muCanvas, loadedTexture.image, muGlowCtx, muTubeCtx);
       muTex.needsUpdate = true;
+      muGlowTex.needsUpdate = true;
+      muTubeTex.needsUpdate = true;
       loadedTexture.dispose();
     });
 
@@ -600,54 +705,54 @@ export default function RoomScene({ activeScreen, onScreenClick, onOpenProject }
       map: muTex,
       transparent: true,
       opacity: 1.0,
-      alphaTest: 0.06,
+      alphaTest: 0.03,
       blending: THREE.NormalBlending,
       depthWrite: false,
     });
-    const muMesh = new THREE.Mesh(new THREE.PlaneGeometry(2.08, 3.74), muMat);
-    muMesh.position.set(0, 3.82, -4.52);
-    muMesh.renderOrder = 5;
+    const muMesh = new THREE.Mesh(new THREE.PlaneGeometry(2.08, 2.98), muMat);
+    muMesh.position.set(0, 3.99, -4.518);
+    muMesh.renderOrder = 6;
     scene.add(muMesh);
 
-    const haloCanvas = document.createElement('canvas');
-    haloCanvas.width = 256;
-    haloCanvas.height = 256;
-    const haloCtx = haloCanvas.getContext('2d');
-    const haloGrad = haloCtx.createRadialGradient(128, 128, 14, 128, 128, 128);
-    haloGrad.addColorStop(0, 'rgba(255,64,64,0.42)');
-    haloGrad.addColorStop(0.25, 'rgba(255,48,48,0.26)');
-    haloGrad.addColorStop(0.65, 'rgba(160,24,24,0.10)');
-    haloGrad.addColorStop(1, 'rgba(0,0,0,0)');
-    haloCtx.fillStyle = haloGrad;
-    haloCtx.fillRect(0, 0, 256, 256);
-    const haloTex = new THREE.CanvasTexture(haloCanvas);
-
-    const muGlowPlateMat = new THREE.MeshBasicMaterial({
-      map: haloTex,
-      color: 0xff4040,
+    const muTubeMat = new THREE.MeshBasicMaterial({
+      map: muTubeTex,
+      color: 0xffdcdc,
       transparent: true,
-      opacity: 0.25,
+      opacity: 0.38,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
     });
-    const muGlowPlate = new THREE.Mesh(new THREE.PlaneGeometry(3.15, 4.8), muGlowPlateMat);
-    muGlowPlate.position.set(0, 3.82, -4.535);
-    muGlowPlate.renderOrder = 4;
+    const muTubeMesh = new THREE.Mesh(new THREE.PlaneGeometry(2.08, 2.98), muTubeMat);
+    muTubeMesh.position.set(0, 3.99, -4.525);
+    muTubeMesh.renderOrder = 7;
+    scene.add(muTubeMesh);
+
+    const muGlowPlateMat = new THREE.MeshBasicMaterial({
+      map: muGlowTex,
+      color: 0xff4040,
+      transparent: true,
+      opacity: 0.30,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    });
+    const muGlowPlate = new THREE.Mesh(new THREE.PlaneGeometry(2.44, 3.38), muGlowPlateMat);
+    muGlowPlate.position.set(0, 3.99, -4.532);
+    muGlowPlate.renderOrder = 5;
     scene.add(muGlowPlate);
 
-    S.muSign = { mesh: muMesh, mat: muMat, glowMat: muGlowPlateMat };
+    S.muSign = { mesh: muMesh, mat: muMat, glowMat: muGlowPlateMat, tubeMat: muTubeMat };
 
     const signFrame = new THREE.Mesh(
-      new THREE.BoxGeometry(2.34, 4.04, 0.03),
+      new THREE.BoxGeometry(2.16, 3.06, 0.03),
       new THREE.MeshStandardMaterial({
         color: 0x080a12,
         roughness: 0.92,
         metalness: 0.12,
         transparent: true,
-        opacity: 0.04,
+        opacity: 0.07,
       }),
     );
-    signFrame.position.set(0, 3.82, -4.57);
+    signFrame.position.set(0, 3.99, -4.565);
     scene.add(signFrame);
 
     // ══════════════════════════════════════════════════
@@ -765,19 +870,51 @@ export default function RoomScene({ activeScreen, onScreenClick, onOpenProject }
     msBtnR.position.set(1.332, DESK_Y + 0.088, 0.855);
     scene.add(msBtnR);
 
-    // Scroll wheel
+    // Scroll wheel — red-lit, matching the underglow
     const wheel = new THREE.Mesh(
       new THREE.CylinderGeometry(0.014, 0.014, 0.055, 7),
-      new THREE.MeshStandardMaterial({ color: 0x2a3050, roughness: 0.55, metalness: 0.5 }),
+      new THREE.MeshStandardMaterial({
+        color: 0x3a1418, roughness: 0.5, metalness: 0.4,
+        emissive: new THREE.Color(0xff1a2e), emissiveIntensity: 0.9,
+      }),
     );
     wheel.position.set(1.30, DESK_Y + 0.093, 0.858);
     scene.add(wheel);
 
-    // Mouse LED glow (RGB mouse aesthetic)
-    const msLed = new THREE.PointLight(0xff1020, 0.18, 0.55, 2.0);
-    msLed.position.set(1.30, DESK_Y + 0.005, 0.93);
+    // Red underglow — the light bleeding out under the mouse onto the pad
+    const msLed = new THREE.PointLight(0xff0a1e, 0.85, 0.95, 2.2);
+    msLed.position.set(1.30, DESK_Y + 0.030, 0.90);
     scene.add(msLed);
     S.mouseRgbLight = msLed;
+
+    // Additive glow disc so the underglow reads even where the point light doesn't reach
+    const msGlowMat = new THREE.MeshBasicMaterial({
+      color: 0xff1a2e, transparent: true, opacity: 0.5,
+      blending: THREE.AdditiveBlending, depthWrite: false,
+    });
+    const msGlow = new THREE.Mesh(new THREE.CircleGeometry(0.17, 24), msGlowMat);
+    msGlow.rotation.x = -Math.PI / 2;
+    msGlow.position.set(1.30, DESK_Y + 0.010, 0.90);
+    scene.add(msGlow);
+    S.mouseGlow = msGlowMat;
+
+    // ══════════════════════════════════════════════════
+    // RUBIK'S PUZZLES — desk toys flanking the keyboard + mouse
+    // ══════════════════════════════════════════════════
+    const deskSurf = DESK_Y + 0.036;
+    [
+      { type: '3x3',      pos: [-1.16, deskSurf + 0.086, 1.00], rotY:  0.5,  baseX:  0.12, spin:  0.13 },
+      { type: 'pyraminx', pos: [-1.60, deskSurf + 0.070, 0.72], rotY: -0.4,  baseX: -0.20, spin: -0.10 },
+      { type: 'mirror',   pos: [ 2.04, deskSurf + 0.100, 0.98], rotY:  0.7,  baseX:  0.12, spin:  0.11 },
+      { type: 'megaminx', pos: [ 2.52, deskSurf + 0.120, 0.70], rotY: -0.6,  baseX:  0.10, spin:  0.16 },
+    ].forEach((def) => {
+      const grp = makeRubiks(def.type);
+      grp.position.set(...def.pos);
+      grp.rotation.set(def.baseX, def.rotY, 0);
+      grp.traverse((o) => { if (o.isMesh) o.castShadow = true; });
+      scene.add(grp);
+      S.rubiks.push({ grp, spin: def.spin, baseX: def.baseX, phase: Math.random() * 6.28 });
+    });
 
     // ══════════════════════════════════════════════════
     // DESK ACCESSORIES — personality elements
@@ -1074,14 +1211,44 @@ export default function RoomScene({ activeScreen, onScreenClick, onOpenProject }
       //    regardless of scene lighting (this is correct for monitors)
       const { canvas, zones, canvasH } = buildScreenCanvas(id);
       const screenTex = new THREE.CanvasTexture(canvas);
+      screenTex.colorSpace = THREE.SRGBColorSpace;
+      screenTex.minFilter = THREE.LinearFilter;
+      screenTex.magFilter = THREE.LinearFilter;
       const screenMesh = new THREE.Mesh(
         new THREE.PlaneGeometry(2.22, 1.36),
-        new THREE.MeshBasicMaterial({ map: screenTex }),
+        new THREE.MeshBasicMaterial({ map: screenTex, toneMapped: false }),
       );
       screenMesh.position.z = 0.064;
       screenMesh.userData   = { isScreen: true, screenId: id, zones, canvasH };
       group.add(screenMesh);
       S.clickTargets.push(screenMesh);
+
+      const glassOverlay = new THREE.Mesh(
+        new THREE.PlaneGeometry(2.23, 1.37),
+        new THREE.MeshBasicMaterial({
+          color: 0x9fbfff,
+          transparent: true,
+          opacity: 0.05,
+          blending: THREE.AdditiveBlending,
+          depthWrite: false,
+        }),
+      );
+      glassOverlay.position.z = 0.066;
+      group.add(glassOverlay);
+
+      const glare = new THREE.Mesh(
+        new THREE.PlaneGeometry(0.44, 1.16),
+        new THREE.MeshBasicMaterial({
+          color: 0xffffff,
+          transparent: true,
+          opacity: 0.03,
+          blending: THREE.AdditiveBlending,
+          depthWrite: false,
+        }),
+      );
+      glare.position.set(-0.56, 0.0, 0.067);
+      glare.rotation.z = 0.18;
+      group.add(glare);
 
       // Very subtle edge glow (additive overlay)
       const glowMat = new THREE.MeshBasicMaterial({
@@ -1293,12 +1460,20 @@ export default function RoomScene({ activeScreen, onScreenClick, onOpenProject }
       }
 
       if (S.mouseRgbLight) {
-        const hue = (t * 0.4) % 1;
-        S.mouseRgbLight.color.setHSL(hue, 1, 0.5);
-        S.mouseRgbLight.intensity = 0.15 + Math.sin(t * 2.2) * 0.05;
+        S.mouseRgbLight.intensity = 0.8 + Math.sin(t * 2.4) * 0.16;
+      }
+      if (S.mouseGlow) {
+        S.mouseGlow.opacity = 0.42 + Math.sin(t * 2.4) * 0.12;
       }
       if (S.kbLight) {
         S.kbLight.intensity = 0.7 + Math.sin(t * 1.8) * 0.2;
+      }
+
+      // Rubik's puzzles — slow idle turn with a gentle tilt wobble
+      for (let i = 0; i < S.rubiks.length; i++) {
+        const rk = S.rubiks[i];
+        rk.grp.rotation.y += rk.spin * 0.016;
+        rk.grp.rotation.x = rk.baseX + Math.sin(t * 0.5 + rk.phase) * 0.05;
       }
 
       // Parallax on overview only
@@ -1320,10 +1495,10 @@ export default function RoomScene({ activeScreen, onScreenClick, onOpenProject }
         const m        = S.screens[id];
         const isActive = S.activeId === id;
         const isHover  = S.hovered === id;
-        const baseO    = isActive ? 0.11 : isHover ? 0.07 : 0.03;
+        const baseO    = isActive ? 0.09 : isHover ? 0.06 : 0.025;
         const pulse    = Math.sin(t * 1.9 + idx * 1.4) * 0.016;
         m.glowMat.opacity          = Math.max(0, baseO + pulse);
-        S.monLights[id].intensity  = isActive ? 2.8 : isHover ? 2.0 : 1.45;
+        S.monLights[id].intensity  = isActive ? 2.35 : isHover ? 1.8 : 1.25;
       });
 
       // Lamp flicker
@@ -1341,6 +1516,14 @@ export default function RoomScene({ activeScreen, onScreenClick, onOpenProject }
         p.mat.dispose();
       });
       S.steamPuffs.length = 0;
+      S.rubiks.forEach(({ grp }) => {
+        scene.remove(grp);
+        grp.traverse((o) => {
+          if (o.geometry) o.geometry.dispose();
+          if (o.material) (Array.isArray(o.material) ? o.material : [o.material]).forEach((m) => m.dispose());
+        });
+      });
+      S.rubiks.length = 0;
       window.removeEventListener('resize',     onResize);
       mount.removeEventListener('mousemove', onMouseMove);
       mount.removeEventListener('click',     onClick);
