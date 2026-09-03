@@ -8,23 +8,22 @@ export const SCREENS_DATA = {
   dev: {
     label: 'The Builder', tab: '--dev', color: '#7C6FF7', hex: 0x7C6FF7,
     projects: [
-      { name: 'CLIfolio',  tech: 'Next.js · Three.js · Framer', desc: 'Terminal portfolio with immersive 3D room', github: '#', live: '#' },
-      { name: 'DataPulse', tech: 'React · D3 · Node.js',        desc: 'Real-time analytics dashboard - 1.2k *',   github: '#', live: '#' },
-      { name: 'APIForge',  tech: 'Node.js · PostgreSQL · Redis', desc: 'Developer API management platform',        github: '#', live: null },
+      { name: 'CLIfolio', tech: 'Next.js · Three.js · Framer Motion', desc: 'This site — a terminal-styled portfolio with an interactive 3D room you can walk your cursor around.', github: 'https://github.com/jayguri', live: null },
+      { name: 'ARFL Platform', tech: 'Python · PyTorch · Flower · FastAPI · Docker', desc: 'Privacy-preserving federated learning with Byzantine fault tolerance — clients train locally and share only model updates, never raw data.', github: 'https://github.com/jayguri', live: null },
     ],
   },
   research: {
     label: 'The Researcher', tab: '--research', color: '#E8935A', hex: 0xE8935A,
     projects: [
-      { name: 'Multi-Hazard EWS',  tech: 'Python · ML · GIS',      desc: 'Early warning system for disasters', github: '#', live: null },
-      { name: 'EEG/EMG Detection', tech: 'Signal Processing · CNN', desc: 'Neural signal classification',       github: '#', live: null },
+      { name: 'Multi-Hazard EWS', tech: 'Kafka · Apache Flink · TensorFlow · IoT', desc: 'Real-time disaster nowcasting at IIT Bombay — IoT sensor networks feeding stream-processing pipelines that drive deep-learning models for community alerting.', github: null, live: null },
+      { name: 'EEG / EMG Hunger Detection', tech: 'Signal Processing · MNE · CNN', desc: 'Where neuromorphic computing meets human physiology — a pipeline classifying raw neural and muscular signals into hunger states.', github: 'https://github.com/jayguri', live: null },
     ],
   },
   aiml: {
     label: 'AI / ML', tab: '--aiml', color: '#28C840', hex: 0x28C840,
     projects: [
-      { name: 'ARFL Platform',   tech: 'PyTorch · FastAPI · FL',  desc: 'Adaptive federated learning platform',  github: '#', live: '#' },
-      { name: 'Vision Pipeline', tech: 'YOLOv8 · OpenCV · CUDA',  desc: 'Real-time multi-class detection',       github: '#', live: null },
+      { name: 'ARFL Platform', tech: 'PyTorch · FastAPI · Federated Learning', desc: 'Adaptive aggregation that keeps the global model stable even when a share of participants are adversarial.', github: 'https://github.com/jayguri', live: null },
+      { name: 'EEG / EMG Hunger Detection', tech: 'Python · NumPy · scikit-learn', desc: 'Biosignal-driven ML — preprocessing raw EEG and EMG through to inference on hunger state.', github: 'https://github.com/jayguri', live: null },
     ],
   },
 };
@@ -284,6 +283,11 @@ function buildSteamTexture() {
   return new THREE.CanvasTexture(cv);
 }
 
+function hexA(hex, a) {
+  const n = parseInt(hex.slice(1), 16);
+  return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${a})`;
+}
+
 function buildScreenCanvas(id) {
   const CW = 1024, CH = 620;
   const cv  = document.createElement('canvas');
@@ -291,158 +295,212 @@ function buildScreenCanvas(id) {
   const ctx = cv.getContext('2d');
   const d   = SCREENS_DATA[id];
 
-  // Richer screen background with slight vertical falloff so the UI
-  // feels lit from within instead of painted flat on a dark card.
+  // Background — soft vertical falloff so the panel feels lit from within.
   const bgGrad = ctx.createLinearGradient(0, 0, 0, CH);
-  bgGrad.addColorStop(0, '#121927');
-  bgGrad.addColorStop(0.55, '#0f1723');
-  bgGrad.addColorStop(1, '#0b111b');
+  bgGrad.addColorStop(0, '#0f1621');
+  bgGrad.addColorStop(0.55, '#0c131d');
+  bgGrad.addColorStop(1, '#090f18');
   ctx.fillStyle = bgGrad;
   ctx.fillRect(0, 0, CW, CH);
 
-  const bloom = ctx.createRadialGradient(CW * 0.5, CH * 0.12, 10, CW * 0.5, CH * 0.12, CW * 0.7);
-  bloom.addColorStop(0, 'rgba(124,111,247,0.08)');
-  bloom.addColorStop(0.45, 'rgba(50,80,140,0.05)');
+  const bloom = ctx.createRadialGradient(CW * 0.5, CH * 0.05, 10, CW * 0.5, CH * 0.05, CW * 0.75);
+  bloom.addColorStop(0, hexA(d.color, 0.10));
+  bloom.addColorStop(0.5, hexA(d.color, 0.04));
   bloom.addColorStop(1, 'rgba(0,0,0,0)');
   ctx.fillStyle = bloom;
   ctx.fillRect(0, 0, CW, CH);
 
   for (let sy = 0; sy < CH; sy += 4) {
-    ctx.fillStyle = 'rgba(255,255,255,0.02)';
+    ctx.fillStyle = 'rgba(255,255,255,0.014)';
     ctx.fillRect(0, sy, CW, 1);
   }
 
   // ── Title bar ──
-  ctx.fillStyle = '#161f2f';
+  ctx.fillStyle = '#131b28';
   ctx.fillRect(0, 0, CW, 52);
-  ctx.strokeStyle = '#2a3447'; ctx.lineWidth = 1;
+  ctx.strokeStyle = '#232f42'; ctx.lineWidth = 1;
   ctx.beginPath(); ctx.moveTo(0, 52); ctx.lineTo(CW, 52); ctx.stroke();
 
-  // Traffic lights
-  [['#FF5F57', 22], ['#FEBC2E', 46], ['#28C840', 70]].forEach(([c, x]) => {
+  [['#FF5F57', 24], ['#FEBC2E', 48], ['#28C840', 72]].forEach(([c, x]) => {
     ctx.fillStyle = c;
-    ctx.beginPath(); ctx.arc(x, 26, 7, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(x, 26, 6.5, 0, Math.PI * 2); ctx.fill();
   });
 
-  // Tab label
   ctx.font = '600 14px "JetBrains Mono","Courier New",monospace';
   ctx.fillStyle = d.color;
-  ctx.fillText(d.tab, 96, 32);
+  ctx.fillText(`jay@studio ${d.tab}`, 100, 32);
 
-  // Right status
   ctx.font = '12px "JetBrains Mono","Courier New",monospace';
-  ctx.fillStyle = '#74839a';
-  const stxt = `${d.projects.length} entries`;
-  ctx.fillText(stxt, CW - ctx.measureText(stxt).width - 20, 32);
+  ctx.fillStyle = '#6b7c94';
+  const cnt = `${d.projects.length} ${d.projects.length === 1 ? 'project' : 'projects'}`;
+  ctx.fillText(cnt, CW - ctx.measureText(cnt).width - 22, 32);
+
+  const pw = (s) => ctx.measureText(s).width;
 
   // ── Prompt line ──
-  const pw = (s) => ctx.measureText(s).width;
   ctx.font = '13px "JetBrains Mono","Courier New",monospace';
-  let cx = 24;
-  ctx.fillStyle = '#28C840'; ctx.fillText('visitor@portfolio', cx, 82); cx += pw('visitor@portfolio');
-  ctx.fillStyle = '#8f9db4'; ctx.fillText(':', cx, 82); cx += pw(':');
-  ctx.fillStyle = d.color;   ctx.fillText('~/work', cx, 82);            cx += pw('~/work');
-  ctx.fillStyle = '#edf4ff'; ctx.fillText(' ❯ cat projects.json', cx, 82);
-
-  // Divider
-  ctx.fillStyle = '#253146';
-  ctx.fillRect(24, 98, CW - 48, 1);
+  let cx = 26;
+  ctx.fillStyle = '#28C840'; ctx.fillText('visitor@portfolio', cx, 88); cx += pw('visitor@portfolio');
+  ctx.fillStyle = '#8f9db4'; ctx.fillText(':', cx, 88); cx += pw(':');
+  ctx.fillStyle = d.color;   ctx.fillText('~/work', cx, 88);            cx += pw('~/work');
+  ctx.fillStyle = '#dfe8f5'; ctx.fillText(` ❯ ls ./${id}`, cx, 88);
 
   // ── Category heading ──
-  ctx.font = 'bold 22px "JetBrains Mono","Courier New",monospace';
+  ctx.font = 'bold 30px "JetBrains Mono","Courier New",monospace';
   ctx.fillStyle = d.color;
-  ctx.fillText(d.label, 24, 134);
-  ctx.font = '12px "JetBrains Mono","Courier New",monospace';
-  ctx.fillStyle = '#70829c';
-  ctx.fillText(`[ ${d.projects.length} projects ]`, 28 + pw(d.label), 134);
+  ctx.fillText(d.label, 26, 138);
+  ctx.font = '13px "JetBrains Mono","Courier New",monospace';
+  ctx.fillStyle = '#5f7089';
+  ctx.fillText('pick a project to open the details', 28, 166);
 
-  // ── Project rows ──
-  const total     = d.projects.length;
-  const available = CH - 154 - 40;
-  const rowGap    = Math.floor(available / total);
-  const rowH      = Math.min(rowGap - 10, 128);
-  const zones     = [];
+  ctx.strokeStyle = hexA(d.color, 0.22); ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(26, 186); ctx.lineTo(CW - 26, 186); ctx.stroke();
+
+  // ── Project name list ──
+  const top    = 208;
+  const bottom = CH - 52;
+  const total  = d.projects.length;
+  const rowH   = Math.min((bottom - top) / total, 132);
+  const listH  = rowH * total;
+  const startY = top + ((bottom - top) - listH) / 2;
+  const zones  = [];
 
   d.projects.forEach((p, i) => {
-    const ry = 154 + i * rowGap;
-    zones.push({ yMin: ry, yMax: ry + rowH });
+    const ry = startY + i * rowH;
+    const cy = ry + rowH / 2;
+    zones.push({ yMin: ry + 6, yMax: ry + rowH - 6 });
 
-    // Card BG
-    const cardGrad = ctx.createLinearGradient(0, ry, 0, ry + rowH);
-    cardGrad.addColorStop(0, 'rgba(33,45,68,0.92)');
-    cardGrad.addColorStop(1, 'rgba(22,31,49,0.94)');
-    ctx.fillStyle = cardGrad;
-    rr(ctx, 14, ry, CW - 28, rowH, 6); ctx.fill();
-    ctx.strokeStyle = 'rgba(102,132,190,0.35)'; ctx.lineWidth = 0.9;
-    rr(ctx, 14, ry, CW - 28, rowH, 6); ctx.stroke();
+    // row plate
+    ctx.fillStyle = hexA(d.color, 0.05);
+    rr(ctx, 22, ry + 8, CW - 44, rowH - 16, 12); ctx.fill();
+    ctx.strokeStyle = hexA(d.color, 0.18); ctx.lineWidth = 1;
+    rr(ctx, 22, ry + 8, CW - 44, rowH - 16, 12); ctx.stroke();
 
-    // Left accent
+    // left accent tick
     ctx.fillStyle = d.color;
-    ctx.fillRect(14, ry, 3, rowH);
+    rr(ctx, 22, cy - 20, 4, 40, 2); ctx.fill();
 
-    // Index
-    ctx.font = '11px "JetBrains Mono","Courier New",monospace';
-    ctx.fillStyle = '#8292a7';
-    ctx.fillText(`0${i + 1}`, 28, ry + 20);
+    // index
+    ctx.font = '600 15px "JetBrains Mono","Courier New",monospace';
+    ctx.fillStyle = hexA(d.color, 0.7);
+    ctx.textBaseline = 'middle';
+    ctx.fillText(String(i + 1).padStart(2, '0'), 52, cy);
 
-    // Project name
-    ctx.font = 'bold 18px "JetBrains Mono","Courier New",monospace';
-    ctx.fillStyle = '#dfeaff';
-    ctx.fillText(p.name, 60, ry + 24);
+    // name
+    ctx.font = 'bold 30px "JetBrains Mono","Courier New",monospace';
+    ctx.fillStyle = '#eaf1fb';
+    ctx.fillText(p.name, 104, cy + 1);
 
-    // "→ open" pill
-    const btnLabel = '→ open';
-    const btnW     = ctx.measureText(btnLabel).width + 22;
-    ctx.font = '12px "JetBrains Mono","Courier New",monospace';
-    ctx.fillStyle = d.color + '33';
-    rr(ctx, CW - btnW - 16, ry + 7, btnW, 22, 4); ctx.fill();
-    ctx.strokeStyle = d.color + '88'; ctx.lineWidth = 0.9;
-    rr(ctx, CW - btnW - 16, ry + 7, btnW, 22, 4); ctx.stroke();
-    ctx.fillStyle = d.color;
-    ctx.fillText(btnLabel, CW - btnW - 5, ry + 22);
+    // chevron
+    ctx.font = '600 30px "JetBrains Mono","Courier New",monospace';
+    ctx.fillStyle = hexA(d.color, 0.8);
+    ctx.fillText('›', CW - 58, cy);
 
-    // Tech stack
-    ctx.font = '13px "JetBrains Mono","Courier New",monospace';
-    ctx.fillStyle = '#ffd18e';
-    ctx.fillText(p.tech, 60, ry + 48);
-
-    // Description (truncate)
-    ctx.font = '12.5px "JetBrains Mono","Courier New",monospace';
-    ctx.fillStyle = '#b9c5d7';
-    const maxW = CW - 60 - btnW - 30;
-    let desc = p.desc;
-    while (desc.length > 4 && ctx.measureText(desc).width > maxW) desc = desc.slice(0, -1);
-    if (desc !== p.desc) desc = desc.trimEnd() + '…';
-    ctx.fillText(desc, 60, ry + 68);
-
-    // Links
-    if (rowH >= 90) {
-      ctx.font = '11.5px "JetBrains Mono","Courier New",monospace';
-      let lx = 60;
-      if (p.github) {
-        ctx.fillStyle = '#66b2ff';
-        ctx.fillText('⌥ GitHub', lx, ry + rowH - 14);
-        lx += ctx.measureText('⌥ GitHub').width + 18;
-      }
-      if (p.live) {
-        ctx.fillStyle = d.color;
-        ctx.fillText('↗ Live', lx, ry + rowH - 14);
-      }
-    }
+    ctx.textBaseline = 'alphabetic';
   });
 
   // ── Footer bar ──
-  ctx.fillStyle = '#151e2c';
+  ctx.fillStyle = '#111925';
   ctx.fillRect(0, CH - 36, CW, 36);
-  ctx.strokeStyle = '#243044'; ctx.lineWidth = 0.5;
+  ctx.strokeStyle = '#212d3f'; ctx.lineWidth = 0.5;
   ctx.beginPath(); ctx.moveTo(0, CH - 36); ctx.lineTo(CW, CH - 36); ctx.stroke();
   ctx.font = '11px "JetBrains Mono","Courier New",monospace';
-  ctx.fillStyle = '#7a8da6';
-  ctx.fillText('click a project to open details · esc to close', 24, CH - 13);
+  ctx.fillStyle = '#6b7c94';
+  const foot = 'click a project name to open details · esc to close';
+  ctx.fillText(foot, 26, CH - 13);
   ctx.fillStyle = d.color;
-  ctx.fillText(' ▮', 24 + ctx.measureText('click a project to open details · esc to close').width, CH - 13);
+  ctx.fillText(' ▮', 26 + pw(foot), CH - 13);
 
   return { canvas: cv, zones, canvasH: CH };
+}
+
+// ─── Rubik's-style desk puzzles ──────────────────────────────────────────────
+// Built entirely from primitives so there's no asset to load. Each returns a
+// THREE.Group centred on its own origin; the scene positions and spins them.
+function makeRubiks(type) {
+  const g = new THREE.Group();
+  const bodyMat = new THREE.MeshStandardMaterial({ color: 0x0a0a0c, roughness: 0.45, metalness: 0.15 });
+  const edgeMat = new THREE.LineBasicMaterial({ color: 0x050506, transparent: true, opacity: 0.85 });
+  const stickerCache = {};
+  const sticker = (hex) =>
+    (stickerCache[hex] ||= new THREE.MeshStandardMaterial({
+      color: hex, roughness: 0.32, metalness: 0.04,
+      emissive: new THREE.Color(hex), emissiveIntensity: 0.14,
+    }));
+
+  if (type === '3x3') {
+    const S = 0.17, t = S / 3, q = t * 0.82, off = S / 2 + 0.002;
+    const body = new THREE.Mesh(new THREE.BoxGeometry(S, S, S), bodyMat);
+    body.castShadow = true;
+    body.add(new THREE.LineSegments(new THREE.EdgesGeometry(body.geometry), edgeMat));
+    g.add(body);
+    const COL = { U: 0xf5f5f5, D: 0xffd21f, F: 0xd01f1f, B: 0xff7a1a, R: 0x1f5fd0, L: 0x1fa64a };
+    const face = (color, axis, sign) => {
+      for (let a = -1; a <= 1; a++) for (let b = -1; b <= 1; b++) {
+        const m = new THREE.Mesh(new THREE.PlaneGeometry(q, q), sticker(color));
+        if (axis === 'x')      { m.rotation.y = sign * Math.PI / 2;  m.position.set(sign * off, a * t, b * t); }
+        else if (axis === 'y') { m.rotation.x = -sign * Math.PI / 2; m.position.set(a * t, sign * off, b * t); }
+        else                   { m.rotation.y = sign > 0 ? 0 : Math.PI; m.position.set(a * t, b * t, sign * off); }
+        g.add(m);
+      }
+    };
+    face(COL.R, 'x', 1); face(COL.L, 'x', -1);
+    face(COL.U, 'y', 1); face(COL.D, 'y', -1);
+    face(COL.F, 'z', 1); face(COL.B, 'z', -1);
+    return g;
+  }
+
+  if (type === 'mirror') {
+    // Mirror Blocks — gold cubies at deliberately uneven sizes.
+    // One shared material + a thin dark gap frame so the size contrast reads
+    // without a wireframe on every cubie.
+    const gold = new THREE.MeshStandardMaterial({ color: 0xc9a24e, roughness: 0.24, metalness: 0.9 });
+    g.add(new THREE.Mesh(new THREE.BoxGeometry(0.185, 0.185, 0.185), bodyMat));
+    const base = 0.055;
+    for (let x = 0; x < 3; x++) for (let y = 0; y < 3; y++) for (let z = 0; z < 3; z++) {
+      const c = new THREE.Mesh(
+        new THREE.BoxGeometry(
+          base * (0.6 + Math.random() * 0.85),
+          base * (0.6 + Math.random() * 0.85),
+          base * (0.6 + Math.random() * 0.85),
+        ),
+        gold,
+      );
+      c.position.set((x - 1) * base, (y - 1) * base, (z - 1) * base);
+      c.castShadow = true;
+      g.add(c);
+    }
+    return g;
+  }
+
+  if (type === 'pyraminx') {
+    const geo = new THREE.TetrahedronGeometry(0.135);
+    geo.clearGroups();
+    for (let i = 0; i < 4; i++) geo.addGroup(i * 3, 3, i);
+    const mats = [0x1fa64a, 0xd01f1f, 0x1f5fd0, 0xffd21f].map(sticker);
+    const mesh = new THREE.Mesh(geo, mats);
+    mesh.castShadow = true;
+    mesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo), edgeMat));
+    g.add(mesh);
+    return g;
+  }
+
+  if (type === 'megaminx') {
+    const geo = new THREE.DodecahedronGeometry(0.125);
+    geo.clearGroups();
+    for (let i = 0; i < 12; i++) geo.addGroup(i * 9, 9, i);
+    const mats = [
+      0xf5f5f5, 0xffd21f, 0x1436b0, 0xd01f1f, 0x0f7a34, 0x6b2fb0,
+      0x9aa0a6, 0x35a7d0, 0xff7a1a, 0x7ac943, 0xe86ea0, 0xdcc8a0,
+    ].map(sticker);
+    const mesh = new THREE.Mesh(geo, mats);
+    mesh.castShadow = true;
+    mesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo), edgeMat));
+    g.add(mesh);
+    return g;
+  }
+
+  return g;
 }
 
 // ─── Main Component ───────────────────────────────────────────────────────────
@@ -488,9 +546,10 @@ export default function RoomScene({ activeScreen, onScreenClick, onOpenProject }
       screens:      {},
       monLights: {},
       steamPuffs: [],
+      rubiks: [],
       muSign: null,
       dustGeo: null, dustSpeeds: null,
-      mouseRgbLight: null,
+      mouseRgbLight: null, mouseGlow: null,
       kbLight: null,
       disposed: false, raf: null,
     };
@@ -501,8 +560,8 @@ export default function RoomScene({ activeScreen, onScreenClick, onOpenProject }
     // ══════════════════════════════════════════════════
 
     // Base ambient — room is dark but not black
-    scene.add(new THREE.AmbientLight(0x1a1828, 4.5));
-    scene.add(new THREE.HemisphereLight(0x182040, 0x080610, 2.8));
+    scene.add(new THREE.AmbientLight(0x1a1828, 5.2));
+    scene.add(new THREE.HemisphereLight(0x182040, 0x080610, 3.2));
 
     // Overhead warm fill (simulates ceiling track light)
     const overheadLight = new THREE.PointLight(0xffd090, 8.0, 12, 1.6);
@@ -811,19 +870,51 @@ export default function RoomScene({ activeScreen, onScreenClick, onOpenProject }
     msBtnR.position.set(1.332, DESK_Y + 0.088, 0.855);
     scene.add(msBtnR);
 
-    // Scroll wheel
+    // Scroll wheel — red-lit, matching the underglow
     const wheel = new THREE.Mesh(
       new THREE.CylinderGeometry(0.014, 0.014, 0.055, 7),
-      new THREE.MeshStandardMaterial({ color: 0x2a3050, roughness: 0.55, metalness: 0.5 }),
+      new THREE.MeshStandardMaterial({
+        color: 0x3a1418, roughness: 0.5, metalness: 0.4,
+        emissive: new THREE.Color(0xff1a2e), emissiveIntensity: 0.9,
+      }),
     );
     wheel.position.set(1.30, DESK_Y + 0.093, 0.858);
     scene.add(wheel);
 
-    // Mouse LED glow (RGB mouse aesthetic)
-    const msLed = new THREE.PointLight(0xff1020, 0.18, 0.55, 2.0);
-    msLed.position.set(1.30, DESK_Y + 0.005, 0.93);
+    // Red underglow — the light bleeding out under the mouse onto the pad
+    const msLed = new THREE.PointLight(0xff0a1e, 0.85, 0.95, 2.2);
+    msLed.position.set(1.30, DESK_Y + 0.030, 0.90);
     scene.add(msLed);
     S.mouseRgbLight = msLed;
+
+    // Additive glow disc so the underglow reads even where the point light doesn't reach
+    const msGlowMat = new THREE.MeshBasicMaterial({
+      color: 0xff1a2e, transparent: true, opacity: 0.5,
+      blending: THREE.AdditiveBlending, depthWrite: false,
+    });
+    const msGlow = new THREE.Mesh(new THREE.CircleGeometry(0.17, 24), msGlowMat);
+    msGlow.rotation.x = -Math.PI / 2;
+    msGlow.position.set(1.30, DESK_Y + 0.010, 0.90);
+    scene.add(msGlow);
+    S.mouseGlow = msGlowMat;
+
+    // ══════════════════════════════════════════════════
+    // RUBIK'S PUZZLES — desk toys flanking the keyboard + mouse
+    // ══════════════════════════════════════════════════
+    const deskSurf = DESK_Y + 0.036;
+    [
+      { type: '3x3',      pos: [-1.16, deskSurf + 0.086, 1.00], rotY:  0.5,  baseX:  0.12, spin:  0.13 },
+      { type: 'pyraminx', pos: [-1.60, deskSurf + 0.070, 0.72], rotY: -0.4,  baseX: -0.20, spin: -0.10 },
+      { type: 'mirror',   pos: [ 2.04, deskSurf + 0.100, 0.98], rotY:  0.7,  baseX:  0.12, spin:  0.11 },
+      { type: 'megaminx', pos: [ 2.52, deskSurf + 0.120, 0.70], rotY: -0.6,  baseX:  0.10, spin:  0.16 },
+    ].forEach((def) => {
+      const grp = makeRubiks(def.type);
+      grp.position.set(...def.pos);
+      grp.rotation.set(def.baseX, def.rotY, 0);
+      grp.traverse((o) => { if (o.isMesh) o.castShadow = true; });
+      scene.add(grp);
+      S.rubiks.push({ grp, spin: def.spin, baseX: def.baseX, phase: Math.random() * 6.28 });
+    });
 
     // ══════════════════════════════════════════════════
     // DESK ACCESSORIES — personality elements
@@ -1369,12 +1460,20 @@ export default function RoomScene({ activeScreen, onScreenClick, onOpenProject }
       }
 
       if (S.mouseRgbLight) {
-        const hue = (t * 0.4) % 1;
-        S.mouseRgbLight.color.setHSL(hue, 1, 0.5);
-        S.mouseRgbLight.intensity = 0.15 + Math.sin(t * 2.2) * 0.05;
+        S.mouseRgbLight.intensity = 0.8 + Math.sin(t * 2.4) * 0.16;
+      }
+      if (S.mouseGlow) {
+        S.mouseGlow.opacity = 0.42 + Math.sin(t * 2.4) * 0.12;
       }
       if (S.kbLight) {
         S.kbLight.intensity = 0.7 + Math.sin(t * 1.8) * 0.2;
+      }
+
+      // Rubik's puzzles — slow idle turn with a gentle tilt wobble
+      for (let i = 0; i < S.rubiks.length; i++) {
+        const rk = S.rubiks[i];
+        rk.grp.rotation.y += rk.spin * 0.016;
+        rk.grp.rotation.x = rk.baseX + Math.sin(t * 0.5 + rk.phase) * 0.05;
       }
 
       // Parallax on overview only
@@ -1417,6 +1516,14 @@ export default function RoomScene({ activeScreen, onScreenClick, onOpenProject }
         p.mat.dispose();
       });
       S.steamPuffs.length = 0;
+      S.rubiks.forEach(({ grp }) => {
+        scene.remove(grp);
+        grp.traverse((o) => {
+          if (o.geometry) o.geometry.dispose();
+          if (o.material) (Array.isArray(o.material) ? o.material : [o.material]).forEach((m) => m.dispose());
+        });
+      });
+      S.rubiks.length = 0;
       window.removeEventListener('resize',     onResize);
       mount.removeEventListener('mousemove', onMouseMove);
       mount.removeEventListener('click',     onClick);
