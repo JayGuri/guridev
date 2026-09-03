@@ -69,12 +69,17 @@ main.sphere-main {
 }
 
 .overlay {
-  background-image: radial-gradient(rgba(8, 8, 9, 0) 60%, var(--overlay-blur-color, #080809) 100%);
+  background-image: radial-gradient(
+    ellipse 74% 66% at 50% 50%,
+    rgba(8, 8, 9, 0) 40%,
+    rgba(8, 8, 9, 0.55) 74%,
+    var(--overlay-blur-color, #080809) 100%
+  );
 }
 
 .overlay--blur {
-  -webkit-mask-image: radial-gradient(rgba(8, 8, 9, 0) 68%, var(--overlay-blur-color, #080809) 92%);
-  mask-image: radial-gradient(rgba(8, 8, 9, 0) 68%, var(--overlay-blur-color, #080809) 92%);
+  -webkit-mask-image: radial-gradient(ellipse 76% 68% at 50% 50%, rgba(8, 8, 9, 0) 55%, var(--overlay-blur-color, #080809) 88%);
+  mask-image: radial-gradient(ellipse 76% 68% at 50% 50%, rgba(8, 8, 9, 0) 55%, var(--overlay-blur-color, #080809) 88%);
   backdrop-filter: blur(3px);
 }
 
@@ -261,21 +266,48 @@ main.sphere-main {
 
 .edge-fade {
   position: absolute;
-  left: 0;
-  right: 0;
-  height: 120px;
   z-index: 5;
   pointer-events: none;
-  background: linear-gradient(to bottom, transparent, var(--overlay-blur-color, #080809));
 }
 
+.edge-fade--top,
+.edge-fade--bottom {
+  left: 0;
+  right: 0;
+  height: 34%;
+}
 .edge-fade--top {
   top: 0;
-  transform: rotate(180deg);
+  background: linear-gradient(
+    to top,
+    transparent,
+    rgba(8, 8, 9, 0.7) 55%,
+    var(--overlay-blur-color, #080809) 100%
+  );
 }
-
 .edge-fade--bottom {
   bottom: 0;
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    rgba(8, 8, 9, 0.7) 55%,
+    var(--overlay-blur-color, #080809) 100%
+  );
+}
+
+.edge-fade--left,
+.edge-fade--right {
+  top: 0;
+  bottom: 0;
+  width: 15%;
+}
+.edge-fade--left {
+  left: 0;
+  background: linear-gradient(to left, transparent, var(--overlay-blur-color, #080809) 92%);
+}
+.edge-fade--right {
+  right: 0;
+  background: linear-gradient(to right, transparent, var(--overlay-blur-color, #080809) 92%);
 }
 
 body.dg-scroll-lock {

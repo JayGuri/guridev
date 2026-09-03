@@ -17,7 +17,8 @@ const DEFAULTS = {
   maxVerticalRotationDeg: 5,
   dragSensitivity: 20,
   enlargeTransitionMs: 300,
-  segments: 13,
+  segments: 19,
+  rows: 3,
 };
 
 const clamp = (v, min, max) => Math.min(Math.max(v, min), max);
@@ -47,15 +48,16 @@ function insetsForAspect(aspect) {
   return { x: 9, y: 9 };
 }
 
-function buildItems(pool, seg) {
+function buildItems(pool, seg, rows) {
+  const n = Math.max(1, rows);
   const xCols = Array.from({ length: seg }, (_, i) => -37 + i * 2);
-  const evenYs = [-4, -2, 0, 2, 4];
-  const oddYs = [-3, -1, 1, 3, 5];
+  // Rows are placed so their *projected* centres sit symmetrically about the
+  // equator — the +0.5 cancels the (sizeY-1)/2 term in the tile transform, so
+  // the dome isn't tilted and the top/bottom clip evenly. rows=3 -> tiles at
+  // rotateX ∈ {-2u, 0, 2u}.
+  const ys = Array.from({ length: n }, (_, i) => 0.5 + (i - (n - 1) / 2) * 2);
 
-  const coords = xCols.flatMap((x, c) => {
-    const ys = c % 2 === 0 ? evenYs : oddYs;
-    return ys.map(y => ({ x, y, sizeX: 2, sizeY: 2 }));
-  });
+  const coords = xCols.flatMap(x => ys.map(y => ({ x, y, sizeX: 2, sizeY: 2 })));
 
   const totalSlots = coords.length;
   if (pool.length === 0) {
@@ -113,6 +115,7 @@ export default function DomeGallery({
   dragSensitivity = DEFAULTS.dragSensitivity,
   enlargeTransitionMs = DEFAULTS.enlargeTransitionMs,
   segments = DEFAULTS.segments,
+  rows = DEFAULTS.rows,
   dragDampening = 2,
   openedImageWidth = null,
   openedImageHeight = null,
@@ -161,7 +164,7 @@ export default function DomeGallery({
     try { window.__lenis?.start(); } catch { /* no lenis */ }
   }, []);
 
-  const items = useMemo(() => buildItems(images, segments), [images, segments]);
+  const items = useMemo(() => buildItems(images, segments, rows), [images, segments, rows]);
 
   const applyTransform = (xDeg, yDeg) => {
     const el = sphereRef.current;
@@ -755,6 +758,8 @@ export default function DomeGallery({
         <div className="overlay overlay--blur" />
         <div className="edge-fade edge-fade--top" />
         <div className="edge-fade edge-fade--bottom" />
+        <div className="edge-fade edge-fade--left" />
+        <div className="edge-fade edge-fade--right" />
 
         <div className="viewer" ref={viewerRef}>
           <div ref={scrimRef} className="scrim" />

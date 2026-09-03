@@ -59,7 +59,10 @@ export default function Darkroom() {
     [shots],
   );
 
-  const segs = Math.max(9, Math.min(14, Math.round(domeImages.length / 4)));
+  // 3 rows keeps the dome shallow enough that no frame gets sliced by the top
+  // or bottom. Enough columns that every photo lands on its own tile.
+  const DOME_ROWS = 3;
+  const segs = Math.max(12, Math.ceil(domeImages.length / DOME_ROWS));
 
   return (
     <section
@@ -121,15 +124,17 @@ export default function Darkroom() {
             key={filter}
             images={domeImages}
             segments={segs}
+            rows={DOME_ROWS}
             grayscale={false}
             overlayBlurColor="#080809"
             imageBorderRadius="14px"
             openedImageBorderRadius="18px"
-            padFactor={0.11}
-            fit={0.52}
-            maxVerticalRotationDeg={6}
+            padFactor={0.1}
+            fit={0.5}
+            minRadius={340}
+            maxVerticalRotationDeg={4}
             autoRotate
-            autoRotateSpeed={0.05}
+            autoRotateSpeed={0.04}
           />
         </div>
 
@@ -141,19 +146,17 @@ export default function Darkroom() {
       <style>{`
         .dk-dome {
           position: relative;
-          height: clamp(500px, 74vh, 700px);
-          border-radius: 20px;
+          height: clamp(540px, 82vh, 780px);
           overflow: hidden;
-          border: 1px solid rgba(255,255,255,0.06);
-          background: #060607;
+          background: #080809;
         }
         .dk-dome-glow {
           position: absolute; inset: 0; z-index: 0; pointer-events: none;
-          background: radial-gradient(60% 55% at 50% 48%, rgba(232,147,90,0.10), transparent 70%);
+          background: radial-gradient(58% 52% at 50% 50%, rgba(232,147,90,0.09), transparent 72%);
         }
         .dk-filter::-webkit-scrollbar { display: none; }
         @media (max-width: 560px) {
-          .dk-dome { height: clamp(420px, 62vh, 560px); }
+          .dk-dome { height: clamp(440px, 66vh, 560px); }
         }
       `}</style>
     </section>
