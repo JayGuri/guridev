@@ -504,43 +504,6 @@ function makeRubiks(type) {
     return g;
   }
 
-  if (type === 'pyraminx') {
-    const R = 0.135;
-    const geo = new THREE.TetrahedronGeometry(R);
-    geo.clearGroups();
-    for (let i = 0; i < 4; i++) geo.addGroup(i * 3, 3, i);
-    const faceCols = [0x1fa64a, 0xd11a1a, 0x1f5fd0, 0xffd21f];
-    const body = new THREE.Mesh(geo, faceCols.map(sticker));
-    body.castShadow = true;
-
-    // recover the 4 unique corners from the 12 non-indexed positions
-    const pos = geo.getAttribute('position');
-    const corners = [];
-    for (let i = 0; i < 12; i++) {
-      const v = new THREE.Vector3().fromBufferAttribute(pos, i);
-      if (!corners.some((c) => c.distanceTo(v) < 1e-4)) corners.push(v);
-    }
-
-    // volumetric black edge bars along each of the 6 edges
-    const tubeMat = new THREE.MeshStandardMaterial({ color: 0x050506, roughness: 0.6 });
-    for (let i = 0; i < corners.length; i++) for (let j = i + 1; j < corners.length; j++) {
-      const a = corners[i], b = corners[j];
-      const edge = new THREE.Mesh(new THREE.CylinderGeometry(0.006, 0.006, a.distanceTo(b), 6), tubeMat);
-      edge.position.copy(a).add(b).multiplyScalar(0.5);
-      edge.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), b.clone().sub(a).normalize());
-      body.add(edge);
-    }
-    // rotating corner-tip caps, like a real pyraminx
-    corners.forEach((c) => {
-      const tip = new THREE.Mesh(new THREE.TetrahedronGeometry(R * 0.34), new THREE.MeshStandardMaterial({ color: 0x0a0a0c, roughness: 0.4 }));
-      tip.position.copy(c).multiplyScalar(0.66);
-      tip.lookAt(0, 0, 0);
-      body.add(tip);
-    });
-    g.add(body);
-    return g;
-  }
-
   if (type === 'megaminx') {
     const R = 0.125;
     const geo = new THREE.DodecahedronGeometry(R);
@@ -618,7 +581,6 @@ export default function RoomScene({ activeScreen, onScreenClick, onOpenProject }
       rubiks: [],
       muSign: null,
       dustGeo: null, dustSpeeds: null,
-      mouseRgbLight: null, mouseGlow: null,
       kbLight: null,
       disposed: false, raf: null,
     };
@@ -915,11 +877,8 @@ export default function RoomScene({ activeScreen, onScreenClick, onOpenProject }
     // ══════════════════════════════════════════════════
     // FOREGROUND MOUSE + MOUSEPAD
     // ══════════════════════════════════════════════════
-    const msMat  = new THREE.MeshStandardMaterial({
-      color: 0x13172a, roughness: 0.62, metalness: 0.34,
-      emissive: new THREE.Color(0xff0a1e), emissiveIntensity: 0.18,
-    });
-    const msBtnMat = new THREE.MeshStandardMaterial({ color: 0x181c2e, roughness: 0.78, metalness: 0.15 });
+    const msMat  = new THREE.MeshStandardMaterial({ color: 0x0e1018, roughness: 0.6, metalness: 0.28 });
+    const msBtnMat = new THREE.MeshStandardMaterial({ color: 0x12151f, roughness: 0.72, metalness: 0.12 });
 
     // Mousepad
     const padMat = new THREE.MeshStandardMaterial({ color: 0x080a10, roughness: 0.97 });
@@ -942,66 +901,22 @@ export default function RoomScene({ activeScreen, onScreenClick, onOpenProject }
     msBtnR.position.set(1.332, DESK_Y + 0.088, 0.855);
     scene.add(msBtnR);
 
-    // Scroll wheel — red-lit, matching the underglow
+    // Scroll wheel — plain dark rubber
     const wheel = new THREE.Mesh(
       new THREE.CylinderGeometry(0.014, 0.014, 0.055, 7),
-      new THREE.MeshStandardMaterial({
-        color: 0x3a1418, roughness: 0.5, metalness: 0.4,
-        emissive: new THREE.Color(0xff1a2e), emissiveIntensity: 0.9,
-      }),
+      new THREE.MeshStandardMaterial({ color: 0x1a1d28, roughness: 0.7, metalness: 0.2 }),
     );
     wheel.position.set(1.30, DESK_Y + 0.093, 0.858);
     scene.add(wheel);
-
-    // ── Red mouse underglow ──────────────────────────────────────────────────
-    const MS_X = 1.30, MS_Z = 0.89;
-
-    // Point light bleeding red onto the pad
-    const msLed = new THREE.PointLight(0xff0a1e, 3.6, 1.5, 2.0);
-    msLed.position.set(MS_X, DESK_Y + 0.028, MS_Z + 0.02);
-    scene.add(msLed);
-    S.mouseRgbLight = msLed;
-
-    // Bright inner glow pool on the pad (unaffected by tone mapping so it stays vivid)
-    const msGlowMat = new THREE.MeshBasicMaterial({
-      color: 0xff1626, transparent: true, opacity: 0.62,
-      blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false,
-    });
-    const msGlow = new THREE.Mesh(new THREE.CircleGeometry(0.19, 32), msGlowMat);
-    msGlow.rotation.x = -Math.PI / 2;
-    msGlow.position.set(MS_X, DESK_Y + 0.009, MS_Z + 0.01);
-    scene.add(msGlow);
-    S.mouseGlow = msGlowMat;
-
-    // Wide soft halo so the spill fades out naturally
-    const msHaloMat = new THREE.MeshBasicMaterial({
-      color: 0xff1020, transparent: true, opacity: 0.16,
-      blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false,
-    });
-    const msHalo = new THREE.Mesh(new THREE.CircleGeometry(0.42, 32), msHaloMat);
-    msHalo.rotation.x = -Math.PI / 2;
-    msHalo.position.set(MS_X, DESK_Y + 0.0075, MS_Z + 0.02);
-    scene.add(msHalo);
-
-    // Emissive skirt peeking out from under the mouse — the actual "underglow" strip
-    const msSkirt = new THREE.Mesh(
-      new THREE.TorusGeometry(0.072, 0.006, 8, 24),
-      new THREE.MeshBasicMaterial({ color: 0xff2436, toneMapped: false }),
-    );
-    msSkirt.rotation.x = -Math.PI / 2;
-    msSkirt.scale.set(1.18, 1, 1);
-    msSkirt.position.set(MS_X, DESK_Y + 0.018, MS_Z);
-    scene.add(msSkirt);
 
     // ══════════════════════════════════════════════════
     // RUBIK'S PUZZLES — desk toys flanking the keyboard + mouse
     // ══════════════════════════════════════════════════
     const deskSurf = DESK_Y + 0.036;
     [
-      { type: '3x3',      pos: [-1.16, deskSurf + 0.086, 1.00], rotY:  0.5,  baseX:  0.12, spin:  0.13 },
-      { type: 'pyraminx', pos: [-1.60, deskSurf + 0.070, 0.72], rotY: -0.4,  baseX: -0.20, spin: -0.10 },
-      { type: 'mirror',   pos: [ 2.04, deskSurf + 0.100, 0.98], rotY:  0.7,  baseX:  0.12, spin:  0.11 },
-      { type: 'megaminx', pos: [ 2.52, deskSurf + 0.120, 0.70], rotY: -0.6,  baseX:  0.10, spin:  0.16 },
+      { type: '3x3',      pos: [-1.14, deskSurf + 0.086, 1.00], rotY:  0.5,  baseX:  0.12, spin:  0.13 },
+      { type: 'megaminx', pos: [-1.62, deskSurf + 0.120, 0.70], rotY: -0.5,  baseX:  0.10, spin:  0.16 },
+      { type: 'mirror',   pos: [ 2.06, deskSurf + 0.100, 0.96], rotY:  0.7,  baseX:  0.12, spin:  0.11 },
     ].forEach((def) => {
       const grp = makeRubiks(def.type);
       grp.position.set(...def.pos);
@@ -1554,12 +1469,6 @@ export default function RoomScene({ activeScreen, onScreenClick, onOpenProject }
         muDeskSpill.intensity = 0.32 + Math.sin(t * 0.75) * 0.04;
       }
 
-      if (S.mouseRgbLight) {
-        S.mouseRgbLight.intensity = 3.4 + Math.sin(t * 2.4) * 0.5;
-      }
-      if (S.mouseGlow) {
-        S.mouseGlow.opacity = 0.56 + Math.sin(t * 2.4) * 0.12;
-      }
       if (S.kbLight) {
         S.kbLight.intensity = 0.7 + Math.sin(t * 1.8) * 0.2;
       }
