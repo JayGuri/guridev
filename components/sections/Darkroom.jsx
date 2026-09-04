@@ -59,7 +59,12 @@ export default function Darkroom() {
     [shots],
   );
 
-  const segs = Math.max(9, Math.min(14, Math.round(domeImages.length / 4)));
+  // 4 rows of masonry — enough vertical room for the 2×1 / 1×2 / 2×2 tiles to
+  // interlock like brickwork, still shallow enough (with fit 0.44) that nothing
+  // clips top or bottom. Columns ≈ half the photo count so every frame lands on
+  // the wall at a readable size.
+  const DOME_ROWS = 4;
+  const segs = Math.max(14, Math.min(28, Math.round(domeImages.length * 0.46)));
 
   return (
     <section
@@ -121,15 +126,17 @@ export default function Darkroom() {
             key={filter}
             images={domeImages}
             segments={segs}
+            rows={DOME_ROWS}
             grayscale={false}
             overlayBlurColor="#080809"
-            imageBorderRadius="14px"
+            imageBorderRadius="9px"
             openedImageBorderRadius="18px"
-            padFactor={0.11}
-            fit={0.52}
+            padFactor={0.1}
+            fit={0.44}
+            minRadius={320}
             maxVerticalRotationDeg={6}
             autoRotate
-            autoRotateSpeed={0.05}
+            autoRotateSpeed={0.045}
           />
         </div>
 
@@ -141,19 +148,17 @@ export default function Darkroom() {
       <style>{`
         .dk-dome {
           position: relative;
-          height: clamp(500px, 74vh, 700px);
-          border-radius: 20px;
+          height: clamp(540px, 82vh, 780px);
           overflow: hidden;
-          border: 1px solid rgba(255,255,255,0.06);
-          background: #060607;
+          background: #080809;
         }
         .dk-dome-glow {
           position: absolute; inset: 0; z-index: 0; pointer-events: none;
-          background: radial-gradient(60% 55% at 50% 48%, rgba(232,147,90,0.10), transparent 70%);
+          background: radial-gradient(58% 52% at 50% 50%, rgba(232,147,90,0.09), transparent 72%);
         }
         .dk-filter::-webkit-scrollbar { display: none; }
         @media (max-width: 560px) {
-          .dk-dome { height: clamp(420px, 62vh, 560px); }
+          .dk-dome { height: clamp(440px, 66vh, 560px); }
         }
       `}</style>
     </section>
