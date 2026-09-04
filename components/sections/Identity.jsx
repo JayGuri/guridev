@@ -270,18 +270,19 @@ function PhotographerCard({ inView, index, onOpen }) {
               <span className="pc-af-b pc-af-bl" /><span className="pc-af-b pc-af-br" />
             </span>
             <span className="pc-hud pc-hud-tl"><span className="pc-hud-rec" />REC</span>
-            <span className="pc-hud pc-hud-tr">1/250 · f1.8 · ISO400</span>
+            <span className="pc-hud pc-hud-tr">1/180 · ƒ1.8 · ISO 64</span>
             <span className="pc-hud pc-hud-bl">AF-C</span>
-            <span className="pc-hud pc-hud-br">[0247]</span>
+            <span className="pc-hud pc-hud-br">[0056]</span>
           </div>
 
           <h3 style={{ fontFamily: 'Clash Display, sans-serif', fontSize: '22px', fontWeight: 600, color: 'var(--text-primary)', margin: '18px 0 10px' }}>The Photographer</h3>
           <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', lineHeight: 1.75, color: 'var(--text-secondary)', flex: 1 }}>
-            I point a camera at the half-second everyone else walks past.
-            Mumbai hands me a few thousand of those a day.
+            No camera bag — just an iPhone and the habit of looking twice. Québec
+            rooftops, Kerala backwaters, the white nothing of the Rann of Kutch.
+            Mostly I&apos;m after the half-second before a place notices me.
           </p>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '16px' }}>
-            {['Street', 'Portrait', 'Sony α7 III'].map(t => (
+            {['Landscape', 'Architecture', 'iPhone 14 Pro'].map(t => (
               <span key={t} className="pc-tag">{t}</span>
             ))}
           </div>
@@ -569,9 +570,10 @@ function PhotographerModalContent({ onClose }) {
     { bg: '#080A08', tint: 'rgba(200,150,90,0.02)' },
   ];
   const collections = [
-    { name: 'Mumbai Streets', frames: 47, year: 2024 },
-    { name: 'After Dark', frames: 23, year: 2024 },
-    { name: 'Portraits in Transit', frames: 31, year: 2025 },
+    { name: 'Québec & Montréal', frames: 16, year: 2024 },
+    { name: 'Ontario — Toronto to the Falls', frames: 28, year: 2024 },
+    { name: 'Kerala', frames: 7, year: 2025 },
+    { name: 'The Rann of Kutch', frames: 1, year: 2025 },
   ];
 
   return (
@@ -584,10 +586,10 @@ function PhotographerModalContent({ onClose }) {
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to right, rgba(6,4,6,0.9) 0%, transparent 15%, transparent 75%, rgba(6,4,6,0.9) 100%)' }} />
         <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', padding: '0 20px' }}>
           <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '10px', color: 'rgba(232,147,90,0.55)', letterSpacing: '0.15em' }}>
-            35MM · 36EXP · MUMBAI
+            iPHONE 14 PRO · MAIN 24MM · NO BAG
           </span>
           <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '10px', color: 'rgba(232,147,90,0.3)', letterSpacing: '0.1em' }}>
-            f/1.8 · 1/250s · ISO 400
+            ƒ1.8 · 1/180s · ISO 64
           </span>
           <ModalCloseBtn onClose={onClose} color="#E8935A" />
         </div>
@@ -613,7 +615,7 @@ function PhotographerModalContent({ onClose }) {
               [ AUTOFOCUS &middot; AF-C ]
             </span>
             <span style={{ position: 'absolute', bottom: '8px', left: '14px', fontFamily: 'JetBrains Mono, monospace', fontSize: '9px', color: 'rgba(232,147,90,0.3)', letterSpacing: '0.08em', display: 'flex', alignItems: 'center', gap: '4px' }}><span style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#E8935A', display: 'inline-block' }} />REC</span>
-            <span style={{ position: 'absolute', bottom: '8px', right: '14px', fontFamily: 'JetBrains Mono, monospace', fontSize: '9px', color: 'rgba(232,147,90,0.3)', letterSpacing: '0.08em' }}>FRAME 0247</span>
+            <span style={{ position: 'absolute', bottom: '8px', right: '14px', fontFamily: 'JetBrains Mono, monospace', fontSize: '9px', color: 'rgba(232,147,90,0.3)', letterSpacing: '0.08em' }}>FRAME 0056</span>
           </div>
         </FadeUp>
 
@@ -622,8 +624,8 @@ function PhotographerModalContent({ onClose }) {
           <div style={{ position: 'relative', margin: '0 0 36px', paddingLeft: '22px', borderLeft: '2px solid rgba(232,147,90,0.4)' }}>
             <span style={{ position: 'absolute', top: '-14px', left: '-4px', fontFamily: 'Georgia, serif', fontSize: '80px', color: 'rgba(232,147,90,0.1)', lineHeight: 1, userSelect: 'none' }}>&ldquo;</span>
             <p style={{ fontFamily: 'Clash Display, sans-serif', fontSize: 'clamp(17px, 2.5vw, 22px)', fontWeight: 600, color: '#E8935A', fontStyle: 'italic', lineHeight: 1.45, marginBottom: '12px', position: 'relative', zIndex: 1 }}>
-              A photo is just a decision about what to leave out of the frame.
-              Mumbai makes that decision hard in the best way.
+              A photo is mostly a decision about what to leave out of the frame.
+              Travelling puts that decision in front of you every few steps.
             </p>
             <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '11px', color: 'rgba(232,147,90,0.4)', letterSpacing: '0.1em' }}>
               — how I think about it, anyway
@@ -670,13 +672,14 @@ function PhotographerModalContent({ onClose }) {
         <FadeUp delay={0.21}>
           <h3 style={{ fontFamily: 'Clash Display, sans-serif', fontSize: '18px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '14px' }}>Behind the lens</h3>
           <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', lineHeight: 1.85, color: 'var(--text-secondary)', marginBottom: '14px' }}>
-            I mostly shoot street and portraits, on foot, in Mumbai. The interesting stuff is rarely
-            posing for you &mdash; it&apos;s the half-second before someone notices the camera, or the
-            way light lands on a wall nobody looks at twice.
+            No dedicated body, no bag &mdash; the camera is whatever&apos;s already in my pocket, lately
+            an iPhone 14&nbsp;Pro. It travels everywhere I do: Québec and Toronto, the coast off the
+            Bruce Peninsula, Kerala&apos;s backwaters, the salt flats of Kutch. Mostly I&apos;m watching
+            for architecture, a run of leading lines, or the way light lands on a wall nobody looks at twice.
           </p>
           <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', lineHeight: 1.85, color: 'var(--text-secondary)', marginBottom: '28px' }}>
-            The Sony α7 III does the seeing; the editing is where I decide what the frame was actually
-            about. Taking a photo is easy. Making one you&apos;d hang on a wall is the hard, slow part.
+            The phone does the seeing; the editing is where I decide what the frame was actually about.
+            Taking a photo is easy. Making one you&apos;d hang on a wall is the hard, slow part.
           </p>
         </FadeUp>
 
@@ -685,10 +688,10 @@ function PhotographerModalContent({ onClose }) {
           <div style={{ background: 'rgba(232,147,90,0.04)', border: '1px solid rgba(232,147,90,0.12)', borderRadius: '12px', padding: '20px', marginBottom: '28px' }}>
             <p style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '10px', color: 'rgba(232,147,90,0.45)', letterSpacing: '0.15em', marginBottom: '14px' }}>── EQUIPMENT ────────────────────</p>
             {[
-              { label: 'Body', value: 'Sony α7 III' },
-              { label: 'Shoots', value: 'Street · Portrait' },
-              { label: 'Base', value: 'Mumbai, on foot' },
-              { label: 'Edit', value: 'Lightroom' },
+              { label: 'Body', value: 'iPhone 14 Pro' },
+              { label: 'Shoots', value: 'Landscape · Architecture · Street' },
+              { label: 'Range', value: 'Canada · Kerala · Kutch' },
+              { label: 'Edit', value: 'Lightroom Mobile' },
             ].map((e, i, arr) => (
               <div key={e.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '9px 0', borderBottom: i < arr.length - 1 ? '1px solid rgba(232,147,90,0.07)' : 'none', gap: '12px' }}>
                 <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: 'var(--text-tertiary)' }}>{e.label}</span>
@@ -701,7 +704,7 @@ function PhotographerModalContent({ onClose }) {
         {/* Tags */}
         <FadeUp delay={0.29}>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-            {['Street', 'Portrait', 'Architecture', 'Long Exposure', 'Mumbai', 'People', 'Light'].map(t => (
+            {['Landscape', 'Architecture', 'Golden hour', 'Leading lines', 'Coast', 'Street', 'Minimal'].map(t => (
               <span key={t} style={{ background: '#E8935A26', border: '1px solid #E8935A4D', color: '#E8935A', fontFamily: 'Inter, sans-serif', fontSize: '12px', fontWeight: 500, padding: '4px 12px', borderRadius: '999px' }}>{t}</span>
             ))}
           </div>
