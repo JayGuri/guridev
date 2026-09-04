@@ -47,16 +47,16 @@ const CONFIG = {
     currently_building:['Async federated learning system'],
   },
   skills: {
-    Languages: ['Python', 'JavaScript', 'TypeScript', 'SQL'],
-    Frontend:  ['Next.js', 'React', 'Framer Motion', 'Three.js'],
-    Backend:   ['FastAPI', 'Node.js', 'Kafka', 'Apache Flink'],
-    ML:        ['PyTorch', 'TensorFlow', 'scikit-learn', 'MNE'],
-    DevOps:    ['Docker', 'Vercel', 'GitHub Actions'],
-    Photo:     ['Sony α7 III', 'Lightroom', 'Capture One'],
+    'Frontend':             ['React', 'Next.js', 'TypeScript', 'Tailwind'],
+    'Backend & Languages':  ['Node.js', 'FastAPI', 'C++', 'Java'],
+    'Data & ML':            ['Python', 'PyTorch', 'TensorFlow', 'Gemini AI'],
+    'Databases & CMS':      ['MongoDB', 'PostgreSQL', 'Strapi', 'WordPress'],
+    'Infra & Integrations': ['Docker', 'Kafka', 'Apache Flink', 'Razorpay'],
+    'Tools':                ['Git', 'GitHub', 'Postman', 'Figma'],
   },
   experience: [
-    { period: '2024 – present', role: 'Research Intern',     org: '@ IIT Bombay — Multi-Hazard EWS' },
-    { period: '2023 – present', role: 'Engineering Student', org: '@ DJ Sanghvi, Mumbai (BE CSE)' },
+    { period: 'Jan 2026 – present', role: 'Research Intern',       org: '@ IIT Bombay — CSRE' },
+    { period: 'Jul – Oct 2025',     role: 'Full Stack Web Dev Intern', org: '@ Realatte Ventures' },
   ],
   projects: [
     { id: '01', name: 'ARFL Platform',          tag: 'ML',       color: 'blue',   stack: 'PyTorch · FastAPI · Docker',         desc: 'Async federated learning with Byzantine fault tolerance' },
@@ -73,7 +73,7 @@ const CONFIG = {
 // ── Autocomplete map ──────────────────────────────────────────────────────────
 const AC = {
   help: [], clear: [], whoami: [], pwd: [], date: [], uname: [], exit: [],
-  cd:   ['./home', '--dev', '--photography', './about', './contact'],
+  cd:   ['./home', '--dev', '--research', '--experience', '--skills', '--education', '--leadership', '--photography', './about', './contact'],
   ls:   ['-la ./projects', './skills', './experience'],
   cat:  ['about.md', 'contact.json', 'stack.json'],
   open: ['github', 'linkedin', 'email'],
@@ -88,6 +88,14 @@ const NAV_ITEMS = [
     label: <><span style={{ color: T.blue }}>--</span><span style={{ color: T.green }}>dev</span></> },
   { id: 'research',    targetId: 'research',    mobileVisible: false,
     label: <><span style={{ color: T.blue }}>--</span><span style={{ color: T.green }}>research</span></> },
+  { id: 'experience',  targetId: 'experience',  mobileVisible: false,
+    label: <><span style={{ color: T.blue }}>--</span><span style={{ color: T.green }}>experience</span></> },
+  { id: 'skills',      targetId: 'skills',      mobileVisible: false,
+    label: <><span style={{ color: T.green }}>ls</span><span style={{ color: T.orange }}> ./skills</span></> },
+  { id: 'education',   targetId: 'education',   mobileVisible: false,
+    label: <><span style={{ color: T.blue }}>--</span><span style={{ color: T.green }}>education</span></> },
+  { id: 'extracurriculars', targetId: 'extracurriculars', mobileVisible: false,
+    label: <><span style={{ color: T.blue }}>--</span><span style={{ color: T.green }}>leadership</span></> },
   { id: 'photography', targetId: 'photography', mobileVisible: true,
     label: <><span style={{ color: T.blue }}>--</span><span style={{ color: T.green }}>photography</span></> },
   { id: 'projects',    targetId: 'work',        mobileVisible: false,
@@ -98,11 +106,17 @@ const NAV_ITEMS = [
     label: <><span style={{ color: T.green }}>curl</span><span style={{ color: T.orange }}> contact.json</span></> },
 ];
 
-const SECTION_IDS = ['hero', 'about', 'work', 'research', 'photography', 'me', 'contact'];
+const SECTION_IDS = [
+  'hero', 'about', 'work', 'research',
+  'experience', 'skills', 'education', 'extracurriculars',
+  'photography', 'me', 'contact',
+];
 
 const SECTION_TO_NAV = {
   hero: 'home', about: 'about', work: 'dev',
-  research: 'research', photography: 'photography', me: 'about', contact: 'contact',
+  research: 'research',
+  experience: 'experience', skills: 'skills', education: 'education', extracurriculars: 'extracurriculars',
+  photography: 'photography', me: 'about', contact: 'contact',
 };
 
 // ── Section navigation helper (called from runCommand, no React context needed) ─
@@ -341,6 +355,11 @@ export default function TerminalNav() {
           ['whoami',            'display a quick bio'],
           ['cd ./home',         'go to the hero section'],
           ['cd --dev',          'explore the developer side'],
+          ['cd --research',     'jump to the research section'],
+          ['cd --experience',   'jump to professional experience'],
+          ['cd --skills',       'jump to the skills section'],
+          ['cd --education',    'jump to education'],
+          ['cd --leadership',   'jump to leadership & extracurriculars'],
           ['cd --photography',  'browse photography portfolio'],
           ['ls -la ./projects', 'list projects with details'],
           ['ls ./skills',       'show full tech stack'],
@@ -382,7 +401,7 @@ export default function TerminalNav() {
           push('');
           push(`<span style="color:${T.green}">→</span> Navigating to <span style="color:${T.orange};font-weight:700">Dev Studio</span> <span style="color:${T.dim}">↓ scrolling…</span>`);
           push('');
-          [['Languages','green'],['Frontend','blue'],['Backend','orange'],['ML','purple']].forEach(([k, c]) => {
+          [['Frontend','blue'],['Backend & Languages','orange'],['Data & ML','purple'],['Tools','green']].forEach(([k, c]) => {
             const tgs = (CONFIG.skills[k] || []).slice(0, 4).map(s => mkTag(s, c)).join(' ');
             push(`  <span style="color:${T.dim}">${k.padEnd(12)}</span>  ${tgs}`);
           });
@@ -409,6 +428,30 @@ export default function TerminalNav() {
           push(`  <span style="color:${T.dim}">Kafka · Apache Flink · TensorFlow · IoT sensors</span>`);
           push('');
           navTarget = 'research';
+        } else if (args === '--experience' || args === './experience') {
+          setTerminalLoc('experience');
+          push('');
+          push(`<span style="color:${T.green}">→</span> Navigating to <span style="color:${T.orange};font-weight:700">Experience</span> <span style="color:${T.dim}">↓ scrolling…</span>`);
+          push('');
+          navTarget = 'experience';
+        } else if (args === '--skills' || args === './skills') {
+          setTerminalLoc('skills');
+          push('');
+          push(`<span style="color:${T.green}">→</span> Navigating to <span style="color:${T.orange};font-weight:700">Skills</span> <span style="color:${T.dim}">↓ scrolling…</span>`);
+          push('');
+          navTarget = 'skills';
+        } else if (args === '--education' || args === './education') {
+          setTerminalLoc('education');
+          push('');
+          push(`<span style="color:${T.green}">→</span> Navigating to <span style="color:${T.orange};font-weight:700">Education</span> <span style="color:${T.dim}">↓ scrolling…</span>`);
+          push('');
+          navTarget = 'education';
+        } else if (args === '--leadership' || args === './extracurriculars') {
+          setTerminalLoc('extracurriculars');
+          push('');
+          push(`<span style="color:${T.green}">→</span> Navigating to <span style="color:${T.orange};font-weight:700">Leadership & Extracurriculars</span> <span style="color:${T.dim}">↓ scrolling…</span>`);
+          push('');
+          navTarget = 'extracurriculars';
         } else if (args === './about' || args === './me') {
           setTerminalLoc('about');
           push('');
@@ -429,7 +472,7 @@ export default function TerminalNav() {
           navTarget = 'hero';
         } else {
           push(`<span style="color:${T.red}">cd: no such directory: ${esc(args)}</span>`);
-          push(`<span style="color:${T.muted}">try: cd ./home · cd --dev · cd --photography · cd --research · cd ./about · cd ./contact</span>`);
+          push(`<span style="color:${T.muted}">try: cd ./home · cd --dev · cd --research · cd --experience · cd --skills · cd --education · cd --leadership · cd --photography · cd ./about · cd ./contact</span>`);
           push('');
         }
         break;
@@ -451,26 +494,26 @@ export default function TerminalNav() {
         } else if (args.includes('skills')) {
           setTerminalLoc('skills');
           push('');
-          push(`<span style="color:${T.green}">./skills/</span>  <span style="color:${T.dim}">↓ scrolling to About…</span>`);
+          push(`<span style="color:${T.green}">./skills/</span>  <span style="color:${T.dim}">↓ scrolling to Skills…</span>`);
           push('');
           const cols = ['orange','blue','purple','yellow','green','gray'];
           Object.entries(CONFIG.skills).forEach(([k, v], i) => {
             const c = T[cols[i % cols.length]] || T.muted;
-            push(`  <span style="color:${c}">${k.padEnd(12)}</span> ${esc(v.join('  '))}`);
+            push(`  <span style="color:${c}">${k.padEnd(20)}</span> ${esc(v.join('  '))}`);
           });
           push('');
-          navTarget = 'about';
+          navTarget = 'skills';
         } else if (args.includes('experience')) {
           setTerminalLoc('experience');
           push('');
-          push(`<span style="color:${T.green}">./experience/</span>  <span style="color:${T.dim}">↓ scrolling to Research…</span>`);
+          push(`<span style="color:${T.green}">./experience/</span>  <span style="color:${T.dim}">↓ scrolling to Experience…</span>`);
           push('');
           CONFIG.experience.forEach(e => {
             push(`  <span style="color:${T.orange};font-weight:700">${esc(e.period)}</span>  <span style="color:${T.text}">${esc(e.role)}</span>`);
             push(`     <span style="color:${T.muted}">${esc(e.org)}</span>`);
             push('');
           });
-          navTarget = 'research';
+          navTarget = 'experience';
         } else {
           push('');
           push(`<span style="color:${T.muted}">total 4</span>`);

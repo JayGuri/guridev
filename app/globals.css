@@ -89,9 +89,11 @@
   --bg-surface: #0F0F12;
   --bg-elevated: #17171C;
 
+  /* White at reduced opacity, not grey hexes — reads as "dimmer white",
+     never muddy or low-contrast against the near-black surfaces. */
   --text-primary: #F2F0EB;
-  --text-secondary: #8A8880;
-  --text-tertiary: #4A4845;
+  --text-secondary: rgba(242, 240, 235, 0.78);
+  --text-tertiary: rgba(242, 240, 235, 0.56);
 
   --accent-dev: #7C6FF7;
   --accent-photo: #E8935A;
@@ -108,8 +110,8 @@
     --bg-elevated: #17171C;
 
     --text-primary: #F2F0EB;
-    --text-secondary: #8A8880;
-    --text-tertiary: #4A4845;
+    --text-secondary: rgba(242, 240, 235, 0.78);
+    --text-tertiary: rgba(242, 240, 235, 0.56);
 
     --accent-dev: #7C6FF7;
     --accent-photo: #E8935A;
