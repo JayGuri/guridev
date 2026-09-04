@@ -82,7 +82,7 @@ export default function Experience() {
                   <h3 style={{ fontFamily: 'Clash Display, sans-serif', fontSize: '19px', fontWeight: 600, color: 'var(--text-primary)' }}>{job.role}</h3>
                   <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '11.5px', color: 'var(--accent-dev)', letterSpacing: '0.03em', flexShrink: 0 }}>{job.period}</span>
                 </div>
-                <p style={{ display: 'flex', alignItems: 'center', gap: '6px', fontFamily: 'Inter, sans-serif', fontSize: '13.5px', color: 'var(--text-tertiary)', marginBottom: '14px' }}>
+                <p style={{ display: 'flex', alignItems: 'center', gap: '6px', fontFamily: 'Inter, sans-serif', fontSize: '13.5px', color: 'var(--text-secondary)', marginBottom: '14px' }}>
                   {job.org} <span style={{ opacity: 0.5 }}>·</span> <MapPin size={12} strokeWidth={2} style={{ flexShrink: 0 }} /> {job.location}
                 </p>
                 {job.bullets.map((b) => (

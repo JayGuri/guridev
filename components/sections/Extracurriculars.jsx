@@ -30,7 +30,12 @@ const ORGS = [
       { title: 'Marketing Team Member', period: 'Feb 2024 — Feb 2025' },
       { title: 'Technical Team Member', period: 'Feb 2024 — Feb 2025' },
     ],
-    highlights: [],
+    highlights: [
+      'Spearheaded DJS Youth Summit 2.0 and DJMUN 2.0 — the largest MUN events in college history, with 500+ participants and a ₹3L+ budget',
+      'Directed delegate affairs, academic programming, and logistics across 8 inter-department committees',
+      'Expanded beyond marketing into technical and operational execution, becoming a versatile, cross-functional contributor',
+      'Built a leadership pipeline and community from the ground up — grew from individual contributor to organisational leader',
+    ],
   },
   {
     name: 'DJS Compute',
@@ -74,7 +79,7 @@ export default function Extracurriculars() {
             >
               <div className="xc-icon"><Users size={16} strokeWidth={2} /></div>
               <h3 style={{ fontFamily: 'Clash Display, sans-serif', fontSize: '18px', fontWeight: 600, color: 'var(--text-primary)', marginTop: '14px' }}>{org.name}</h3>
-              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12.5px', color: 'var(--text-tertiary)', marginTop: '3px', marginBottom: '18px' }}>{org.sub}</p>
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12.5px', color: 'var(--text-secondary)', marginTop: '3px', marginBottom: '18px' }}>{org.sub}</p>
 
               <div className="xc-roles">
                 {org.roles.map((r) => (
@@ -82,7 +87,7 @@ export default function Extracurriculars() {
                     <span className={`xc-role-dot${r.current ? ' xc-role-dot--current' : ''}`} />
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13.5px', fontWeight: 600, color: 'var(--text-primary)' }}>{r.title}</p>
-                      <p style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '10.5px', color: 'var(--text-tertiary)', marginTop: '1px' }}>{r.period}</p>
+                      <p style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '10.5px', color: 'var(--text-secondary)', marginTop: '1px' }}>{r.period}</p>
                     </div>
                   </div>
                 ))}

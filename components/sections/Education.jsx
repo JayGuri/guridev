@@ -11,18 +11,21 @@ const SCHOOLS = [
     name: 'Dwarkadas J. Sanghvi College of Engineering',
     program: 'B.Tech, Computer Science & Engineering (Data Science)',
     period: 'Aug 2023 — Jun 2027',
+    grade: 'CGPA 9.51 / 10 — through 6th sem',
     current: true,
   },
   {
-    name: 'Pace Junior Science College',
-    program: 'Higher Secondary — Science',
+    name: 'Pace Junior College of Science',
+    program: 'Higher Secondary — Science (HSC)',
     period: 'Mar 2021 — May 2023',
+    grade: '88.33%',
     current: false,
   },
   {
     name: 'Hiranandani Foundation School',
-    program: 'Primary & Secondary Education',
+    program: 'Primary & Secondary Education (ICSE)',
     period: 'Jun 2011 — Jun 2021',
+    grade: '98.56%',
     current: false,
   },
 ];
@@ -66,6 +69,7 @@ export default function Education() {
                   <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '11px', color: 'var(--accent-dev)', flexShrink: 0 }}>{s.period}</span>
                 </div>
                 <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13.5px', color: 'var(--text-secondary)', marginTop: '4px' }}>{s.program}</p>
+                <span className="edu-grade">{s.grade}</span>
               </div>
             </motion.div>
           ))}
@@ -84,7 +88,7 @@ export default function Education() {
         .edu-dot {
           position: absolute; left: -28px; top: 0; width: 20px; height: 20px;
           border-radius: 50%; background: var(--bg-elevated); border: 1.5px solid var(--border-hover);
-          display: flex; align-items: center; justify-content: center; color: var(--text-tertiary);
+          display: flex; align-items: center; justify-content: center; color: var(--text-secondary);
         }
         .edu-dot--current { border-color: var(--accent-dev); color: var(--accent-dev); box-shadow: 0 0 0 4px rgba(124,111,247,0.16); }
         .edu-card {
@@ -92,6 +96,12 @@ export default function Education() {
           border-radius: 14px; padding: 18px 20px; transition: border-color 0.2s ease, transform 0.2s ease;
         }
         .edu-card:hover { border-color: var(--border-hover); transform: translateY(-2px); }
+        .edu-grade {
+          display: inline-block; margin-top: 10px;
+          font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 600; color: var(--accent-dev);
+          background: rgba(124,111,247,0.1); border: 1px solid rgba(124,111,247,0.24);
+          border-radius: 999px; padding: 3px 10px;
+        }
       `}</style>
     </section>
   );

@@ -16,6 +16,8 @@ import {
   SiNodedotjs, SiExpress, SiFlask,
   SiMysql, SiRedis, SiSupabase, SiCloudinary,
   SiVercel, SiPostman, SiLinux, SiGithub,
+  SiC, SiCplusplus, SiOpenjdk, SiGooglegemini, SiGooglecolab,
+  SiStrapi, SiWordpress, SiApacheflink, SiRazorpay, SiFigma, SiGooglechrome,
 } from 'react-icons/si';
 import { VscVscode } from 'react-icons/vsc';
 
@@ -35,11 +37,15 @@ const techLogos = [
   { node: <SiHtml5 />,       title: 'HTML5' },
   { node: <SiTailwindcss />, title: 'Tailwind' },
   { node: <SiThreedotjs />,  title: 'Three.js' },
-  // Backend
+  { node: <SiGooglechrome />, title: 'Chrome Extensions' },
+  // Backend / languages
   { node: <SiNodedotjs />,   title: 'Node.js' },
   { node: <SiExpress />,     title: 'Express' },
   { node: <SiFastapi />,     title: 'FastAPI' },
   { node: <SiFlask />,       title: 'Flask' },
+  { node: <SiC />,           title: 'C' },
+  { node: <SiCplusplus />,   title: 'C++' },
+  { node: <SiOpenjdk />,     title: 'Java' },
   // Data / ML
   { node: <SiPython />,      title: 'Python' },
   { node: <SiPytorch />,     title: 'PyTorch' },
@@ -49,23 +55,30 @@ const techLogos = [
   { node: <SiNumpy />,       title: 'NumPy' },
   { node: <SiOpencv />,      title: 'OpenCV' },
   { node: <SiHuggingface />, title: 'HuggingFace' },
-  // Databases / services
+  { node: <SiGooglegemini />, title: 'Gemini AI' },
+  { node: <SiGooglecolab />, title: 'Google Colab' },
+  // Databases / CMS
   { node: <SiPostgresql />,  title: 'PostgreSQL' },
   { node: <SiMongodb />,     title: 'MongoDB' },
   { node: <SiMysql />,       title: 'MySQL' },
   { node: <SiRedis />,       title: 'Redis' },
   { node: <SiSupabase />,    title: 'Supabase' },
   { node: <SiCloudinary />,  title: 'Cloudinary' },
+  { node: <SiStrapi />,      title: 'Strapi' },
+  { node: <SiWordpress />,   title: 'WordPress' },
   // Infra / streaming
   { node: <SiDocker />,      title: 'Docker' },
   { node: <SiApachekafka />, title: 'Kafka' },
+  { node: <SiApacheflink />, title: 'Apache Flink' },
   { node: <SiVercel />,      title: 'Vercel' },
+  { node: <SiRazorpay />,    title: 'Razorpay' },
   // Tools
   { node: <SiGit />,         title: 'Git' },
   { node: <SiGithub />,      title: 'GitHub' },
   { node: <SiPostman />,     title: 'Postman' },
   { node: <SiLinux />,       title: 'Linux' },
   { node: <VscVscode />,     title: 'VS Code' },
+  { node: <SiFigma />,       title: 'Figma' },
 ];
 
 const E = [0.16, 1, 0.3, 1]; // shared ease

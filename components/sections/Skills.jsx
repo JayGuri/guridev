@@ -4,15 +4,34 @@ import { motion, useInView } from 'framer-motion';
 import { useRef } from 'react';
 import {
   SiReact, SiNextdotjs, SiTypescript, SiJavascript, SiHtml5, SiTailwindcss, SiThreedotjs,
-  SiNodedotjs, SiExpress, SiFastapi, SiFlask,
+  SiGooglechrome,
+  SiNodedotjs, SiExpress, SiFastapi, SiFlask, SiC, SiCplusplus, SiOpenjdk,
   SiPython, SiPytorch, SiTensorflow, SiScikitlearn, SiPandas, SiNumpy, SiOpencv, SiHuggingface,
-  SiPostgresql, SiMongodb, SiMysql, SiRedis, SiSupabase, SiCloudinary,
-  SiDocker, SiApachekafka, SiVercel,
-  SiGit, SiGithub, SiPostman, SiLinux,
+  SiGooglegemini, SiGooglecolab,
+  SiPostgresql, SiMongodb, SiMysql, SiRedis, SiSupabase, SiCloudinary, SiStrapi, SiWordpress,
+  SiDocker, SiApachekafka, SiApacheflink, SiVercel, SiRazorpay,
+  SiGit, SiGithub, SiPostman, SiLinux, SiFigma,
 } from 'react-icons/si';
 import { VscVscode } from 'react-icons/vsc';
 
 const EASE = [0.16, 1, 0.3, 1];
+
+// Official brand colours for the ones that actually read as colour on a dark
+// card. Deliberately left out: logos whose brand mark is pure black/white
+// (Next.js, Vercel, Express, Three.js, GitHub, Kafka, Flask, Java, Pandas,
+// NumPy) — those fall back to the theme's text colour instead of vanishing
+// or fighting the background.
+const BRAND = {
+  React: '#61DAFB', TypeScript: '#3178C6', JavaScript: '#F7DF1E', HTML5: '#E34F26',
+  Tailwind: '#06B6D4', 'Chrome Extensions': '#4285F4',
+  'Node.js': '#339933', FastAPI: '#009688', C: '#A8B9CC', 'C++': '#00599C',
+  Python: '#3776AB', PyTorch: '#EE4C2C', TensorFlow: '#FF6F00', 'scikit-learn': '#F7931E',
+  OpenCV: '#5C3EE8', HuggingFace: '#FFD21E', 'Gemini AI': '#8E75B2', 'Google Colab': '#F9AB00',
+  PostgreSQL: '#4169E1', MongoDB: '#47A248', MySQL: '#4479A1', Redis: '#DC382D',
+  Supabase: '#3ECF8E', Cloudinary: '#3448C5', Strapi: '#4945FF', WordPress: '#21759B',
+  Docker: '#2496ED', 'Apache Flink': '#E6526F', Razorpay: '#0C2451',
+  Git: '#F05032', Postman: '#FF6C37', Linux: '#FCC624', 'VS Code': '#007ACC', Figma: '#F24E1E',
+};
 
 // Same stack as the "things I build with" marquee, grouped by what part of the
 // work each one actually does — so a recruiter skimming this section can tell
@@ -29,16 +48,20 @@ const CATEGORIES = [
       { Icon: SiHtml5, label: 'HTML5' },
       { Icon: SiTailwindcss, label: 'Tailwind' },
       { Icon: SiThreedotjs, label: 'Three.js' },
+      { Icon: SiGooglechrome, label: 'Chrome Extensions' },
     ],
   },
   {
-    name: 'Backend',
-    blurb: 'The APIs and services underneath',
+    name: 'Backend & Languages',
+    blurb: 'The APIs, services, and languages underneath',
     items: [
       { Icon: SiNodedotjs, label: 'Node.js' },
       { Icon: SiExpress, label: 'Express' },
       { Icon: SiFastapi, label: 'FastAPI' },
       { Icon: SiFlask, label: 'Flask' },
+      { Icon: SiC, label: 'C' },
+      { Icon: SiCplusplus, label: 'C++' },
+      { Icon: SiOpenjdk, label: 'Java' },
     ],
   },
   {
@@ -53,11 +76,13 @@ const CATEGORIES = [
       { Icon: SiNumpy, label: 'NumPy' },
       { Icon: SiOpencv, label: 'OpenCV' },
       { Icon: SiHuggingface, label: 'HuggingFace' },
+      { Icon: SiGooglegemini, label: 'Gemini AI' },
+      { Icon: SiGooglecolab, label: 'Google Colab' },
     ],
   },
   {
-    name: 'Databases & Services',
-    blurb: 'Where the data actually lives',
+    name: 'Databases & CMS',
+    blurb: 'Where the data — and content — lives',
     items: [
       { Icon: SiPostgresql, label: 'PostgreSQL' },
       { Icon: SiMongodb, label: 'MongoDB' },
@@ -65,15 +90,19 @@ const CATEGORIES = [
       { Icon: SiRedis, label: 'Redis' },
       { Icon: SiSupabase, label: 'Supabase' },
       { Icon: SiCloudinary, label: 'Cloudinary' },
+      { Icon: SiStrapi, label: 'Strapi' },
+      { Icon: SiWordpress, label: 'WordPress' },
     ],
   },
   {
-    name: 'Infra & Streaming',
-    blurb: 'How it runs and scales',
+    name: 'Infra & Integrations',
+    blurb: 'How it runs, scales, and gets paid',
     items: [
       { Icon: SiDocker, label: 'Docker' },
       { Icon: SiApachekafka, label: 'Kafka' },
+      { Icon: SiApacheflink, label: 'Apache Flink' },
       { Icon: SiVercel, label: 'Vercel' },
+      { Icon: SiRazorpay, label: 'Razorpay' },
     ],
   },
   {
@@ -85,6 +114,7 @@ const CATEGORIES = [
       { Icon: SiPostman, label: 'Postman' },
       { Icon: SiLinux, label: 'Linux' },
       { Icon: VscVscode, label: 'VS Code' },
+      { Icon: SiFigma, label: 'Figma' },
     ],
   },
 ];
@@ -124,11 +154,11 @@ export default function Skills() {
               className="sk-card"
             >
               <h3 style={{ fontFamily: 'Clash Display, sans-serif', fontSize: '16px', fontWeight: 600, color: 'var(--text-primary)' }}>{cat.name}</h3>
-              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11.5px', color: 'var(--text-tertiary)', marginTop: '2px', marginBottom: '16px' }}>{cat.blurb}</p>
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11.5px', color: 'var(--text-secondary)', marginTop: '2px', marginBottom: '16px' }}>{cat.blurb}</p>
               <div className="sk-chips">
                 {cat.items.map(({ Icon, label }) => (
                   <span key={label} className="sk-chip">
-                    <Icon size={13} />
+                    <Icon size={14} style={BRAND[label] ? { color: BRAND[label] } : undefined} />
                     {label}
                   </span>
                 ))}
@@ -148,11 +178,11 @@ export default function Skills() {
         .sk-chips { display: flex; flex-wrap: wrap; gap: 7px; }
         .sk-chip {
           display: inline-flex; align-items: center; gap: 6px;
-          font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 500; color: var(--text-secondary);
+          font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 500; color: var(--text-primary);
           background: var(--bg-surface); border: 1px solid var(--border-subtle);
-          border-radius: 999px; padding: 5px 11px; transition: color 0.15s ease, border-color 0.15s ease;
+          border-radius: 999px; padding: 5px 11px; transition: border-color 0.15s ease, transform 0.15s ease;
         }
-        .sk-chip:hover { color: var(--accent-dev); border-color: rgba(124,111,247,0.4); }
+        .sk-chip:hover { border-color: rgba(124,111,247,0.4); transform: translateY(-1px); }
         @media (max-width: 900px) {
           .sk-grid { grid-template-columns: repeat(2, 1fr) !important; }
         }
