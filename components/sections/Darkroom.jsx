@@ -138,6 +138,19 @@ export default function Darkroom() {
             autoRotate
             autoRotateSpeed={0.045}
           />
+
+          {/* Mirrorless-viewfinder chrome — pure overlay, clicks pass through to the dome */}
+          <div className="dk-vf" aria-hidden="true">
+            <span className="dk-vf-vignette" />
+            <span className="dk-vf-third dk-vf-third-v1" /><span className="dk-vf-third dk-vf-third-v2" />
+            <span className="dk-vf-third dk-vf-third-h1" /><span className="dk-vf-third dk-vf-third-h2" />
+            <span className="dk-vf-c dk-vf-tl" /><span className="dk-vf-c dk-vf-tr" />
+            <span className="dk-vf-c dk-vf-bl" /><span className="dk-vf-c dk-vf-br" />
+            <span className="dk-vf-hud dk-vf-hud-tl"><span className="dk-vf-rec" />REC</span>
+            <span className="dk-vf-hud dk-vf-hud-tr">iPHONE 14 PRO · ƒ1.8</span>
+            <span className="dk-vf-hud dk-vf-hud-bl">AF-C</span>
+            <span className="dk-vf-hud dk-vf-hud-br">{PHOTOS.length} FRAMES</span>
+          </div>
         </div>
 
         <p style={{ textAlign: 'center', marginTop: '30px', fontFamily: 'JetBrains Mono, monospace', fontSize: '11px', color: 'rgba(255,255,255,0.3)', letterSpacing: '0.06em' }}>
@@ -159,6 +172,38 @@ export default function Darkroom() {
         .dk-filter::-webkit-scrollbar { display: none; }
         @media (max-width: 560px) {
           .dk-dome { height: clamp(440px, 66vh, 560px); }
+        }
+
+        /* Mirrorless-EVF chrome laid over the dome */
+        .dk-vf { position: absolute; inset: 0; z-index: 6; pointer-events: none; }
+        .dk-vf-vignette {
+          position: absolute; inset: 0;
+          box-shadow: inset 0 0 90px 20px rgba(0,0,0,0.55);
+          border: 1px solid rgba(232,147,90,0.12);
+        }
+        .dk-vf-third { position: absolute; background: rgba(232,147,90,0.07); }
+        .dk-vf-third-v1 { left: 33.33%; top: 0; bottom: 0; width: 1px; }
+        .dk-vf-third-v2 { left: 66.66%; top: 0; bottom: 0; width: 1px; }
+        .dk-vf-third-h1 { top: 33.33%; left: 0; right: 0; height: 1px; }
+        .dk-vf-third-h2 { top: 66.66%; left: 0; right: 0; height: 1px; }
+        .dk-vf-c { position: absolute; width: 26px; height: 26px; border: 1.5px solid rgba(232,147,90,0.5); }
+        .dk-vf-tl { top: 16px; left: 16px; border-right: 0; border-bottom: 0; }
+        .dk-vf-tr { top: 16px; right: 16px; border-left: 0; border-bottom: 0; }
+        .dk-vf-bl { bottom: 16px; left: 16px; border-right: 0; border-top: 0; }
+        .dk-vf-br { bottom: 16px; right: 16px; border-left: 0; border-top: 0; }
+        .dk-vf-hud {
+          position: absolute; display: flex; align-items: center; gap: 5px;
+          font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.08em;
+          color: rgba(232,147,90,0.75); text-shadow: 0 1px 3px rgba(0,0,0,0.6);
+        }
+        .dk-vf-hud-tl { top: 22px; left: 50px; }
+        .dk-vf-hud-tr { top: 22px; right: 50px; }
+        .dk-vf-hud-bl { bottom: 22px; left: 50px; }
+        .dk-vf-hud-br { bottom: 22px; right: 50px; }
+        .dk-vf-rec { width: 6px; height: 6px; border-radius: 50%; background: #E8935A; animation: dk-vf-blink 1.4s ease-in-out infinite; }
+        @keyframes dk-vf-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.25; } }
+        @media (prefers-reduced-motion: reduce) {
+          .dk-vf-rec { animation: none; }
         }
       `}</style>
     </section>
