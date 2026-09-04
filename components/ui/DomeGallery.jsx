@@ -33,67 +33,126 @@ const getDataNumber = (el, name, fallback) => {
   return Number.isFinite(n) ? n : fallback;
 };
 
-// Full-bleed square tile footprint, but the visible frame is inset to the
-// photo's own aspect — wide for landscape, tall for portrait.
-function insetsForAspect(aspect) {
-  const a = Number.isFinite(aspect) && aspect > 0 ? aspect : 1;
-  if (a >= 1.05) {
-    const iy = clamp((1 - 1 / a) * 50, 4, 26);
-    return { x: 4, y: +iy.toFixed(2) };
+// Small deterministic PRNG (mulberry32 over an FNV-1a hash) so the masonry
+// layout is stable across renders and identical on server + client.
+function seededRand(str) {
+  let h = 2166136261;
+  for (let i = 0; i < str.length; i++) {
+    h ^= str.charCodeAt(i);
+    h = Math.imul(h, 16777619);
   }
-  if (a <= 0.95) {
-    const ix = clamp((1 - a) * 50, 4, 26);
-    return { x: +ix.toFixed(2), y: 4 };
-  }
-  return { x: 9, y: 9 };
+  return () => {
+    h += 0x6d2b79f5;
+    let t = Math.imul(h ^ (h >>> 15), 1 | h);
+    t ^= t + Math.imul(t ^ (t >>> 7), 61 | t);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
 }
 
+const normalizePool = pool =>
+  pool.map((image, i) =>
+    typeof image === 'string'
+      ? { src: image, alt: '', _k: 's' + i }
+      : {
+          src: image.src || '',
+          alt: image.alt || '',
+          aspect: image.aspect,
+          featured: image.featured,
+          title: image.title,
+          place: image.place,
+          exif: image.exif,
+          tags: image.tags,
+          _k: (image.src || 'x') + ':' + i,
+        },
+  );
+
+// Masonry pack onto a `seg × rows` cell grid that wraps horizontally. Tiles
+// take footprints of 1×1 / 2×1 / 1×2 / 2×2 cells, biased by each photo's
+// orientation (wide for landscape, tall for portrait) so frames interlock
+// like a brick wall instead of sitting in a plain grid. One cell == the base
+// sizeX:2 / sizeY:2 tile; X0/Y0 keep the whole thing centred on the equator.
 function buildItems(pool, seg, rows) {
-  const n = Math.max(1, rows);
-  const xCols = Array.from({ length: seg }, (_, i) => -37 + i * 2);
-  // Rows are placed so their *projected* centres sit symmetrically about the
-  // equator — the +0.5 cancels the (sizeY-1)/2 term in the tile transform, so
-  // the dome isn't tilted and the top/bottom clip evenly. rows=3 -> tiles at
-  // rotateX ∈ {-2u, 0, 2u}.
-  const ys = Array.from({ length: n }, (_, i) => 0.5 + (i - (n - 1) / 2) * 2);
+  const cols = Math.max(2, seg);
+  const nRows = Math.max(1, rows);
+  const X0 = -37;
+  const Y0 = 1.5 - nRows;
 
-  const coords = xCols.flatMap(x => ys.map(y => ({ x, y, sizeX: 2, sizeY: 2 })));
-
-  const totalSlots = coords.length;
-  if (pool.length === 0) {
-    return coords.map(c => ({ ...c, src: '', alt: '' }));
-  }
-
-  const normalized = pool.map(image => {
-    if (typeof image === 'string') return { src: image, alt: '' };
-    return {
-      src: image.src || '',
-      alt: image.alt || '',
-      aspect: image.aspect,
-      featured: image.featured,
-      title: image.title,
-      place: image.place,
-      exif: image.exif,
-      tags: image.tags,
-    };
+  const occ = Array.from({ length: cols }, () => new Array(nRows).fill(false));
+  const canFit = (c, r, w, h) => {
+    if (r + h > nRows) return false;
+    for (let dc = 0; dc < w; dc++) {
+      const cc = (c + dc) % cols;
+      for (let dr = 0; dr < h; dr++) if (occ[cc][r + dr]) return false;
+    }
+    return true;
+  };
+  const claim = (c, r, w, h) => {
+    for (let dc = 0; dc < w; dc++) {
+      const cc = (c + dc) % cols;
+      for (let dr = 0; dr < h; dr++) occ[cc][r + dr] = true;
+    }
+  };
+  const place = (p, c, r, w, h) => ({
+    ...p,
+    x: X0 + 2 * c,
+    y: Y0 + 2 * r + 2 * (h - 1),
+    sizeX: 2 * w,
+    sizeY: 2 * h,
   });
 
-  const used = Array.from({ length: totalSlots }, (_, i) => normalized[i % normalized.length]);
+  if (!pool || pool.length === 0) {
+    const out = [];
+    for (let c = 0; c < cols; c++)
+      for (let r = 0; r < nRows; r++) out.push(place({ src: '', alt: '' }, c, r, 1, 1));
+    return out;
+  }
 
-  for (let i = 1; i < used.length; i++) {
-    if (used[i].src === used[i - 1].src) {
-      for (let j = i + 1; j < used.length; j++) {
-        if (used[j].src !== used[i].src) {
-          const tmp = used[i];
-          used[i] = used[j];
-          used[j] = tmp;
-          break;
-        }
+  const norm = normalizePool(pool);
+  const items = [];
+  let pi = 0;
+  let lastSrc = null;
+  const nextPhoto = () => {
+    let p = norm[pi % norm.length];
+    if (norm.length > 1 && p.src && p.src === lastSrc) {
+      pi += 1;
+      p = norm[pi % norm.length];
+    }
+    pi += 1;
+    lastSrc = p.src;
+    return p;
+  };
+
+  for (let c = 0; c < cols; c++) {
+    for (let r = 0; r < nRows; r++) {
+      if (occ[c][r]) continue;
+      const p = nextPhoto();
+      const rnd = seededRand(p._k + '#' + c + '#' + r);
+      const a = Number.isFinite(p.aspect) && p.aspect > 0 ? p.aspect : 1;
+
+      // Mostly 1×1 with a strong helping of orientation-matched 2×1 / 1×2 to
+      // give the wall its brick rhythm; the full 2×2 is a rare accent, a touch
+      // more common for featured frames.
+      const wide = a >= 1.25;
+      const tall = a <= 0.82;
+      const stretch = wide ? [2, 1] : tall ? [1, 2] : null;
+
+      let w = 1;
+      let h = 1;
+      const rBig = p.featured ? 0.24 : 0.07;
+      const rStretch = p.featured ? 0.58 : 0.5;
+      if (rnd() < rBig && canFit(c, r, 2, 2)) {
+        w = 2;
+        h = 2;
+      } else if (stretch && rnd() < rStretch && canFit(c, r, stretch[0], stretch[1])) {
+        [w, h] = stretch;
       }
+
+      claim(c, r, w, h);
+      items.push(place(p, c, r, w, h));
     }
   }
 
-  return coords.map((c, i) => ({ ...c, ...used[i] }));
+  return items;
 }
 
 function computeItemBaseRotation(offsetX, offsetY, sizeX, sizeY, segments) {
@@ -713,44 +772,40 @@ export default function DomeGallery({
       >
         <div className="stage">
           <div ref={sphereRef} className="sphere">
-            {items.map((it, i) => {
-              const ins = insetsForAspect(it.aspect);
-              return (
+            {items.map((it, i) => (
+              <div
+                key={`${it.x},${it.y},${i}`}
+                className="item"
+                data-src={it.src}
+                data-offset-x={it.x}
+                data-offset-y={it.y}
+                data-size-x={it.sizeX}
+                data-size-y={it.sizeY}
+                data-aspect={it.aspect ?? ''}
+                data-featured={it.featured ? 'true' : undefined}
+                data-title={it.title ?? ''}
+                data-place={it.place ?? ''}
+                data-exif={it.exif ?? ''}
+                data-tags={it.tags ?? ''}
+                style={{
+                  ['--offset-x']: it.x,
+                  ['--offset-y']: it.y,
+                  ['--item-size-x']: it.sizeX,
+                  ['--item-size-y']: it.sizeY,
+                }}
+              >
                 <div
-                  key={`${it.x},${it.y},${i}`}
-                  className="item"
-                  data-src={it.src}
-                  data-offset-x={it.x}
-                  data-offset-y={it.y}
-                  data-size-x={it.sizeX}
-                  data-size-y={it.sizeY}
-                  data-aspect={it.aspect ?? ''}
-                  data-featured={it.featured ? 'true' : undefined}
-                  data-title={it.title ?? ''}
-                  data-place={it.place ?? ''}
-                  data-exif={it.exif ?? ''}
-                  data-tags={it.tags ?? ''}
-                  style={{
-                    ['--offset-x']: it.x,
-                    ['--offset-y']: it.y,
-                    ['--item-size-x']: it.sizeX,
-                    ['--item-size-y']: it.sizeY,
-                  }}
+                  className="item__image"
+                  role="button"
+                  tabIndex={0}
+                  aria-label={it.alt || it.title || 'Open image'}
+                  onClick={onTileClick}
+                  onPointerUp={onTilePointerUp}
                 >
-                  <div
-                    className="item__image"
-                    role="button"
-                    tabIndex={0}
-                    aria-label={it.alt || it.title || 'Open image'}
-                    onClick={onTileClick}
-                    onPointerUp={onTilePointerUp}
-                    style={{ ['--img-ins-x']: `${ins.x}%`, ['--img-ins-y']: `${ins.y}%` }}
-                  >
-                    <img src={it.src} draggable={false} alt={it.alt} loading="lazy" decoding="async" />
-                  </div>
+                  <img src={it.src} draggable={false} alt={it.alt} loading="lazy" decoding="async" />
                 </div>
-              );
-            })}
+              </div>
+            ))}
           </div>
         </div>
 

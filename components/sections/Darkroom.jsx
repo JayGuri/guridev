@@ -59,10 +59,12 @@ export default function Darkroom() {
     [shots],
   );
 
-  // 3 rows keeps the dome shallow enough that no frame gets sliced by the top
-  // or bottom. Enough columns that every photo lands on its own tile.
-  const DOME_ROWS = 3;
-  const segs = Math.max(12, Math.ceil(domeImages.length / DOME_ROWS));
+  // 4 rows of masonry — enough vertical room for the 2×1 / 1×2 / 2×2 tiles to
+  // interlock like brickwork, still shallow enough (with fit 0.44) that nothing
+  // clips top or bottom. Columns ≈ half the photo count so every frame lands on
+  // the wall at a readable size.
+  const DOME_ROWS = 4;
+  const segs = Math.max(14, Math.min(28, Math.round(domeImages.length * 0.46)));
 
   return (
     <section
@@ -127,14 +129,14 @@ export default function Darkroom() {
             rows={DOME_ROWS}
             grayscale={false}
             overlayBlurColor="#080809"
-            imageBorderRadius="14px"
+            imageBorderRadius="9px"
             openedImageBorderRadius="18px"
             padFactor={0.1}
-            fit={0.5}
-            minRadius={340}
-            maxVerticalRotationDeg={4}
+            fit={0.44}
+            minRadius={320}
+            maxVerticalRotationDeg={6}
             autoRotate
-            autoRotateSpeed={0.04}
+            autoRotateSpeed={0.045}
           />
         </div>
 
