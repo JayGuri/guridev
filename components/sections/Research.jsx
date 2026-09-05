@@ -125,7 +125,7 @@ export default function Research() {
   });
 
   return (
-    <section id="research" style={{ background: 'var(--bg-surface)', padding: '120px 24px', width: '100%' }}>
+    <section id="research" style={{ background: 'var(--bg-surface)', padding: 'var(--section-pad-y) 24px', width: '100%' }}>
       <div ref={ref} style={{ maxWidth: '1120px', margin: '0 auto' }}>
 
         {/* Header */}

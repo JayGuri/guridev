@@ -35,20 +35,23 @@ export default function Education() {
   const inView = useInView(ref, { once: true, amount: 0.2 });
 
   return (
-    <section id="education" style={{ background: 'var(--bg-base)', padding: '120px 24px', width: '100%' }}>
-      <div style={{ maxWidth: '780px', margin: '0 auto' }} ref={ref}>
+    <section id="education" style={{ background: 'var(--bg-base)', padding: 'var(--section-pad-y) 24px', width: '100%' }}>
+      <div style={{ maxWidth: '860px', margin: '0 auto' }} ref={ref}>
         <motion.div
           initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, amount: 0.4 }} transition={{ duration: 0.7, ease: EASE }}
-          style={{ textAlign: 'center', marginBottom: '52px' }}
+          style={{ marginBottom: '44px', maxWidth: '640px' }}
         >
           <p style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '11px', letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--accent-dev)', display: 'inline-flex', alignItems: 'center', gap: '8px', marginBottom: '18px' }}>
             <span style={{ width: '7px', height: '7px', borderRadius: '2px', background: 'var(--accent-dev)' }} />
             education
           </p>
-          <h2 style={{ fontFamily: 'Clash Display, sans-serif', fontSize: 'clamp(32px, 4.6vw, 52px)', fontWeight: 600, color: 'var(--text-primary)', letterSpacing: '-0.02em', lineHeight: 1.05 }}>
+          <h2 style={{ fontFamily: 'Clash Display, sans-serif', fontSize: 'clamp(32px, 4.6vw, 52px)', fontWeight: 600, color: 'var(--text-primary)', letterSpacing: '-0.02em', lineHeight: 1.05, margin: '0 0 18px' }}>
             The classrooms before the terminal.
           </h2>
+          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '16px', lineHeight: 1.75, color: 'var(--text-secondary)' }}>
+            Engineering at DJ Sanghvi now, on a Data Science track — after twelve years of school in Mumbai that kept the grades high enough to get here.
+          </p>
         </motion.div>
 
         <div className="edu-rail">

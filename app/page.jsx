@@ -1,5 +1,3 @@
-'use client';
-
 import Hero from '@/components/sections/Hero';
 import Identity from '@/components/sections/Identity';
 import DevStudio from '@/components/sections/DevStudio';

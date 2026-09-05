@@ -15,6 +15,7 @@ export default function ClientWrapper({ children }) {
   const [sparkColor, setSparkColor] = useState('#7C6FF7');
 
   useEffect(() => {
+    let raf = 0;
     const check = () => {
       const el = document.getElementById('photography');
       if (!el) return;
@@ -23,10 +24,17 @@ export default function ClientWrapper({ children }) {
       const inView = top < mid && bottom > mid;
       setSparkColor(inView ? '#E8935A' : '#7C6FF7');
     };
+    const onScroll = () => {
+      if (raf) return;
+      raf = requestAnimationFrame(() => { raf = 0; check(); });
+    };
 
-    window.addEventListener('scroll', check, { passive: true });
+    window.addEventListener('scroll', onScroll, { passive: true });
     check();
-    return () => window.removeEventListener('scroll', check);
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      if (raf) cancelAnimationFrame(raf);
+    };
   }, []);
 
   return (

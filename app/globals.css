@@ -47,6 +47,11 @@
 
   --border-subtle: rgba(0, 0, 0, 0.08);
   --border-hover: rgba(0, 0, 0, 0.16);
+
+  /* Fluid vertical rhythm for sections — full 120px on desktop, tightens to
+     ~72px on phones so stacked sections don't read as half-empty. */
+  --section-pad-y: clamp(72px, 12vw, 120px);
+
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);

@@ -44,6 +44,7 @@ const ORGS = [
       { title: 'Web Tech Member', period: 'Aug 2024 — Jul 2025' },
     ],
     highlights: [],
+    note: "On the web team — built and maintained the society's site and event pages through the year.",
   },
 ];
 
@@ -52,7 +53,7 @@ export default function Extracurriculars() {
   const inView = useInView(ref, { once: true, amount: 0.15 });
 
   return (
-    <section id="extracurriculars" style={{ background: 'var(--bg-surface)', padding: '120px 24px', width: '100%' }}>
+    <section id="extracurriculars" style={{ background: 'var(--bg-surface)', padding: 'var(--section-pad-y) 24px', width: '100%' }}>
       <div style={{ maxWidth: '1120px', margin: '0 auto' }}>
         <motion.div
           initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }}
@@ -103,13 +104,19 @@ export default function Extracurriculars() {
                   ))}
                 </div>
               )}
+
+              {org.highlights.length === 0 && org.note && (
+                <div className="xc-highlights">
+                  <p className="xc-highlight"><span>{org.note}</span></p>
+                </div>
+              )}
             </motion.div>
           ))}
         </div>
       </div>
 
       <style>{`
-        .xc-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+        .xc-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; align-items: start; }
         .xc-card {
           background: var(--bg-elevated); border: 1px solid var(--border-subtle);
           border-radius: 18px; padding: 24px; transition: border-color 0.2s ease, transform 0.2s ease;
@@ -134,7 +141,10 @@ export default function Extracurriculars() {
           display: flex; align-items: flex-start; gap: 8px;
           font-family: 'Inter', sans-serif; font-size: 12.5px; line-height: 1.55; color: var(--text-secondary);
         }
-        @media (max-width: 900px) {
+        @media (max-width: 980px) {
+          .xc-grid { grid-template-columns: repeat(2, 1fr) !important; }
+        }
+        @media (max-width: 620px) {
           .xc-grid { grid-template-columns: 1fr !important; }
         }
       `}</style>

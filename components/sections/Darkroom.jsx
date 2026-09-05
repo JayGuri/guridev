@@ -70,7 +70,7 @@ export default function Darkroom() {
     <section
       ref={sectionRef}
       id="photography"
-      style={{ background: '#080809', position: 'relative', overflow: 'hidden', padding: '120px 24px' }}
+      style={{ background: '#080809', position: 'relative', overflow: 'hidden', padding: 'var(--section-pad-y) 24px' }}
     >
       <FilmGrain />
 

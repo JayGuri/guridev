@@ -982,7 +982,7 @@ export default function Identity() {
   const closeModal = useCallback(() => setActiveModal(null), []);
 
   return (
-    <section id="about" style={{ background: 'var(--bg-surface)', padding: '120px 24px', width: '100%' }}>
+    <section id="about" style={{ background: 'var(--bg-surface)', padding: 'var(--section-pad-y) 24px', width: '100%' }}>
       <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
 
         {/* Section header */}

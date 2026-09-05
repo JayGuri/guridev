@@ -124,7 +124,7 @@ export default function Skills() {
   const inView = useInView(ref, { once: true, amount: 0.1 });
 
   return (
-    <section id="skills" style={{ background: 'var(--bg-surface)', padding: '120px 24px', width: '100%' }}>
+    <section id="skills" style={{ background: 'var(--bg-surface)', padding: 'var(--section-pad-y) 24px', width: '100%' }}>
       <div style={{ maxWidth: '1120px', margin: '0 auto' }}>
         <motion.div
           initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }}

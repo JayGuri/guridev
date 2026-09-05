@@ -27,6 +27,19 @@ function scrollTo(id) {
 export default function Hero() {
   const prefersReduced = useReducedMotion();
 
+  // The two WebGL background layers are the heaviest thing on the page and the
+  // 3D room further down already taxes mobile GPUs — skip them on phones and
+  // when the visitor asked for reduced motion, falling back to a static wash.
+  const [isSmall, setIsSmall] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 768px)');
+    const sync = () => setIsSmall(mq.matches);
+    sync();
+    mq.addEventListener('change', sync);
+    return () => mq.removeEventListener('change', sync);
+  }, []);
+  const showFX = !prefersReduced && !isSmall;
+
   // Helpers: with reduced motion every element appears instantly in place.
   const fadeUp = (delay = 0) =>
     prefersReduced
@@ -63,9 +76,19 @@ export default function Hero() {
   const [scrollVisible, setScrollVisible] = useState(true);
 
   useEffect(() => {
-    const onScroll = () => setScrollVisible(window.scrollY <= 80);
+    let raf = 0;
+    const onScroll = () => {
+      if (raf) return;
+      raf = requestAnimationFrame(() => {
+        raf = 0;
+        setScrollVisible(window.scrollY <= 80);
+      });
+    };
     window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      if (raf) cancelAnimationFrame(raf);
+    };
   }, []);
 
   // ── Mouse parallax on the name only ─────────────────────────────────
@@ -119,36 +142,49 @@ export default function Hero() {
         background: 'var(--bg-base)',
       }}
     >
-      {/* ── Layer A: PixelBlast pixel grid ──────────────────────────── */}
-      <div style={{ position: 'absolute', inset: 0, opacity: 0.3, zIndex: 0, pointerEvents: 'none' }}>
-        <PixelBlast
-          variant="square"
-          pixelSize={4}
-          color="#7C6FF7"
-          patternScale={1.2}
-          patternDensity={0.5}
-          enableRipples={true}
-          rippleSpeed={0.2}
-          rippleThickness={0.08}
-          speed={0.3}
-          transparent={true}
-          edgeFade={0.6}
-        />
-      </div>
+      {showFX ? (
+        <>
+          {/* ── Layer A: PixelBlast pixel grid ──────────────────────────── */}
+          <div style={{ position: 'absolute', inset: 0, opacity: 0.3, zIndex: 0, pointerEvents: 'none' }}>
+            <PixelBlast
+              variant="square"
+              pixelSize={4}
+              color="#7C6FF7"
+              patternScale={1.2}
+              patternDensity={0.5}
+              enableRipples={true}
+              rippleSpeed={0.2}
+              rippleThickness={0.08}
+              speed={0.3}
+              transparent={true}
+              edgeFade={0.6}
+            />
+          </div>
 
-      {/* ── Layer B: Beams light overlay ─────────────────────────────── */}
-      <div style={{ position: 'absolute', inset: 0, opacity: 0.5, zIndex: 0, pointerEvents: 'none' }}>
-        <Beams
-          beamWidth={1.5}
-          beamHeight={10}
-          beamNumber={12}
-          lightColor="#7C6FF7"
-          speed={0.6}
-          noiseIntensity={0.6}
-          scale={0.25}
-          rotation={0}
+          {/* ── Layer B: Beams light overlay ─────────────────────────────── */}
+          <div style={{ position: 'absolute', inset: 0, opacity: 0.5, zIndex: 0, pointerEvents: 'none' }}>
+            <Beams
+              beamWidth={1.5}
+              beamHeight={10}
+              beamNumber={12}
+              lightColor="#7C6FF7"
+              speed={0.6}
+              noiseIntensity={0.6}
+              scale={0.25}
+              rotation={0}
+            />
+          </div>
+        </>
+      ) : (
+        <div
+          aria-hidden="true"
+          style={{
+            position: 'absolute', inset: 0, zIndex: 0, pointerEvents: 'none',
+            background:
+              'radial-gradient(60% 50% at 50% 40%, rgba(124,111,247,0.16), transparent 70%)',
+          }}
         />
-      </div>
+      )}
 
       {/* ── Main content ─────────────────────────────────────────────── */}
       <div
@@ -322,6 +358,7 @@ export default function Hero() {
 
       {/* f) Terminal shortcut hint — fades in after 3s, bottom-left */}
       <motion.div
+        className="hero-term-hint"
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={prefersReduced ? {} : { delay: 3.2, duration: 0.7, ease: EASE_OUT_EXPO }}
@@ -421,6 +458,10 @@ export default function Hero() {
         @keyframes scrollPulse {
           0%, 100% { transform: translateY(0); }
           50%       { transform: translateY(8px); }
+        }
+        /* On small screens the hint would sit under the centred scroll cue */
+        @media (max-width: 720px) {
+          .hero-term-hint { display: none !important; }
         }
       `}</style>
     </section>

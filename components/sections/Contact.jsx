@@ -77,7 +77,7 @@ export default function Contact() {
     : 'Send message →';
 
   return (
-    <section id="contact" style={{ background: 'var(--bg-base)', padding: '120px 24px', width: '100%' }}>
+    <section id="contact" style={{ background: 'var(--bg-base)', padding: 'var(--section-pad-y) 24px', width: '100%' }}>
       <div className="contact-layout" style={{ maxWidth: '1120px', margin: '0 auto', display: 'grid', gridTemplateColumns: '0.85fr 1fr', gap: '72px', alignItems: 'start' }}>
 
         {/* Left */}
@@ -131,7 +131,7 @@ export default function Contact() {
           style={{ border: '1px solid var(--border-subtle)', borderRadius: '18px', padding: '28px', background: 'var(--bg-surface)' }}
         >
           <p style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '11px', color: 'var(--text-tertiary)', marginBottom: '22px', letterSpacing: '0.04em' }}>
-            <span style={{ color: 'var(--accent-dev)' }}>~/contact</span> &#10095; new message
+            <span style={{ color: 'var(--accent-dev)' }}>~/contact</span>{' ❯ new message'}
           </p>
 
           <div style={{ marginBottom: '20px' }}>

@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import { motion, useInView } from 'framer-motion';
 import ProjectModal from '@/components/ui/ProjectModal';
+import { PROJECT_LIST } from '@/lib/projects';
 
 const EASE = [0.16, 1, 0.3, 1];
 
@@ -44,7 +45,7 @@ function TerminalHeader() {
       initial={{ opacity: 0, y: 16 }}
       animate={inView ? { opacity: 1, y: 0 } : {}}
       transition={{ duration: 0.48, ease: EASE }}
-      style={{ background: '#0d1117', border: '1px solid #30363d', borderRadius: '12px', padding: '18px 22px', marginBottom: '28px', maxWidth: '560px' }}
+      style={{ background: '#0d1117', border: '1px solid #30363d', borderRadius: '12px', padding: '18px 22px', marginBottom: '28px', maxWidth: 'min(560px, 100%)', overflowX: 'auto' }}
     >
       <div style={{ display: 'flex', gap: '7px', marginBottom: '14px' }}>
         {['#FF5F57', '#FEBC2E', '#28C840'].map((c) => <div key={c} style={{ width: '11px', height: '11px', borderRadius: '50%', background: c }} />)}
@@ -94,7 +95,7 @@ export default function DevStudio() {
   const sl = activeScreen ? SCREEN_META[activeScreen] : null;
 
   return (
-    <section id="work" style={{ background: 'var(--bg-base, #03040a)', padding: '120px 24px', width: '100%' }}>
+    <section id="work" style={{ background: 'var(--bg-base, #03040a)', padding: 'var(--section-pad-y) 24px', width: '100%' }}>
       <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
 
         <motion.p
@@ -107,7 +108,28 @@ export default function DevStudio() {
 
         <TerminalHeader />
 
-        <div style={{ position: 'relative', width: '100%' }}>
+        {/* Non-WebGL / small-screen fallback — plain project cards.
+            The 3D room below is hidden under 900px (heavy on mobile GPUs). */}
+        <div className="devstudio-2d">
+          <div className="ds-grid">
+            {PROJECT_LIST.map((p) => (
+              <button
+                key={p.name}
+                className="ds-card"
+                style={{ '--ds-c': p.color }}
+                onClick={() => setSelectedProject({ ...p })}
+              >
+                <span className="ds-card-cat">{SCREEN_META[p.category]?.label ?? p.category}</span>
+                <span className="ds-card-name">{p.name}</span>
+                <span className="ds-card-tech">{p.tech}</span>
+                <span className="ds-card-desc">{p.desc}</span>
+                <span className="ds-card-open">open ›</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="devstudio-3d" style={{ position: 'relative', width: '100%' }}>
           <div style={{ width: '100%', height: 'clamp(500px, 68vh, 720px)', borderRadius: '20px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.05)', position: 'relative', background: '#03040a' }}>
 
             <RoomScene activeScreen={activeScreen} isZoomedIn={isZoomedIn} onScreenClick={handleScreenClick} onOpenProject={(p) => setSelectedProject(p)} />
@@ -190,6 +212,27 @@ export default function DevStudio() {
       <style>{`
         @keyframes th-blink  { 0%,100%{opacity:1} 50%{opacity:0} }
         @keyframes pulse-dot { 0%,100%{opacity:1; transform:scale(1)} 50%{opacity:0.55; transform:scale(0.75)} }
+
+        .devstudio-2d { display: none; }
+        @media (max-width: 900px) {
+          .devstudio-3d { display: none !important; }
+          .devstudio-2d { display: block; }
+        }
+        .ds-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+        @media (max-width: 560px) { .ds-grid { grid-template-columns: 1fr; } }
+        .ds-card {
+          display: flex; flex-direction: column; gap: 7px;
+          text-align: left; width: 100%; cursor: pointer;
+          background: rgba(20,24,32,0.6); border: 1px solid #30363d;
+          border-radius: 14px; padding: 20px;
+          transition: border-color 0.16s ease, transform 0.16s ease;
+        }
+        .ds-card:hover { border-color: var(--ds-c); transform: translateY(-2px); }
+        .ds-card-cat  { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ds-c); }
+        .ds-card-name { font-family: 'Clash Display', sans-serif; font-size: 18px; font-weight: 600; color: #eaf1fb; }
+        .ds-card-tech { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #ffa657; }
+        .ds-card-desc { font-family: 'Inter', sans-serif; font-size: 13px; line-height: 1.6; color: #c9d1d9; }
+        .ds-card-open { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ds-c); margin-top: 2px; }
       `}</style>
     </section>
   );

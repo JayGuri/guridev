@@ -39,7 +39,7 @@ export default function CandidMe() {
   });
 
   return (
-    <section id="me" style={{ background: 'var(--bg-surface)', padding: '120px 24px', width: '100%' }}>
+    <section id="me" style={{ background: 'var(--bg-surface)', padding: 'var(--section-pad-y) 24px', width: '100%' }}>
       <div className="candid-layout" style={{ maxWidth: '1120px', margin: '0 auto', display: 'grid', gridTemplateColumns: '0.8fr 1.2fr', gap: '64px', alignItems: 'start' }}>
 
         {/* Left — statement */}

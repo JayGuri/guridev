@@ -39,7 +39,7 @@ export default function Experience() {
   const inView = useInView(ref, { once: true, amount: 0.15 });
 
   return (
-    <section id="experience" style={{ background: 'var(--bg-base)', padding: '120px 24px', width: '100%' }}>
+    <section id="experience" style={{ background: 'var(--bg-base)', padding: 'var(--section-pad-y) 24px', width: '100%' }}>
       <div className="exp-layout" style={{ maxWidth: '1120px', margin: '0 auto', display: 'grid', gridTemplateColumns: '0.75fr 1.25fr', gap: '64px', alignItems: 'start' }}>
 
         {/* Left — intro */}
