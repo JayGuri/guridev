@@ -6,6 +6,7 @@ import CustomCursor from '@/components/effects/CustomCursor';
 import LoadingScreen from '@/components/effects/LoadingScreen';
 import SmoothScroll from '@/components/effects/SmoothScroll';
 import TerminalNav from '@/components/ui/TerminalNav';
+import FloatingNav from '@/components/ui/FloatingNav';
 
 // Tracks scroll position to swap ClickSpark color when the #photography section
 // is centred in the viewport — orange to match the Darkroom / photographer palette.
@@ -49,7 +50,10 @@ export default function ClientWrapper({ children }) {
       <LoadingScreen />
       <SmoothScroll />
       <TerminalNav />
-      <main style={{ paddingTop: '112px' }}>
+      <FloatingNav />
+      {/* .main-content picks up the terminal-open padding rule in globals.css;
+          no static top padding — the hero owns the top of the page. */}
+      <main className="main-content">
         {children}
       </main>
     </ClickSpark>

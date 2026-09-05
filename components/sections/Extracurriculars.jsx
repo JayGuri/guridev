@@ -58,7 +58,7 @@ export default function Extracurriculars() {
         <motion.div
           initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, amount: 0.4 }} transition={{ duration: 0.7, ease: EASE }}
-          style={{ textAlign: 'center', marginBottom: '52px' }}
+          style={{ marginBottom: '44px', maxWidth: '640px' }}
         >
           <p style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '11px', letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--accent-dev)', display: 'inline-flex', alignItems: 'center', gap: '8px', marginBottom: '18px' }}>
             <span style={{ width: '7px', height: '7px', borderRadius: '2px', background: 'var(--accent-dev)' }} />

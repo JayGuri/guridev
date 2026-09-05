@@ -5,6 +5,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useReducedMotion } from '@/lib/useReducedMotion';
 import PixelBlast from '@/components/PixelBlast';
 import Beams      from '@/components/Beams';
+import PixelWash  from '@/components/PixelWash';
 
 // Role words and their accent colours
 const ROLES = ['Developer', 'Researcher', 'Photographer', 'Builder'];
@@ -176,14 +177,10 @@ export default function Hero() {
           </div>
         </>
       ) : (
-        <div
-          aria-hidden="true"
-          style={{
-            position: 'absolute', inset: 0, zIndex: 0, pointerEvents: 'none',
-            background:
-              'radial-gradient(60% 50% at 50% 40%, rgba(124,111,247,0.16), transparent 70%)',
-          }}
-        />
+        <div aria-hidden="true" style={{ position: 'absolute', inset: 0, zIndex: 0, pointerEvents: 'none', overflow: 'hidden' }}>
+          <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(60% 50% at 50% 38%, rgba(124,111,247,0.18), transparent 72%)' }} />
+          <PixelWash color="#7C6FF7" cell={7} density={0.6} style={{ opacity: 0.5 }} />
+        </div>
       )}
 
       {/* ── Main content ─────────────────────────────────────────────── */}

@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import { motion, useInView } from 'framer-motion';
 import ProjectModal from '@/components/ui/ProjectModal';
+import PixelWash from '@/components/PixelWash';
 import { PROJECT_LIST } from '@/lib/projects';
 
 const EASE = [0.16, 1, 0.3, 1];
@@ -108,9 +109,11 @@ export default function DevStudio() {
 
         <TerminalHeader />
 
-        {/* Non-WebGL / small-screen fallback — plain project cards.
-            The 3D room below is hidden under 900px (heavy on mobile GPUs). */}
+        {/* Non-WebGL / small-screen fallback — plain project cards over a cheap
+            pixel shimmer. The 3D room below is hidden under 900px (heavy on
+            mobile GPUs). */}
         <div className="devstudio-2d">
+          <PixelWash color="#7C6FF7" cell={7} density={0.5} style={{ opacity: 0.4 }} />
           <div className="ds-grid">
             {PROJECT_LIST.map((p) => (
               <button
@@ -213,12 +216,12 @@ export default function DevStudio() {
         @keyframes th-blink  { 0%,100%{opacity:1} 50%{opacity:0} }
         @keyframes pulse-dot { 0%,100%{opacity:1; transform:scale(1)} 50%{opacity:0.55; transform:scale(0.75)} }
 
-        .devstudio-2d { display: none; }
+        .devstudio-2d { display: none; position: relative; overflow: hidden; border-radius: 20px; }
         @media (max-width: 900px) {
           .devstudio-3d { display: none !important; }
           .devstudio-2d { display: block; }
         }
-        .ds-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+        .ds-grid { position: relative; z-index: 1; display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
         @media (max-width: 560px) { .ds-grid { grid-template-columns: 1fr; } }
         .ds-card {
           display: flex; flex-direction: column; gap: 7px;

@@ -129,7 +129,7 @@ export default function Skills() {
         <motion.div
           initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, amount: 0.4 }} transition={{ duration: 0.7, ease: EASE }}
-          style={{ textAlign: 'center', marginBottom: '52px' }}
+          style={{ marginBottom: '44px', maxWidth: '620px' }}
         >
           <p style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '11px', letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--accent-dev)', display: 'inline-flex', alignItems: 'center', gap: '8px', marginBottom: '18px' }}>
             <span style={{ width: '7px', height: '7px', borderRadius: '2px', background: 'var(--accent-dev)' }} />
@@ -138,7 +138,7 @@ export default function Skills() {
           <h2 style={{ fontFamily: 'Clash Display, sans-serif', fontSize: 'clamp(32px, 4.6vw, 52px)', fontWeight: 600, color: 'var(--text-primary)', letterSpacing: '-0.02em', lineHeight: 1.05, margin: '0 0 16px' }}>
             The same stack, sorted by job.
           </h2>
-          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '15px', color: 'var(--text-secondary)', maxWidth: '520px', margin: '0 auto' }}>
+          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '15px', lineHeight: 1.7, color: 'var(--text-secondary)' }}>
             Everything from the scrolling marquee above — grouped by what it&apos;s
             actually for, not just listed.
           </p>
