@@ -318,30 +318,17 @@ function CandidCard({ inView, index, onOpen }) {
             <span className="cc-online"><span className="cc-online-dot" />PLAYER ONE</span>
           </div>
 
-          {/* platinum shelf */}
-          <div className="cc-run">
-            <span className="cc-run-ring cc-run-ring--full">
-              <Trophy size={16} strokeWidth={2} />
-            </span>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <p className="cc-run-k">TROPHY SHELF</p>
-              <p className="cc-run-v"><span className="cc-run-big">8</span> platinums</p>
-            </div>
-          </div>
-          <p className="cc-shelf">GoW · GoWR · Spider-Man · Miles Morales · Uncharted 1&ndash;4</p>
-
-          <div className="cc-now2">
-            <span className="cc-now2-tag">NOW</span>
-            <span className="cc-now2-title">The Last of Us Remastered</span>
-          </div>
-
           <h3 className="cc-h3">Off the clock</h3>
           <p className="cc-copy">
-            GTA first &mdash; then downloading mods for it. Watching the terminal
-            flash while they installed is when it clicked that there&apos;s more to
-            a computer than the part you see.
+            Platinum hunter, competitive at three sports, and the GTA-mods kid
+            who stayed for the terminal.
           </p>
-          <p className="cc-foot">also &mdash; football · table tennis · swimming · Post Malone on loop</p>
+          <div className="cc-glyphs" aria-hidden="true">
+            <Gamepad2 size={18} strokeWidth={1.75} />
+            <Waves size={18} strokeWidth={1.75} />
+            <Disc3 size={18} strokeWidth={1.75} />
+          </div>
+          <p className="cc-foot">open the trophy cabinet &rarr;</p>
         </div>
       </CometCard>
     </CardReveal>
@@ -1218,7 +1205,8 @@ export default function Identity() {
         .cc-chip { display: inline-flex; align-items: center; gap: 6px; font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 500; color: #FF8FA6; background: rgba(255,107,138,0.1); border: 1px solid rgba(255,107,138,0.24); border-radius: 999px; padding: 4px 11px; }
         .cc-chip svg { flex-shrink: 0; color: #FF6B8A; }
         .cc-h3 { font-family: 'Clash Display', sans-serif; font-size: 22px; font-weight: 600; color: #FF6B8A; margin: 18px 0 10px; }
-        .cc-copy { font-family: 'Inter', sans-serif; font-size: 14px; line-height: 1.7; color: var(--text-secondary); flex: 1; }
+        .cc-copy { font-family: 'Inter', sans-serif; font-size: 14px; line-height: 1.7; color: var(--text-secondary); }
+        .cc-glyphs { display: flex; gap: 18px; margin-top: 22px; color: rgba(255,107,138,0.5); }
         .cc-foot { margin-top: auto; padding-top: 16px; font-family: 'Inter', sans-serif; font-size: 12px; font-style: italic; color: var(--text-tertiary); }
 
         @keyframes rc-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.25; } }

@@ -119,9 +119,9 @@ export default function Extracurriculars() {
         .xc-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; align-items: start; }
         .xc-card {
           background: var(--bg-elevated); border: 1px solid var(--border-subtle);
-          border-radius: 18px; padding: 24px; transition: border-color 0.2s ease, transform 0.2s ease;
+          border-radius: 16px; padding: 22px; transition: border-color 0.2s ease, transform 0.2s ease;
         }
-        .xc-card:hover { border-color: var(--border-hover); transform: translateY(-3px); }
+        .xc-card:hover { border-color: var(--border-hover); transform: translateY(-2px); }
         .xc-icon {
           width: 34px; height: 34px; border-radius: 10px; display: flex; align-items: center; justify-content: center;
           background: rgba(124,111,247,0.1); border: 1px solid rgba(124,111,247,0.24); color: var(--accent-dev);

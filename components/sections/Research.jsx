@@ -130,7 +130,7 @@ export default function Research() {
 
         {/* Header */}
         <motion.div {...up(0)} style={{ maxWidth: '760px' }}>
-          <p style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '11px', letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--text-tertiary)', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '18px' }}>
+          <p style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '11px', letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--accent-dev)', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '18px' }}>
             <span style={{ width: '7px', height: '7px', borderRadius: '2px', background: 'var(--accent-dev)' }} />
             research
           </p>

@@ -97,7 +97,7 @@ export default function DevStudio() {
 
   return (
     <section id="work" style={{ background: 'var(--bg-base, #03040a)', padding: 'var(--section-pad-y) 24px', width: '100%' }}>
-      <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+      <div style={{ maxWidth: '1120px', margin: '0 auto' }}>
 
         <motion.p
           initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.5 }}
@@ -227,7 +227,7 @@ export default function DevStudio() {
           display: flex; flex-direction: column; gap: 7px;
           text-align: left; width: 100%; cursor: pointer;
           background: rgba(20,24,32,0.6); border: 1px solid #30363d;
-          border-radius: 14px; padding: 20px;
+          border-radius: 16px; padding: 22px;
           transition: border-color 0.16s ease, transform 0.16s ease;
         }
         .ds-card:hover { border-color: var(--ds-c); transform: translateY(-2px); }

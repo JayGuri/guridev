@@ -96,7 +96,7 @@ export default function Education() {
         .edu-dot--current { border-color: var(--accent-dev); color: var(--accent-dev); box-shadow: 0 0 0 4px rgba(124,111,247,0.16); }
         .edu-card {
           background: var(--bg-elevated); border: 1px solid var(--border-subtle);
-          border-radius: 14px; padding: 18px 20px; transition: border-color 0.2s ease, transform 0.2s ease;
+          border-radius: 16px; padding: 20px 22px; transition: border-color 0.2s ease, transform 0.2s ease;
         }
         .edu-card:hover { border-color: var(--border-hover); transform: translateY(-2px); }
         .edu-grade {
