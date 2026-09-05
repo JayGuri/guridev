@@ -146,7 +146,7 @@ export default function Hero() {
       {showFX ? (
         <>
           {/* ── Layer A: PixelBlast pixel grid ──────────────────────────── */}
-          <div style={{ position: 'absolute', inset: 0, opacity: 0.3, zIndex: 0, pointerEvents: 'none' }}>
+          <div style={{ position: 'absolute', inset: 0, opacity: 0.42, zIndex: 0, pointerEvents: 'none' }}>
             <PixelBlast
               variant="square"
               pixelSize={4}
@@ -163,7 +163,7 @@ export default function Hero() {
           </div>
 
           {/* ── Layer B: Beams light overlay ─────────────────────────────── */}
-          <div style={{ position: 'absolute', inset: 0, opacity: 0.5, zIndex: 0, pointerEvents: 'none' }}>
+          <div style={{ position: 'absolute', inset: 0, opacity: 0.6, zIndex: 0, pointerEvents: 'none' }}>
             <Beams
               beamWidth={1.5}
               beamHeight={10}
@@ -220,12 +220,12 @@ export default function Hero() {
         {/* b) Name — subtle mouse parallax */}
         <motion.h1
           ref={nameRef}
+          className="hero-name-grad"
           {...bigSlide(0.4, 60)}
           style={{
             fontFamily: 'Clash Display, sans-serif',
             fontSize: 'clamp(56px, 9vw, 112px)',
             fontWeight: 600,
-            color: 'var(--text-primary)',
             letterSpacing: '-0.03em',
             lineHeight: 1,
             marginBottom: '8px',
@@ -459,6 +459,27 @@ export default function Hero() {
         /* On small screens the hint would sit under the centred scroll cue */
         @media (max-width: 720px) {
           .hero-term-hint { display: none !important; }
+        }
+        /* Iridescent sheen drifting across the name — mostly cream, a moving
+           purple→orange band. */
+        .hero-name-grad {
+          background-image: linear-gradient(
+            110deg,
+            var(--text-primary) 0%, var(--text-primary) 32%,
+            #9A8CFF 44%, #E8935A 54%,
+            var(--text-primary) 68%, var(--text-primary) 100%
+          );
+          background-size: 220% 100%;
+          -webkit-background-clip: text; background-clip: text;
+          color: transparent;
+          animation: heroNameSheen 7.5s ease-in-out infinite;
+        }
+        @keyframes heroNameSheen {
+          0%, 100% { background-position: 118% 0; }
+          50%      { background-position: -18% 0; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .hero-name-grad { animation: none; background-position: 50% 0; }
         }
       `}</style>
     </section>

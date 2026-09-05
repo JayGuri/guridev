@@ -14,7 +14,9 @@ export interface CanvasTargetEventMap {
  *
  * @augments EventDispatcher
  */
-declare class CanvasTarget extends EventDispatcher<CanvasTargetEventMap> {
+declare class CanvasTarget<TEventMap extends CanvasTargetEventMap = CanvasTargetEventMap>
+    extends EventDispatcher<TEventMap>
+{
     /**
      * Constructs a new CanvasTarget.
      *
@@ -29,49 +31,6 @@ declare class CanvasTarget extends EventDispatcher<CanvasTargetEventMap> {
      * @type {HTMLCanvasElement|OffscreenCanvas}
      */
     domElement: HTMLCanvasElement | OffscreenCanvas;
-    /**
-     * The renderer's pixel ratio.
-     *
-     * @private
-     * @type {number}
-     * @default 1
-     */
-    private _pixelRatio;
-    /**
-     * The width of the renderer's default framebuffer in logical pixel unit.
-     *
-     * @private
-     * @type {number}
-     */
-    private _width;
-    /**
-     * The height of the renderer's default framebuffer in logical pixel unit.
-     *
-     * @private
-     * @type {number}
-     */
-    private _height;
-    /**
-     * The viewport of the renderer in logical pixel unit.
-     *
-     * @private
-     * @type {Vector4}
-     */
-    private _viewport;
-    /**
-     * The scissor rectangle of the renderer in logical pixel unit.
-     *
-     * @private
-     * @type {Vector4}
-     */
-    private _scissor;
-    /**
-     * Whether the scissor test should be enabled or not.
-     *
-     * @private
-     * @type {boolean}
-     */
-    private _scissorTest;
     /**
      * The color texture of the default framebuffer.
      *
@@ -187,12 +146,6 @@ declare class CanvasTarget extends EventDispatcher<CanvasTargetEventMap> {
      * @param {number} maxDepth - The maximum depth value of the viewport. WebGPU only.
      */
     setViewport(x: number, y: number, width: number, height: number, minDepth?: number, maxDepth?: number): void;
-    /**
-     * Dispatches the resize event.
-     *
-     * @private
-     */
-    private _dispatchResize;
     /**
      * Frees the GPU-related resources allocated by this instance. Call this
      * method whenever this instance is no longer used in your app.

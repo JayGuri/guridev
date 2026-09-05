@@ -17,9 +17,17 @@ export interface RenderTargetOptions extends TextureParameters {
     count?: number | undefined;
     depth?: number | undefined;
     multiview?: boolean | undefined;
+    useArrayDepthTexture?: boolean | undefined;
 }
 
-export class RenderTarget<TTexture extends Texture | Texture[] = Texture> extends EventDispatcher<{ dispose: {} }> {
+export interface RenderTargetEventMap {
+    dispose: {};
+}
+
+export class RenderTarget<
+    TTexture extends Texture | Texture[] = Texture,
+    TEventMap extends RenderTargetEventMap = RenderTargetEventMap,
+> extends EventDispatcher<TEventMap> {
     readonly isRenderTarget: true;
 
     width: number;
@@ -69,6 +77,16 @@ export class RenderTarget<TTexture extends Texture | Texture[] = Texture> extend
      * @default false
      */
     multiview: boolean;
+
+    /**
+     * Whether to create the depth texture as an array texture for per-layer depth testing.
+     * This is separate from multiview so layered render targets can use array depth without
+     * the multiview extension.
+     *
+     * @type {boolean}
+     * @default false
+     */
+    useArrayDepthTexture: boolean;
 
     constructor(width?: number, height?: number, options?: RenderTargetOptions);
 

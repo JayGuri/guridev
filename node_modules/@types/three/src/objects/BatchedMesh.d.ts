@@ -127,7 +127,7 @@ declare class BatchedMesh extends Mesh<BufferGeometry, Material> {
      * Frees the GPU-related resources allocated by this instance. Call this method whenever this instance is no longer
      * used in your app.
      */
-    dispose(): this;
+    dispose(): void;
 
     /**
      * Takes a sort a function that is run before render. The function takes a list of instances to sort and a camera.
@@ -145,6 +145,8 @@ declare class BatchedMesh extends Mesh<BufferGeometry, Material> {
      * @param color - The target object that is used to store the method's result.
      * @return The instance's color. Use a `Vector4` to also retrieve alpha.
      */
+    getColorAt(instanceId: number, color: Color): Color;
+    getColorAt(instanceId: number, color: Vector4): Vector4;
     getColorAt(instanceId: number, color: Color | Vector4): Color | Vector4;
 
     /**

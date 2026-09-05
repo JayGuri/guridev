@@ -23,7 +23,7 @@ import { WebGLProgramParametersWithUniforms } from "../renderers/webgl/WebGLProg
 import { WebGLRenderer } from "../renderers/WebGLRenderer.js";
 import { Scene } from "../scenes/Scene.js";
 import { SourceJSON } from "../textures/Source.js";
-import { TextureJSON } from "../textures/Texture.js";
+import { Texture, TextureJSON } from "../textures/Texture.js";
 
 export interface MaterialProperties {
     /**
@@ -519,6 +519,10 @@ export interface MaterialJSON {
     images?: SourceJSON[];
 }
 
+export interface MaterialEventMap {
+    dispose: {};
+}
+
 /**
  * Abstract base class for materials.
  *
@@ -526,7 +530,7 @@ export interface MaterialJSON {
  *
  * @abstract
  */
-export class Material extends EventDispatcher<{ dispose: {} }> {
+export class Material<TEventMap extends MaterialEventMap = MaterialEventMap> extends EventDispatcher<TEventMap> {
     /**
      * This flag can be used for type testing.
      *
@@ -608,6 +612,14 @@ export class Material extends EventDispatcher<{ dispose: {} }> {
      * @see {@link ObjectLoader#parse}
      */
     toJSON(meta?: JSONMeta): MaterialJSON;
+    /**
+     * Deserializes the material from the given JSON.
+     *
+     * @param {Object} json - The JSON holding the serialized material.
+     * @param {Object<string,Texture>} textures - A dictionary holding textures referenced by the material.
+     * @return {Material} A reference to this material.
+     */
+    fromJSON(json: MaterialJSON, textures: Record<string, Texture>): this;
     /**
      * Returns a new material with copied values from this instance.
      *

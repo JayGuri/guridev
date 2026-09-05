@@ -13,17 +13,42 @@ const NOW = [
   ['watching', 'United, hopefully winning'],
 ];
 
+// Manchester United crest — a homage, not the trademarked badge: heraldic
+// shield, a ship in full sail across the top band, and the red devil with a
+// trident below.
 function TridentShield() {
   return (
-    <svg width="30" height="34" viewBox="0 0 30 34" fill="none" aria-hidden="true">
-      <path d="M2 3 L15 1 L28 3 V16 C28 25 22 30 15 33 C8 30 2 25 2 16 Z"
-        fill="#B31217" stroke="rgba(255,255,255,0.25)" strokeWidth="1" />
-      <g stroke="#fff" strokeWidth="1.8" strokeLinecap="round">
-        <path d="M15 10 V25" />
-        <path d="M15 12 C 10 12, 9 15, 9 19 M15 12 C 20 12, 21 15, 21 19" />
-        <path d="M9 19 L8 16 M21 19 L22 16 M15 10 L15 7" />
+    <svg width="42" height="49" viewBox="0 0 34 40" fill="none" aria-hidden="true" style={{ flexShrink: 0 }}>
+      {/* shield */}
+      <path d="M3 4 L17 1.5 L31 4 V17 C31 27.5 24.5 34.6 17 38.5 C9.5 34.6 3 27.5 3 17 Z"
+        fill="#DA020E" stroke="rgba(255,255,255,0.30)" strokeWidth="1.1" />
+      {/* inner keyline */}
+      <path d="M5.6 6 L17 4 L28.4 6 V16.4 C28.4 25.2 23 31.4 17 35 C11 31.4 5.6 25.2 5.6 16.4 Z"
+        fill="none" stroke="rgba(255,255,255,0.38)" strokeWidth="0.7" />
+      {/* top band + ship in full sail */}
+      <path d="M6 13 H28" stroke="#fff" strokeWidth="0.7" opacity="0.55" />
+      <g fill="#fff">
+        <path d="M10.5 10.4 Q17 12.6 23.5 10.4 L22 12.7 Q17 14 12 12.7 Z" />
+        <path d="M13.2 4.6 q1.6 -1.7 3 0 v4.6 h-3 Z" />
+        <path d="M17.8 4.6 q1.6 -1.7 3 0 v4.6 h-3 Z" />
       </g>
-      <circle cx="15" cy="26.5" r="1.6" fill="#fff" />
+      <g stroke="#fff" strokeWidth="0.9" strokeLinecap="round">
+        <path d="M14.7 4 v6.2 M19.3 4 v6.2" />
+        <path d="M10.8 14 q1.4 0.9 2.8 0 M20.4 14 q1.4 0.9 2.8 0" opacity="0.7" />
+      </g>
+      {/* red devil */}
+      <g fill="#0c0c0c">
+        <path d="M14.1 16.7 q-1.9 -1.4 -1.1 -3.1 q1.1 0.4 1.6 1.5 q0.4 -1.3 1.4 -1.9 q1 0.6 1.4 1.9 q0.5 -1.1 1.6 -1.5 q0.8 1.7 -1.1 3.1 q1.3 1.2 1.1 3 q-0.5 2 -3 2 q-2.5 0 -3 -2 q-0.2 -1.8 1.1 -3 Z" />
+        <path d="M14 21.3 q3 1.7 6 0 l0.7 5 q-0.9 2.5 -2 4.4 l-1 -3.6 h-1.4 l-1 3.6 q-1.1 -1.9 -2 -4.4 Z" />
+        <path d="M13.9 22 l-3.4 2.2 1 1.7 3.2 -1.8 Z" />
+        <path d="M20.1 21.6 l2.9 -2 q1.2 2.1 0.4 4.2 q-1 -1.6 -2 -1.1 Z" />
+      </g>
+      {/* trident in the raised hand */}
+      <g stroke="#0c0c0c" strokeWidth="1.4" strokeLinecap="round" fill="none">
+        <path d="M23.4 15.5 V25" />
+        <path d="M21.4 15.9 v2.4 M23.4 14.9 v2.6 M25.4 15.9 v2.4" />
+        <path d="M21 18.1 H25.8" />
+      </g>
     </svg>
   );
 }

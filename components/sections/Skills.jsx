@@ -33,13 +33,73 @@ const BRAND = {
   Git: '#F05032', Postman: '#FF6C37', Linux: '#FCC624', 'VS Code': '#007ACC', Figma: '#F24E1E',
 };
 
+// One motif per category — a small animated glyph that hints at what the
+// category *does*, drawn in `currentColor` so the card's accent drives it.
+function Motif({ kind }) {
+  switch (kind) {
+    case 'atom': // Frontend — orbiting React-style rings
+      return (
+        <svg className="sk-motif sk-atom" width="34" height="34" viewBox="0 0 34 34" fill="none" aria-hidden="true">
+          <circle cx="17" cy="17" r="2.4" fill="currentColor" />
+          <g stroke="currentColor" strokeWidth="1.3">
+            <ellipse cx="17" cy="17" rx="13" ry="5" />
+            <ellipse cx="17" cy="17" rx="13" ry="5" transform="rotate(60 17 17)" />
+            <ellipse cx="17" cy="17" rx="13" ry="5" transform="rotate(120 17 17)" />
+          </g>
+        </svg>
+      );
+    case 'braces': // Backend — code braces that breathe
+      return (
+        <svg className="sk-motif sk-braces" width="34" height="34" viewBox="0 0 34 34" fill="none" aria-hidden="true">
+          <path className="sk-brace-l" d="M14 5c-4 0-4 5-4 7 0 3-3 3-3 5s3 2 3 5c0 2 0 7 4 7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+          <path className="sk-brace-r" d="M20 5c4 0 4 5 4 7 0 3 3 3 3 5s-3 2-3 5c0 2 0 7-4 7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+          <circle className="sk-brace-dot" cx="17" cy="17" r="1.7" fill="currentColor" />
+        </svg>
+      );
+    case 'wave': // Data & ML — equaliser bars
+      return (
+        <svg className="sk-motif sk-wave" width="34" height="34" viewBox="0 0 34 34" fill="none" aria-hidden="true">
+          {[6, 12, 18, 24].map((x, i) => (
+            <rect key={x} x={x} y="8" width="3.2" height="18" rx="1.6" fill="currentColor" style={{ ['--i']: i }} />
+          ))}
+        </svg>
+      );
+    case 'stack': // Databases — stacked cylinders, a write drops in
+      return (
+        <svg className="sk-motif sk-stack" width="34" height="34" viewBox="0 0 34 34" fill="none" aria-hidden="true">
+          <circle className="sk-drop" cx="17" cy="4" r="1.6" fill="currentColor" />
+          <g stroke="currentColor" strokeWidth="1.3" fill="none">
+            <ellipse cx="17" cy="11" rx="9" ry="3.2" />
+            <path d="M8 11v6c0 1.8 4 3.2 9 3.2s9-1.4 9-3.2v-6" />
+            <path d="M8 17v6c0 1.8 4 3.2 9 3.2s9-1.4 9-3.2v-6" />
+          </g>
+        </svg>
+      );
+    case 'grid': // Infra — container cells, one lighting up
+      return (
+        <svg className="sk-motif sk-grid-motif" width="34" height="34" viewBox="0 0 34 34" fill="none" aria-hidden="true">
+          {[[7, 7], [19, 7], [7, 19], [19, 19]].map(([x, y], i) => (
+            <rect key={`${x}-${y}`} x={x} y={y} width="8" height="8" rx="2" fill="currentColor" style={{ ['--i']: i }} />
+          ))}
+        </svg>
+      );
+    default: // Tools — terminal prompt with a blinking caret
+      return (
+        <svg className="sk-motif sk-caret" width="34" height="34" viewBox="0 0 34 34" fill="none" aria-hidden="true">
+          <path d="M8 11l6 6-6 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+          <rect className="sk-caret-blink" x="17" y="21" width="9" height="3" rx="1" fill="currentColor" />
+        </svg>
+      );
+  }
+}
+
 // Same stack as the "things I build with" marquee, grouped by what part of the
-// work each one actually does — so a recruiter skimming this section can tell
-// frontend from infra at a glance instead of reading one long icon strip.
+// work each one actually does — each card carries its own accent + motif so the
+// six read as six distinct things, not one list cut into pieces.
 const CATEGORIES = [
   {
-    name: 'Frontend',
-    blurb: 'What ships to the browser',
+    name: 'Frontend', blurb: 'What ships to the browser',
+    accent: '#61DAFB', motif: 'atom',
     items: [
       { Icon: SiReact, label: 'React' },
       { Icon: SiNextdotjs, label: 'Next.js' },
@@ -52,8 +112,8 @@ const CATEGORIES = [
     ],
   },
   {
-    name: 'Backend & Languages',
-    blurb: 'The APIs, services, and languages underneath',
+    name: 'Backend & Languages', blurb: 'The APIs, services, and languages underneath',
+    accent: '#3FB950', motif: 'braces',
     items: [
       { Icon: SiNodedotjs, label: 'Node.js' },
       { Icon: SiExpress, label: 'Express' },
@@ -65,8 +125,8 @@ const CATEGORIES = [
     ],
   },
   {
-    name: 'Data & ML',
-    blurb: 'Pipelines, models, inference',
+    name: 'Data & ML', blurb: 'Pipelines, models, inference',
+    accent: '#E8935A', motif: 'wave',
     items: [
       { Icon: SiPython, label: 'Python' },
       { Icon: SiPytorch, label: 'PyTorch' },
@@ -81,8 +141,8 @@ const CATEGORIES = [
     ],
   },
   {
-    name: 'Databases & CMS',
-    blurb: 'Where the data — and content — lives',
+    name: 'Databases & CMS', blurb: 'Where the data — and content — lives',
+    accent: '#4DB6AC', motif: 'stack',
     items: [
       { Icon: SiPostgresql, label: 'PostgreSQL' },
       { Icon: SiMongodb, label: 'MongoDB' },
@@ -95,8 +155,8 @@ const CATEGORIES = [
     ],
   },
   {
-    name: 'Infra & Integrations',
-    blurb: 'How it runs, scales, and gets paid',
+    name: 'Infra & Integrations', blurb: 'How it runs, scales, and gets paid',
+    accent: '#7C6FF7', motif: 'grid',
     items: [
       { Icon: SiDocker, label: 'Docker' },
       { Icon: SiApachekafka, label: 'Kafka' },
@@ -106,8 +166,8 @@ const CATEGORIES = [
     ],
   },
   {
-    name: 'Tools',
-    blurb: 'How the work actually gets done',
+    name: 'Tools', blurb: 'How the work actually gets done',
+    accent: '#9AA4B2', motif: 'caret',
     items: [
       { Icon: SiGit, label: 'Git' },
       { Icon: SiGithub, label: 'GitHub' },
@@ -135,13 +195,9 @@ export default function Skills() {
             <span style={{ width: '7px', height: '7px', borderRadius: '2px', background: 'var(--accent-dev)' }} />
             skills
           </p>
-          <h2 style={{ fontFamily: 'Clash Display, sans-serif', fontSize: 'clamp(32px, 4.6vw, 52px)', fontWeight: 600, color: 'var(--text-primary)', letterSpacing: '-0.02em', lineHeight: 1.05, margin: '0 0 16px' }}>
-            The same stack, sorted by job.
+          <h2 style={{ fontFamily: 'Clash Display, sans-serif', fontSize: 'clamp(32px, 4.6vw, 52px)', fontWeight: 600, color: 'var(--text-primary)', letterSpacing: '-0.02em', lineHeight: 1.05, margin: 0 }}>
+            Skills in use.
           </h2>
-          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '15px', lineHeight: 1.7, color: 'var(--text-secondary)' }}>
-            Everything from the scrolling marquee above — grouped by what it&apos;s
-            actually for, not just listed.
-          </p>
         </motion.div>
 
         <div ref={ref} className="sk-grid">
@@ -152,9 +208,15 @@ export default function Skills() {
               animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 26 }}
               transition={{ delay: i * 0.07, duration: 0.55, ease: EASE }}
               className="sk-card"
+              style={{ '--sk-accent': cat.accent }}
             >
-              <h3 style={{ fontFamily: 'Clash Display, sans-serif', fontSize: '16px', fontWeight: 600, color: 'var(--text-primary)' }}>{cat.name}</h3>
-              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11.5px', color: 'var(--text-secondary)', marginTop: '2px', marginBottom: '16px' }}>{cat.blurb}</p>
+              <div className="sk-card-head">
+                <div>
+                  <h3 style={{ fontFamily: 'Clash Display, sans-serif', fontSize: '16px', fontWeight: 600, color: 'var(--sk-accent)' }}>{cat.name}</h3>
+                  <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '11.5px', color: 'var(--text-secondary)', marginTop: '2px' }}>{cat.blurb}</p>
+                </div>
+                <span className="sk-motif-wrap"><Motif kind={cat.motif} /></span>
+              </div>
               <div className="sk-chips">
                 {cat.items.map(({ Icon, label }) => (
                   <span key={label} className="sk-chip">
@@ -171,10 +233,26 @@ export default function Skills() {
       <style>{`
         .sk-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
         .sk-card {
+          position: relative; overflow: hidden;
           background: var(--bg-elevated); border: 1px solid var(--border-subtle);
-          border-radius: 16px; padding: 22px; transition: border-color 0.2s ease, transform 0.2s ease;
+          border-radius: 16px; padding: 22px;
+          transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
         }
-        .sk-card:hover { border-color: var(--border-hover); transform: translateY(-2px); }
+        .sk-card::before {
+          content: ''; position: absolute; left: 0; right: 0; top: 0; height: 2px;
+          background: var(--sk-accent); opacity: 0.55; transition: opacity 0.2s ease;
+        }
+        .sk-card:hover {
+          border-color: color-mix(in srgb, var(--sk-accent) 45%, transparent);
+          transform: translateY(-2px);
+          box-shadow: 0 14px 40px -18px var(--sk-accent);
+        }
+        .sk-card:hover::before { opacity: 1; }
+
+        .sk-card-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+        .sk-motif-wrap { color: var(--sk-accent); flex-shrink: 0; opacity: 0.9; }
+        .sk-motif { display: block; }
+
         .sk-chips { display: flex; flex-wrap: wrap; gap: 7px; }
         .sk-chip {
           display: inline-flex; align-items: center; gap: 6px;
@@ -182,12 +260,43 @@ export default function Skills() {
           background: var(--bg-surface); border: 1px solid var(--border-subtle);
           border-radius: 999px; padding: 5px 11px; transition: border-color 0.15s ease, transform 0.15s ease;
         }
-        .sk-chip:hover { border-color: rgba(124,111,247,0.4); transform: translateY(-1px); }
-        @media (max-width: 900px) {
-          .sk-grid { grid-template-columns: repeat(2, 1fr) !important; }
+        .sk-chip:hover {
+          border-color: color-mix(in srgb, var(--sk-accent) 55%, transparent);
+          transform: translateY(-1px);
         }
-        @media (max-width: 560px) {
-          .sk-grid { grid-template-columns: 1fr !important; }
+
+        @media (max-width: 900px) { .sk-grid { grid-template-columns: repeat(2, 1fr) !important; } }
+        @media (max-width: 560px) { .sk-grid { grid-template-columns: 1fr !important; } }
+
+        /* ── Motif animations ─────────────────────────────────────────── */
+        .sk-atom g { animation: sk-spin 9s linear infinite; transform-origin: 17px 17px; }
+        @keyframes sk-spin { to { transform: rotate(360deg); } }
+
+        .sk-braces .sk-brace-l { animation: sk-brace-l 3.2s ease-in-out infinite; transform-origin: 17px 17px; }
+        .sk-braces .sk-brace-r { animation: sk-brace-r 3.2s ease-in-out infinite; transform-origin: 17px 17px; }
+        .sk-braces .sk-brace-dot { animation: sk-pulse 3.2s ease-in-out infinite; }
+        @keyframes sk-brace-l { 0%,100% { transform: translateX(0); } 50% { transform: translateX(-1.5px); } }
+        @keyframes sk-brace-r { 0%,100% { transform: translateX(0); } 50% { transform: translateX(1.5px); } }
+        @keyframes sk-pulse { 0%,100% { opacity: 0.4; } 50% { opacity: 1; } }
+
+        .sk-wave rect { animation: sk-eq 1.1s ease-in-out infinite; transform-origin: 50% 100%; animation-delay: calc(var(--i) * 0.13s); }
+        @keyframes sk-eq { 0%,100% { transform: scaleY(0.35); } 50% { transform: scaleY(1); } }
+
+        .sk-stack .sk-drop { animation: sk-drop 2.6s ease-in infinite; }
+        @keyframes sk-drop { 0% { transform: translateY(0); opacity: 0; } 15% { opacity: 1; } 55%,100% { transform: translateY(7px); opacity: 0; } }
+
+        .sk-grid-motif rect { animation: sk-cell 3.2s ease-in-out infinite; animation-delay: calc(var(--i) * 0.5s); opacity: 0.35; }
+        @keyframes sk-cell { 0%,100% { opacity: 0.35; } 50% { opacity: 1; } }
+
+        .sk-caret .sk-caret-blink { animation: sk-blink 1s step-end infinite; }
+        @keyframes sk-blink { 0%,100% { opacity: 1; } 50% { opacity: 0; } }
+
+        @media (prefers-reduced-motion: reduce) {
+          .sk-atom g, .sk-braces .sk-brace-l, .sk-braces .sk-brace-r, .sk-braces .sk-brace-dot,
+          .sk-wave rect, .sk-stack .sk-drop, .sk-grid-motif rect, .sk-caret .sk-caret-blink {
+            animation: none !important;
+          }
+          .sk-wave rect { transform: scaleY(0.7); }
         }
       `}</style>
     </section>
