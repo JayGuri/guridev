@@ -3,9 +3,11 @@
 import { Github, Linkedin, Mail, ArrowUp } from 'lucide-react';
 
 const NAV = [
-  ['About', '#about'],
   ['Work', '#work'],
   ['Research', '#research'],
+  ['Track record', '#experience'],
+  ['Skills', '#skills'],
+  ['Leadership', '#extracurriculars'],
   ['Photography', '#photography'],
   ['Contact', '#contact'],
 ];
@@ -28,8 +30,8 @@ export default function Footer() {
               JG<span style={{ width: '7px', height: '7px', borderRadius: '2px', background: 'var(--accent-dev)', marginBottom: '7px' }} />
             </a>
             <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', lineHeight: 1.7, color: 'var(--text-secondary)', marginTop: '14px', maxWidth: '320px' }}>
-              Developer, researcher and photographer in Mumbai. Currently at DJ Sanghvi and IIT Bombay,
-              and open to work worth doing.
+              ML research intern at IIT Bombay, studying CS &amp; Data Science at DJ Sanghvi.
+              Mumbai-based and open to work worth doing.
             </p>
           </div>
 

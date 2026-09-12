@@ -1,152 +1,184 @@
 'use client';
 
-import { motion, useInView } from 'framer-motion';
-import { useRef } from 'react';
-import { Users, Trophy } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { LineChart, Landmark, Code2, Trophy } from 'lucide-react';
+import SectionHeader from '@/components/ui/SectionHeader';
 
 const EASE = [0.16, 1, 0.3, 1];
 
+// Each society gets its own icon — all three used to share a generic `Users`
+// glyph. Role histories collapse to one current title plus a "previously"
+// line; the old version listed four roles with three identical date ranges.
 const ORGS = [
   {
     name: 'DJS S4DS',
-    sub: "Society for Data Science — DJ Sanghvi's data-science chapter",
-    roles: [
-      { title: 'Chairperson', period: 'Aug 2025 — Jul 2026', current: true },
-      { title: 'Marketing Team Member', period: 'Aug 2024 — Aug 2025' },
-      { title: 'Technical Team Member', period: 'Aug 2024 — Aug 2025' },
-    ],
+    sub: 'Society for Data Science',
+    Icon: LineChart,
+    role: 'Chairperson',
+    period: '2025 — 26',
+    previously: 'previously marketing & technical team, 2024 — 25',
     highlights: [
-      'Led 150+ members, including an 80+ person core committee',
-      'Directed XTract 4.0 and DataHack 4.0 — the chapter’s flagship competition and hackathon',
-      'Steered the chapter to Best S4DS Chapter of the Year, nationally',
+      'Led 150+ members including an 80-person core committee.',
+      'Directed XTract 4.0 and DataHack 4.0 — the chapter’s flagship competition and hackathon.',
+      'Steered the chapter to Best S4DS Chapter of the Year, nationally.',
     ],
   },
   {
     name: 'DJS MUNSOC',
-    sub: "DJ Sanghvi's Model United Nations society",
-    roles: [
-      { title: 'Vice President', period: 'Feb 2025 — Jan 2026', current: true },
-      { title: 'Events Team Member', period: 'Feb 2024 — Feb 2025' },
-      { title: 'Marketing Team Member', period: 'Feb 2024 — Feb 2025' },
-      { title: 'Technical Team Member', period: 'Feb 2024 — Feb 2025' },
-    ],
+    sub: 'Model United Nations Society',
+    Icon: Landmark,
+    role: 'Vice President',
+    period: '2025 — 26',
+    previously: 'previously events, marketing & technical team, 2024 — 25',
     highlights: [
-      'Spearheaded DJS Youth Summit 2.0 and DJMUN 2.0 — the largest MUN events in college history, with 500+ participants and a ₹3L+ budget',
-      'Directed delegate affairs, academic programming, and logistics across 8 inter-department committees',
-      'Expanded beyond marketing into technical and operational execution, becoming a versatile, cross-functional contributor',
-      'Built a leadership pipeline and community from the ground up — grew from individual contributor to organisational leader',
+      'Spearheaded DJS Youth Summit 2.0 and DJMUN 2.0 — the largest MUN events in college history, 500+ participants on a ₹3L+ budget.',
+      'Directed delegate affairs, academic programming and logistics across 8 inter-department committees.',
+      'Built the leadership pipeline from the ground up, moving from contributor to organiser.',
     ],
-  },
-  {
-    name: 'DJS Compute',
-    sub: "DJ Sanghvi's computer science society",
-    roles: [
-      { title: 'Web Tech Member', period: 'Aug 2024 — Jul 2025' },
-    ],
-    highlights: [],
-    note: "On the web team — built and maintained the society's site and event pages through the year.",
   },
 ];
 
-export default function Extracurriculars() {
-  const ref = useRef(null);
-  const inView = useInView(ref, { once: true, amount: 0.15 });
+const MINOR = {
+  name: 'DJS Compute',
+  sub: 'Computer Science Society',
+  Icon: Code2,
+  role: 'Web Tech Member',
+  period: '2024 — 25',
+  note: 'On the web team — built and maintained the society’s site and event pages through the year.',
+};
 
+export default function Extracurriculars() {
   return (
     <section id="extracurriculars" style={{ background: 'var(--bg-surface)', padding: 'var(--section-pad-y) 24px', width: '100%' }}>
       <div style={{ maxWidth: '1120px', margin: '0 auto' }}>
-        <motion.div
-          initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, amount: 0.4 }} transition={{ duration: 0.7, ease: EASE }}
-          style={{ marginBottom: '44px', maxWidth: '640px' }}
-        >
-          <p style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '11px', letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--accent-dev)', display: 'inline-flex', alignItems: 'center', gap: '8px', marginBottom: '18px' }}>
-            <span style={{ width: '7px', height: '7px', borderRadius: '2px', background: 'var(--accent-dev)' }} />
-            leadership & extracurriculars
-          </p>
-          <h2 style={{ fontFamily: 'Clash Display, sans-serif', fontSize: 'clamp(32px, 4.6vw, 52px)', fontWeight: 600, color: 'var(--text-primary)', letterSpacing: '-0.02em', lineHeight: 1.05 }}>
-            Outside the syllabus, still on the record.
-          </h2>
-        </motion.div>
 
-        <div ref={ref} className="xc-grid">
+        <SectionHeader
+          label="leadership"
+          title="Outside the syllabus, still on the record."
+          intro="Two societies I currently run, and one I built websites for."
+          maxWidth={660}
+        />
+
+        {/* the two substantial roles — equal weight, equal height */}
+        <div className="lx-grid">
           {ORGS.map((org, i) => (
-            <motion.div
+            <motion.article
               key={org.name}
-              initial={{ opacity: 0, y: 30 }}
-              animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
+              initial={{ opacity: 0, y: 26 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.2 }}
               transition={{ delay: i * 0.1, duration: 0.6, ease: EASE }}
-              className="xc-card"
+              className="lx-card"
             >
-              <div className="xc-icon"><Users size={16} strokeWidth={2} /></div>
-              <h3 style={{ fontFamily: 'Clash Display, sans-serif', fontSize: '18px', fontWeight: 600, color: 'var(--text-primary)', marginTop: '14px' }}>{org.name}</h3>
-              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12.5px', color: 'var(--text-secondary)', marginTop: '3px', marginBottom: '18px' }}>{org.sub}</p>
+              <header className="lx-head">
+                <span className="lx-ic"><org.Icon size={17} strokeWidth={2} /></span>
+                <div style={{ minWidth: 0 }}>
+                  <h3 className="lx-name">{org.name}</h3>
+                  <p className="lx-sub">{org.sub}</p>
+                </div>
+              </header>
 
-              <div className="xc-roles">
-                {org.roles.map((r) => (
-                  <div key={r.title} className="xc-role">
-                    <span className={`xc-role-dot${r.current ? ' xc-role-dot--current' : ''}`} />
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '13.5px', fontWeight: 600, color: 'var(--text-primary)' }}>{r.title}</p>
-                      <p style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '10.5px', color: 'var(--text-secondary)', marginTop: '1px' }}>{r.period}</p>
-                    </div>
-                  </div>
-                ))}
+              <div className="lx-role">
+                <span className="lx-role-now">
+                  <span className="lx-pulse" />
+                  {org.role}
+                </span>
+                <span className="lx-role-period">{org.period}</span>
               </div>
+              <p className="lx-prev">{org.previously}</p>
 
-              {org.highlights.length > 0 && (
-                <div className="xc-highlights">
-                  {org.highlights.map((h) => (
-                    <p key={h} className="xc-highlight">
-                      <Trophy size={12} strokeWidth={2} style={{ flexShrink: 0, marginTop: '2px', color: 'var(--accent-dev)' }} />
-                      <span>{h}</span>
-                    </p>
-                  ))}
-                </div>
-              )}
-
-              {org.highlights.length === 0 && org.note && (
-                <div className="xc-highlights">
-                  <p className="xc-highlight"><span>{org.note}</span></p>
-                </div>
-              )}
-            </motion.div>
+              <ul className="lx-highlights">
+                {org.highlights.map((h) => (
+                  <li key={h}>
+                    <Trophy size={12} strokeWidth={2} />
+                    <span>{h}</span>
+                  </li>
+                ))}
+              </ul>
+            </motion.article>
           ))}
         </div>
+
+        {/* the lighter one, sized honestly instead of padded to match */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.3 }}
+          transition={{ duration: 0.55, ease: EASE }}
+          className="lx-minor"
+        >
+          <span className="lx-ic"><MINOR.Icon size={17} strokeWidth={2} /></span>
+          <div className="lx-minor-body">
+            <div className="lx-minor-top">
+              <h3 className="lx-name">{MINOR.name}</h3>
+              <span className="lx-minor-role">{MINOR.role} <span className="lx-dim">· {MINOR.period}</span></span>
+            </div>
+            <p className="lx-minor-note">{MINOR.note}</p>
+          </div>
+        </motion.div>
       </div>
 
       <style>{`
-        .xc-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; align-items: start; }
-        .xc-card {
+        .lx-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; align-items: stretch; }
+        @media (max-width: 820px) { .lx-grid { grid-template-columns: 1fr; } }
+
+        .lx-card {
+          display: flex; flex-direction: column;
           background: var(--bg-elevated); border: 1px solid var(--border-subtle);
-          border-radius: 16px; padding: 22px; transition: border-color 0.2s ease, transform 0.2s ease;
+          border-radius: 16px; padding: 22px;
+          transition: border-color 0.2s ease, transform 0.2s ease;
         }
-        .xc-card:hover { border-color: var(--border-hover); transform: translateY(-2px); }
-        .xc-icon {
-          width: 34px; height: 34px; border-radius: 10px; display: flex; align-items: center; justify-content: center;
-          background: rgba(124,111,247,0.1); border: 1px solid rgba(124,111,247,0.24); color: var(--accent-dev);
+        .lx-card:hover { border-color: var(--border-hover); transform: translateY(-2px); }
+
+        .lx-head { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
+        .lx-ic {
+          width: 36px; height: 36px; flex-shrink: 0;
+          display: inline-flex; align-items: center; justify-content: center;
+          border-radius: 10px; color: var(--accent-dev);
+          background: rgba(124,111,247,0.09); border: 1px solid rgba(124,111,247,0.26);
         }
-        .xc-roles { display: flex; flex-direction: column; gap: 12px; }
-        .xc-role { display: flex; align-items: flex-start; gap: 10px; }
-        .xc-role-dot {
-          width: 7px; height: 7px; border-radius: 50%; background: var(--border-hover);
-          margin-top: 5px; flex-shrink: 0;
+        .lx-name { font-family: 'Clash Display', sans-serif; font-size: 18px; font-weight: 600; color: var(--text-primary); margin: 0; }
+        .lx-sub { font-family: 'Inter', sans-serif; font-size: 12.5px; color: var(--text-secondary); margin: 2px 0 0; }
+
+        .lx-role { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+        .lx-role-now {
+          display: inline-flex; align-items: center; gap: 8px;
+          font-family: 'Inter', sans-serif; font-size: 14.5px; font-weight: 600; color: var(--text-primary);
         }
-        .xc-role-dot--current { background: var(--accent-dev); box-shadow: 0 0 0 3px rgba(124,111,247,0.18); }
-        .xc-highlights {
-          margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--border-subtle);
-          display: flex; flex-direction: column; gap: 8px;
+        .lx-pulse {
+          width: 7px; height: 7px; border-radius: 50%; background: var(--accent-dev);
+          box-shadow: 0 0 0 3px rgba(124,111,247,0.18); flex-shrink: 0;
         }
-        .xc-highlight {
-          display: flex; align-items: flex-start; gap: 8px;
-          font-family: 'Inter', sans-serif; font-size: 12.5px; line-height: 1.55; color: var(--text-secondary);
+        .lx-role-period {
+          font-family: 'JetBrains Mono', monospace; font-size: 11px;
+          color: var(--accent-dev); flex-shrink: 0;
         }
-        @media (max-width: 980px) {
-          .xc-grid { grid-template-columns: repeat(2, 1fr) !important; }
+        .lx-prev {
+          font-family: 'JetBrains Mono', monospace; font-size: 10.5px;
+          color: var(--text-tertiary); margin: 6px 0 0; padding-left: 15px;
         }
-        @media (max-width: 620px) {
-          .xc-grid { grid-template-columns: 1fr !important; }
+
+        .lx-highlights {
+          list-style: none; margin: 18px 0 0; padding: 16px 0 0;
+          border-top: 1px solid var(--border-subtle);
+          display: flex; flex-direction: column; gap: 9px;
         }
+        .lx-highlights li {
+          display: flex; align-items: flex-start; gap: 9px;
+          font-family: 'Inter', sans-serif; font-size: 13px; line-height: 1.6; color: var(--text-secondary);
+        }
+        .lx-highlights svg { color: var(--accent-dev); flex-shrink: 0; margin-top: 3px; }
+
+        .lx-minor {
+          display: flex; align-items: flex-start; gap: 12px; margin-top: 16px;
+          background: var(--bg-elevated); border: 1px solid var(--border-subtle);
+          border-radius: 16px; padding: 20px 22px;
+        }
+        .lx-minor-body { flex: 1; min-width: 0; }
+        .lx-minor-top { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; justify-content: space-between; }
+        .lx-minor-role { font-family: 'Inter', sans-serif; font-size: 13.5px; font-weight: 500; color: var(--text-secondary); }
+        .lx-dim { color: var(--text-tertiary); font-family: 'JetBrains Mono', monospace; font-size: 11px; }
+        .lx-minor-note { font-family: 'Inter', sans-serif; font-size: 13px; line-height: 1.6; color: var(--text-secondary); margin: 7px 0 0; }
       `}</style>
     </section>
   );

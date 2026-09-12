@@ -10,9 +10,8 @@ const EASE = [0.16, 1, 0.3, 1];
 const SECTIONS = [
   { id: 'work',             label: 'Work' },
   { id: 'research',         label: 'Research' },
-  { id: 'experience',       label: 'Experience' },
+  { id: 'experience',       label: 'Track record' },
   { id: 'skills',           label: 'Skills' },
-  { id: 'education',        label: 'Education' },
   { id: 'extracurriculars', label: 'Leadership' },
   { id: 'photography',      label: 'Photography', photo: true },
   { id: 'contact',          label: 'Contact' },

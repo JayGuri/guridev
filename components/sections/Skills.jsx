@@ -2,6 +2,9 @@
 
 import { motion, useInView } from 'framer-motion';
 import { useRef } from 'react';
+import SectionHeader from '@/components/ui/SectionHeader';
+import LogoLoop from '@/components/LogoLoop';
+import { techLogos } from '@/lib/techLogos';
 import {
   SiReact, SiNextdotjs, SiTypescript, SiJavascript, SiHtml5, SiTailwindcss, SiThreedotjs,
   SiGooglechrome,
@@ -186,19 +189,29 @@ export default function Skills() {
   return (
     <section id="skills" style={{ background: 'var(--bg-surface)', padding: 'var(--section-pad-y) 24px', width: '100%' }}>
       <div style={{ maxWidth: '1120px', margin: '0 auto' }}>
-        <motion.div
-          initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, amount: 0.4 }} transition={{ duration: 0.7, ease: EASE }}
-          style={{ marginBottom: '44px', maxWidth: '620px' }}
-        >
-          <p style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '11px', letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--accent-dev)', display: 'inline-flex', alignItems: 'center', gap: '8px', marginBottom: '18px' }}>
-            <span style={{ width: '7px', height: '7px', borderRadius: '2px', background: 'var(--accent-dev)' }} />
-            skills
-          </p>
-          <h2 style={{ fontFamily: 'Clash Display, sans-serif', fontSize: 'clamp(32px, 4.6vw, 52px)', fontWeight: 600, color: 'var(--text-primary)', letterSpacing: '-0.02em', lineHeight: 1.05, margin: 0 }}>
-            Skills in use.
-          </h2>
-        </motion.div>
+        <SectionHeader
+          label="skills"
+          title="Skills in use."
+          intro="Grouped by what each one actually does, not listed alphabetically."
+          maxWidth={620}
+        />
+
+        {/* marquee moved here from the deleted about section — and at full
+            opacity, where it used to be dimmed to 0.72 and read as broken */}
+        <div className="sk-marquee">
+          <LogoLoop
+            logos={techLogos}
+            speed={70}
+            direction="left"
+            logoHeight={34}
+            gap={44}
+            hoverSpeed={18}
+            scaleOnHover
+            fadeOut
+            fadeOutColor="var(--bg-surface)"
+            ariaLabel="Technologies I work with"
+          />
+        </div>
 
         <div ref={ref} className="sk-grid">
           {CATEGORIES.map((cat, i) => (
@@ -231,6 +244,7 @@ export default function Skills() {
       </div>
 
       <style>{`
+        .sk-marquee { height: 60px; position: relative; overflow: hidden; margin-bottom: 28px; }
         .sk-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
         .sk-card {
           position: relative; overflow: hidden;

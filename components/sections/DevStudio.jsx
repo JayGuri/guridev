@@ -1,79 +1,82 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
-import { motion, useInView } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ArrowUpRight, Github, Boxes, X } from 'lucide-react';
+import SectionHeader from '@/components/ui/SectionHeader';
 import ProjectModal from '@/components/ui/ProjectModal';
-import PixelWash from '@/components/PixelWash';
-import { PROJECT_LIST } from '@/lib/projects';
+import { PROJECTS, CATEGORY_META, STATUS_META, GITHUB_PROFILE } from '@/lib/projects';
 
 const EASE = [0.16, 1, 0.3, 1];
 
+// Only mounts when the visitor asks for it — the room is ~1.5k lines of three.js
+// and used to gate the whole section behind a camera animation.
 const RoomScene = dynamic(() => import('@/components/effects/RoomScene'), { ssr: false });
 
 const SCREEN_META = {
-  dev:      { label: 'The Builder',    color: '#7C6FF7', cmd: 'cd --dev' },
-  aiml:     { label: 'AI / ML',        color: '#28C840', cmd: 'cd --aiml' },
+  dev: { label: 'The Builder', color: '#7C6FF7', cmd: 'cd --dev' },
+  aiml: { label: 'AI / ML', color: '#28C840', cmd: 'cd --aiml' },
   research: { label: 'The Researcher', color: '#E8935A', cmd: 'cd --research' },
 };
 
-function TerminalHeader() {
-  const ref    = useRef(null);
-  const inView = useInView(ref, { once: true, amount: 0.35 });
-  const [step, setStep] = useState(0);
-
-  useEffect(() => {
-    if (!inView) return;
-    const ts = [
-      setTimeout(() => setStep(1), 100),
-      setTimeout(() => setStep(2), 480),
-      setTimeout(() => setStep(3), 700),
-      setTimeout(() => setStep(4), 900),
-      setTimeout(() => setStep(5), 1100),
-      setTimeout(() => setStep(6), 1280),
-      setTimeout(() => setStep(7), 1460),
-    ];
-    return () => ts.forEach(clearTimeout);
-  }, [inView]);
-
-  const mono = { fontFamily: 'JetBrains Mono, monospace', fontSize: '13px', lineHeight: 1.85, whiteSpace: 'pre' };
-  const Line = ({ show, children }) =>
-    show ? <motion.div initial={{ opacity: 0, x: -5 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.2, ease: EASE }} style={mono}>{children}</motion.div> : null;
+function ProjectCard({ p, i, onOpen }) {
+  const cat = CATEGORY_META[p.category];
+  const st = STATUS_META[p.status];
 
   return (
-    <motion.div
-      ref={ref}
-      initial={{ opacity: 0, y: 16 }}
-      animate={inView ? { opacity: 1, y: 0 } : {}}
-      transition={{ duration: 0.48, ease: EASE }}
-      style={{ background: '#0d1117', border: '1px solid #30363d', borderRadius: '12px', padding: '18px 22px', marginBottom: '28px', maxWidth: 'min(560px, 100%)', overflowX: 'auto' }}
+    <motion.article
+      initial={{ opacity: 0, y: 24 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.2 }}
+      transition={{ delay: i * 0.07, duration: 0.55, ease: EASE }}
+      className="pj-card"
+      style={{ '--pj': cat.color }}
     >
-      <div style={{ display: 'flex', gap: '7px', marginBottom: '14px' }}>
-        {['#FF5F57', '#FEBC2E', '#28C840'].map((c) => <div key={c} style={{ width: '11px', height: '11px', borderRadius: '50%', background: c }} />)}
-      </div>
-      <Line show={step >= 1}><span style={{ color: '#28C840' }}>visitor@portfolio</span><span style={{ color: '#7d8590' }}>:</span><span style={{ color: '#ffa657' }}>~/work</span><span style={{ color: '#e6edf3' }}> ❯ ls ./projects</span></Line>
-      {step >= 2 && <div style={{ height: '4px' }} />}
-      <Line show={step >= 2}><span style={{ color: '#7d8590' }}>4 projects · 3 screens · click a monitor to open one</span></Line>
-      {step >= 2 && <div style={{ height: '4px' }} />}
-      <Line show={step >= 3}><span style={{ color: '#79c0ff' }}>01 · CLIfolio                </span><span style={{ color: '#7C6FF7' }}>[dev]</span></Line>
-      <Line show={step >= 4}><span style={{ color: '#79c0ff' }}>02 · ARFL Platform           </span><span style={{ color: '#7C6FF7' }}>[dev · aiml]</span></Line>
-      <Line show={step >= 5}><span style={{ color: '#79c0ff' }}>03 · Multi-Hazard EWS        </span><span style={{ color: '#E8935A' }}>[research]</span></Line>
-      <Line show={step >= 6}><span style={{ color: '#79c0ff' }}>04 · EEG/EMG Detection       </span><span style={{ color: '#28C840' }}>[aiml · research]</span></Line>
-      {step >= 7 && <div style={{ height: '4px' }} />}
-      {step >= 7 && (
-        <motion.div initial={{ opacity: 0, x: -5 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.2 }} style={{ ...mono, display: 'flex', alignItems: 'center', gap: '3px' }}>
-          <span style={{ color: '#28C840' }}>visitor@portfolio</span><span style={{ color: '#7d8590' }}>:</span><span style={{ color: '#ffa657' }}>~/work</span><span style={{ color: '#e6edf3' }}> ❯ </span>
-          <span style={{ display: 'inline-block', width: '8px', height: '15px', background: '#28C840', borderRadius: '1px', animation: 'th-blink 1s step-end infinite', verticalAlign: 'middle' }} />
-        </motion.div>
-      )}
-    </motion.div>
+      <button className="pj-hit" onClick={() => onOpen(p)} aria-label={`Read more about ${p.name}`} />
+
+      <header className="pj-top">
+        <span className="pj-cat">{cat.label}</span>
+        <span className="pj-meta">
+          <span className="pj-status" style={{ '--st': st.color }}>
+            <span className="pj-dot" />{st.label}
+          </span>
+          <span className="pj-year">{p.year}</span>
+        </span>
+      </header>
+
+      <h3 className="pj-name">{p.name}</h3>
+      <p className="pj-hook">{p.hook}</p>
+      <p className="pj-desc">{p.desc}</p>
+
+      <ul className="pj-tech">
+        {p.tech.map((t) => <li key={t}>{t}</li>)}
+      </ul>
+
+      <footer className="pj-foot">
+        <span className="pj-more">Read more <ArrowUpRight size={13} strokeWidth={2.4} /></span>
+        {p.repo && (
+          <a href={p.repo} target="_blank" rel="noopener noreferrer" className="pj-link">
+            <Github size={13} strokeWidth={2} /> Code
+          </a>
+        )}
+        {p.live && (
+          <a href={p.live} target="_blank" rel="noopener noreferrer" className="pj-link">
+            <ArrowUpRight size={13} strokeWidth={2} /> Live
+          </a>
+        )}
+      </footer>
+    </motion.article>
   );
 }
 
 export default function DevStudio() {
-  const [activeScreen,    setActiveScreen]    = useState(null);
-  const [isZoomedIn,      setIsZoomedIn]      = useState(false);
-  const [selectedProject, setSelectedProject] = useState(null);
+  const [selected, setSelected] = useState(null);
+  const [studioOpen, setStudioOpen] = useState(false);
+
+  // Room interaction state — only meaningful while the studio is open.
+  const [activeScreen, setActiveScreen] = useState(null);
+  const [isZoomedIn, setIsZoomedIn] = useState(false);
 
   useEffect(() => {
     if (!activeScreen) { setIsZoomedIn(false); return; }
@@ -81,161 +84,231 @@ export default function DevStudio() {
     return () => clearTimeout(t);
   }, [activeScreen]);
 
-  // ── FIXED: no setIsZoomedIn(false) when switching between screens.
-  //    Camera lerps directly from A → B without touching the overview position.
-  const handleScreenClick = (id) => {
-    if (activeScreen === id) return;
-    setActiveScreen(id);
-  };
-
-  const handleBack = () => {
-    setIsZoomedIn(false);
-    setActiveScreen(null);
-  };
+  useEffect(() => {
+    if (!studioOpen) { setActiveScreen(null); setIsZoomedIn(false); }
+  }, [studioOpen]);
 
   const sl = activeScreen ? SCREEN_META[activeScreen] : null;
 
   return (
-    <section id="work" style={{ background: 'var(--bg-base, #03040a)', padding: 'var(--section-pad-y) 24px', width: '100%' }}>
+    <section id="work" style={{ background: 'var(--bg-base)', padding: 'var(--section-pad-y) 24px', width: '100%' }}>
       <div style={{ maxWidth: '1120px', margin: '0 auto' }}>
 
-        <motion.p
-          initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.5 }}
-          transition={{ duration: 0.44, ease: EASE }}
-          style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '11px', letterSpacing: '0.22em', textTransform: 'uppercase', color: '#3d444d', marginBottom: '22px' }}
-        >
-          · work · interactive ·
-        </motion.p>
+        <SectionHeader
+          label="work"
+          title="Four things I built, and what they do."
+          intro="Research systems, distributed ML, and the site you're reading. Each card opens the write-up — the problem, the approach, and the part that needed rethinking."
+          maxWidth={660}
+        />
 
-        <TerminalHeader />
-
-        {/* Non-WebGL / small-screen fallback — plain project cards over a cheap
-            pixel shimmer. The 3D room below is hidden under 900px (heavy on
-            mobile GPUs). */}
-        <div className="devstudio-2d">
-          <PixelWash color="#7C6FF7" cell={7} density={0.5} style={{ opacity: 0.4 }} />
-          <div className="ds-grid">
-            {PROJECT_LIST.map((p) => (
-              <button
-                key={p.name}
-                className="ds-card"
-                style={{ '--ds-c': p.color }}
-                onClick={() => setSelectedProject({ ...p })}
-              >
-                <span className="ds-card-cat">{SCREEN_META[p.category]?.label ?? p.category}</span>
-                <span className="ds-card-name">{p.name}</span>
-                <span className="ds-card-tech">{p.tech}</span>
-                <span className="ds-card-desc">{p.desc}</span>
-                <span className="ds-card-open">open ›</span>
-              </button>
-            ))}
-          </div>
+        <div className="pj-grid">
+          {PROJECTS.map((p, i) => (
+            <ProjectCard key={p.id} p={p} i={i} onOpen={setSelected} />
+          ))}
         </div>
 
-        <div className="devstudio-3d" style={{ position: 'relative', width: '100%' }}>
-          <div style={{ width: '100%', height: 'clamp(500px, 68vh, 720px)', borderRadius: '20px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.05)', position: 'relative', background: '#03040a' }}>
+        {/* one honest link — per-project repos aren't public yet */}
+        <div className="pj-after">
+          <a href={GITHUB_PROFILE} target="_blank" rel="noopener noreferrer" className="pj-ghlink">
+            <Github size={15} strokeWidth={2} /> More on GitHub <ArrowUpRight size={13} strokeWidth={2.4} />
+          </a>
 
-            <RoomScene activeScreen={activeScreen} isZoomedIn={isZoomedIn} onScreenClick={handleScreenClick} onOpenProject={(p) => setSelectedProject(p)} />
-
-            {/* Vignette */}
-            <div style={{ position: 'absolute', inset: 0, zIndex: 2, pointerEvents: 'none', background: 'radial-gradient(ellipse 88% 66% at 50% 50%, transparent 48%, rgba(0,0,0,0.34) 100%)' }} />
-            {/* Scanlines */}
-            <div style={{ position: 'absolute', inset: 0, zIndex: 2, pointerEvents: 'none', backgroundImage: 'repeating-linear-gradient(0deg, rgba(0,0,0,0.012) 0px, rgba(0,0,0,0.012) 1px, transparent 1px, transparent 3px)' }} />
-
-            {/* Back button */}
-            {activeScreen && (
-              <motion.button key="back" initial={{ opacity: 0, x: -14 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.26, ease: EASE }}
-                onClick={handleBack}
-                style={{ position: 'absolute', top: '14px', left: '14px', zIndex: 10, background: 'rgba(5,6,12,0.88)', backdropFilter: 'blur(16px)', border: `1px solid ${sl?.color ?? '#555'}30`, borderRadius: '10px', padding: '8px 18px', display: 'flex', alignItems: 'center', gap: '7px', fontFamily: 'JetBrains Mono, monospace', fontSize: '11px', color: sl?.color ?? '#aaa', cursor: 'pointer', letterSpacing: '0.04em', transition: 'background 0.15s' }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(14,16,28,0.94)'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(5,6,12,0.88)'; }}
-              >
-                ← overview
-              </motion.button>
-            )}
-
-            {/* Screen label */}
-            {isZoomedIn && sl && (
-              <motion.div key="label" initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.26, ease: EASE }}
-                style={{ position: 'absolute', top: '14px', right: '14px', zIndex: 10, background: 'rgba(5,6,12,0.88)', backdropFilter: 'blur(16px)', border: `1px solid ${sl.color}30`, borderRadius: '10px', padding: '6px 14px', display: 'flex', alignItems: 'center', gap: '8px', fontFamily: 'JetBrains Mono, monospace', fontSize: '11px', color: sl.color, pointerEvents: 'none' }}
-              >
-                <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: sl.color, animation: 'pulse-dot 2s ease-in-out infinite' }} />
-                {sl.label}
-              </motion.div>
-            )}
-
-            {/* Hints */}
-            {!activeScreen && (
-              <motion.div key="hint-ov" initial={{ opacity: 0 }} animate={{ opacity: 1, transition: { delay: 0.8 } }}
-                style={{ position: 'absolute', bottom: '14px', right: '14px', zIndex: 4, background: 'rgba(5,6,12,0.78)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '8px', padding: '5px 12px', fontFamily: 'JetBrains Mono, monospace', fontSize: '11px', color: '#7d8590', pointerEvents: 'none' }}
-              >
-                click a monitor to explore →
-              </motion.div>
-            )}
-            {isZoomedIn && (
-              <motion.div key="hint-zo" initial={{ opacity: 0 }} animate={{ opacity: 1, transition: { delay: 0.5 } }}
-                style={{ position: 'absolute', bottom: '14px', right: '14px', zIndex: 4, background: 'rgba(5,6,12,0.78)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '8px', padding: '5px 12px', fontFamily: 'JetBrains Mono, monospace', fontSize: '11px', color: '#7d8590', pointerEvents: 'none' }}
-              >
-                click a project name →
-              </motion.div>
-            )}
-
-            <div style={{ position: 'absolute', bottom: '14px', left: '14px', zIndex: 4, background: 'rgba(5,6,12,0.78)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '8px', padding: '5px 12px', fontFamily: 'JetBrains Mono, monospace', fontSize: '11px', color: '#3d444d', pointerEvents: 'none' }}>
-              three.js · interactive
-            </div>
-          </div>
-
-          {/* Screen selector pills */}
-          <motion.div
-            initial={{ opacity: 0, y: 14 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.44, delay: 0.18, ease: EASE }}
-            style={{ display: 'flex', gap: '10px', marginTop: '14px', flexWrap: 'wrap', alignItems: 'center' }}
-          >
-            {Object.entries(SCREEN_META).map(([id, meta]) => {
-              const isActive = activeScreen === id;
-              return (
-                <button key={id} onClick={() => isActive ? handleBack() : handleScreenClick(id)}
-                  style={{ display: 'flex', alignItems: 'center', gap: '7px', background: isActive ? `${meta.color}14` : 'rgba(20,24,32,0.6)', border: `1px solid ${isActive ? meta.color + '42' : '#30363d'}`, borderRadius: '8px', padding: '7px 14px', fontFamily: 'JetBrains Mono, monospace', fontSize: '12px', color: isActive ? meta.color : '#7d8590', cursor: 'pointer', transition: 'all 0.16s ease' }}
-                  onMouseEnter={(e) => { if (!isActive) { e.currentTarget.style.background = `${meta.color}0c`; e.currentTarget.style.borderColor = `${meta.color}30`; e.currentTarget.style.color = meta.color; } }}
-                  onMouseLeave={(e) => { if (!isActive) { e.currentTarget.style.background = 'rgba(20,24,32,0.6)'; e.currentTarget.style.borderColor = '#30363d'; e.currentTarget.style.color = '#7d8590'; } }}
-                >
-                  {isActive && <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: meta.color, flexShrink: 0, animation: 'pulse-dot 2s ease-in-out infinite' }} />}
-                  <span style={{ opacity: 0.45 }}>$</span>{meta.cmd}
-                </button>
-              );
-            })}
-            <div style={{ marginLeft: 'auto', fontFamily: 'JetBrains Mono, monospace', fontSize: '11px', color: '#3d444d', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              {activeScreen ? <><span style={{ color: SCREEN_META[activeScreen]?.color }}>■</span> zoomed · click screen to interact</> : '3 monitors · click to explore'}
-            </div>
-          </motion.div>
+          <button className="pj-studio-toggle" onClick={() => setStudioOpen((v) => !v)} aria-expanded={studioOpen}>
+            {studioOpen ? <X size={15} strokeWidth={2} /> : <Boxes size={15} strokeWidth={2} />}
+            {studioOpen ? 'Close the studio' : 'Explore the 3D studio'}
+          </button>
         </div>
+
+        {/* ── Opt-in three.js studio ────────────────────────────────────── */}
+        <AnimatePresence initial={false}>
+          {studioOpen && (
+            <motion.div
+              key="studio"
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.45, ease: EASE }}
+              style={{ overflow: 'hidden' }}
+            >
+              <div className="pj-studio">
+                <div className="pj-stage">
+                  <RoomScene
+                    activeScreen={activeScreen}
+                    isZoomedIn={isZoomedIn}
+                    onScreenClick={(id) => setActiveScreen((cur) => (cur === id ? cur : id))}
+                    onOpenProject={(p) => setSelected(p)}
+                  />
+                  <div className="pj-vignette" />
+                  {activeScreen && (
+                    <button
+                      className="pj-back"
+                      style={{ '--pj': sl?.color ?? '#7C6FF7' }}
+                      onClick={() => { setIsZoomedIn(false); setActiveScreen(null); }}
+                    >
+                      ← overview
+                    </button>
+                  )}
+                  <span className="pj-stage-tag">three.js · click a monitor</span>
+                </div>
+
+                <div className="pj-pills">
+                  {Object.entries(SCREEN_META).map(([id, meta]) => {
+                    const on = activeScreen === id;
+                    return (
+                      <button
+                        key={id}
+                        onClick={() => setActiveScreen(on ? null : id)}
+                        className={`pj-pill${on ? ' is-on' : ''}`}
+                        style={{ '--pj': meta.color }}
+                      >
+                        <span className="pj-pill-dollar">$</span>{meta.cmd}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
-      {selectedProject && <ProjectModal project={selectedProject} onClose={() => setSelectedProject(null)} />}
+      {selected && (
+        <ProjectModal
+          project={{
+            ...selected,
+            tech: Array.isArray(selected.tech) ? selected.tech.join(' · ') : selected.tech,
+            color: CATEGORY_META[selected.category]?.color,
+          }}
+          onClose={() => setSelected(null)}
+        />
+      )}
 
       <style>{`
-        @keyframes th-blink  { 0%,100%{opacity:1} 50%{opacity:0} }
-        @keyframes pulse-dot { 0%,100%{opacity:1; transform:scale(1)} 50%{opacity:0.55; transform:scale(0.75)} }
+        .pj-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+        @media (max-width: 860px) { .pj-grid { grid-template-columns: 1fr; } }
 
-        .devstudio-2d { display: none; position: relative; overflow: hidden; border-radius: 20px; }
-        @media (max-width: 900px) {
-          .devstudio-3d { display: none !important; }
-          .devstudio-2d { display: block; }
+        .pj-card {
+          position: relative; display: flex; flex-direction: column;
+          background: var(--bg-elevated); border: 1px solid var(--border-subtle);
+          border-radius: 16px; padding: 24px; overflow: hidden;
+          transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
         }
-        .ds-grid { position: relative; z-index: 1; display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
-        @media (max-width: 560px) { .ds-grid { grid-template-columns: 1fr; } }
-        .ds-card {
-          display: flex; flex-direction: column; gap: 7px;
-          text-align: left; width: 100%; cursor: pointer;
-          background: rgba(20,24,32,0.6); border: 1px solid #30363d;
-          border-radius: 16px; padding: 22px;
-          transition: border-color 0.16s ease, transform 0.16s ease;
+        .pj-card::before {
+          content: ''; position: absolute; inset: 0 0 auto 0; height: 2px;
+          background: var(--pj); opacity: 0.5; transition: opacity 0.2s ease;
         }
-        .ds-card:hover { border-color: var(--ds-c); transform: translateY(-2px); }
-        .ds-card-cat  { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ds-c); }
-        .ds-card-name { font-family: 'Clash Display', sans-serif; font-size: 18px; font-weight: 600; color: #eaf1fb; }
-        .ds-card-tech { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #ffa657; }
-        .ds-card-desc { font-family: 'Inter', sans-serif; font-size: 13px; line-height: 1.6; color: #c9d1d9; }
-        .ds-card-open { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ds-c); margin-top: 2px; }
+        .pj-card:hover {
+          border-color: color-mix(in srgb, var(--pj) 42%, transparent);
+          transform: translateY(-3px);
+          box-shadow: 0 18px 44px -22px var(--pj);
+        }
+        .pj-card:hover::before { opacity: 1; }
+        /* full-card click target; real links sit above it on z-index */
+        .pj-hit { position: absolute; inset: 0; z-index: 1; background: none; border: 0; cursor: pointer; }
+
+        .pj-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+        .pj-cat {
+          font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 600;
+          letter-spacing: 0.14em; text-transform: uppercase; color: var(--pj);
+        }
+        .pj-meta { display: inline-flex; align-items: center; gap: 12px; }
+        .pj-status {
+          display: inline-flex; align-items: center; gap: 5px;
+          font-family: 'JetBrains Mono', monospace; font-size: 10px;
+          letter-spacing: 0.08em; color: var(--st);
+        }
+        .pj-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--st); }
+        .pj-year { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--text-tertiary); }
+
+        .pj-name {
+          font-family: 'Clash Display', sans-serif; font-size: 23px; font-weight: 600;
+          color: var(--text-primary); letter-spacing: -0.015em; margin: 0 0 6px;
+        }
+        .pj-hook {
+          font-family: 'Inter', sans-serif; font-size: 14.5px; font-weight: 500;
+          color: var(--pj); margin: 0 0 12px; line-height: 1.45;
+        }
+        .pj-desc {
+          font-family: 'Inter', sans-serif; font-size: 13.5px; line-height: 1.68;
+          color: var(--text-secondary); margin: 0 0 18px;
+        }
+
+        .pj-tech { display: flex; flex-wrap: wrap; gap: 6px; list-style: none; margin: 0 0 20px; padding: 0; }
+        .pj-tech li {
+          font-family: 'JetBrains Mono', monospace; font-size: 10.5px;
+          color: var(--text-secondary); background: var(--bg-surface);
+          border: 1px solid var(--border-subtle); border-radius: 5px; padding: 4px 8px;
+        }
+
+        .pj-foot { margin-top: auto; display: flex; align-items: center; gap: 16px; }
+        .pj-more {
+          display: inline-flex; align-items: center; gap: 5px;
+          font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 500; color: var(--pj);
+        }
+        .pj-card:hover .pj-more { text-decoration: underline; text-underline-offset: 3px; }
+        .pj-link {
+          position: relative; z-index: 2;
+          display: inline-flex; align-items: center; gap: 5px;
+          font-family: 'Inter', sans-serif; font-size: 13px;
+          color: var(--text-secondary); text-decoration: none;
+        }
+        .pj-link:hover { color: var(--text-primary); }
+
+        .pj-after {
+          display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+          gap: 14px; margin-top: 24px;
+        }
+        .pj-ghlink, .pj-studio-toggle {
+          display: inline-flex; align-items: center; gap: 8px;
+          font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 500;
+          color: var(--text-secondary); text-decoration: none;
+          background: transparent; border: 1px solid var(--border-subtle);
+          border-radius: 10px; padding: 11px 18px; cursor: pointer;
+          transition: color 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
+        }
+        .pj-ghlink:hover, .pj-studio-toggle:hover {
+          color: var(--text-primary); border-color: var(--border-hover); transform: translateY(-2px);
+        }
+
+        .pj-studio { padding-top: 20px; }
+        .pj-stage {
+          position: relative; width: 100%;
+          height: clamp(420px, 62vh, 660px);
+          border-radius: 18px; overflow: hidden;
+          border: 1px solid var(--border-subtle); background: #03040a;
+        }
+        .pj-vignette {
+          position: absolute; inset: 0; z-index: 2; pointer-events: none;
+          background: radial-gradient(ellipse 88% 66% at 50% 50%, transparent 48%, rgba(0,0,0,0.36) 100%);
+        }
+        .pj-back {
+          position: absolute; top: 14px; left: 14px; z-index: 10;
+          background: rgba(5,6,12,0.88); backdrop-filter: blur(14px);
+          border: 1px solid color-mix(in srgb, var(--pj) 32%, transparent);
+          border-radius: 10px; padding: 8px 16px; cursor: pointer;
+          font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--pj);
+        }
+        .pj-stage-tag {
+          position: absolute; bottom: 14px; left: 14px; z-index: 4; pointer-events: none;
+          background: rgba(5,6,12,0.78); backdrop-filter: blur(10px);
+          border: 1px solid rgba(255,255,255,0.07); border-radius: 8px; padding: 5px 12px;
+          font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: var(--text-tertiary);
+        }
+
+        .pj-pills { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
+        .pj-pill {
+          font-family: 'JetBrains Mono', monospace; font-size: 12px;
+          background: rgba(20,24,32,0.6); border: 1px solid var(--border-subtle);
+          border-radius: 8px; padding: 7px 14px; cursor: pointer; color: var(--text-tertiary);
+          transition: all 0.16s ease;
+        }
+        .pj-pill:hover { color: var(--pj); border-color: color-mix(in srgb, var(--pj) 32%, transparent); }
+        .pj-pill.is-on {
+          color: var(--pj);
+          border-color: color-mix(in srgb, var(--pj) 45%, transparent);
+          background: color-mix(in srgb, var(--pj) 10%, transparent);
+        }
+        .pj-pill-dollar { opacity: 0.45; margin-right: 4px; }
       `}</style>
     </section>
   );

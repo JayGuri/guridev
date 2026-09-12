@@ -85,7 +85,7 @@ export default function Contact() {
           initial={{ opacity: 0, y: 28 }} whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, amount: 0.3 }} transition={{ duration: 0.7, ease: EASE }}
         >
-          <p style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '11px', letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--text-tertiary)', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '18px' }}>
+          <p style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '11px', letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--accent-dev)', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
             <span style={{ width: '7px', height: '7px', borderRadius: '2px', background: 'var(--accent-dev)' }} />
             contact
           </p>
@@ -134,19 +134,25 @@ export default function Contact() {
             <span style={{ color: 'var(--accent-dev)' }}>~/contact</span>{' ❯ new message'}
           </p>
 
-          <div style={{ marginBottom: '20px' }}>
-            <input {...register('name')} placeholder="Your name" className="contact-input" style={INPUT_STYLE} />
-            {errors.name && <p style={ERROR_STYLE}>! {errors.name.message}</p>}
+          <div style={{ marginBottom: '18px' }}>
+            <label htmlFor="cf-name" className="contact-label">Name</label>
+            <input id="cf-name" {...register('name')} placeholder="Jane Doe" autoComplete="name"
+              aria-invalid={!!errors.name} className="contact-input" style={INPUT_STYLE} />
+            {errors.name && <p style={ERROR_STYLE} role="alert">! {errors.name.message}</p>}
           </div>
 
-          <div style={{ marginBottom: '20px' }}>
-            <input {...register('email')} placeholder="Your email" className="contact-input" style={INPUT_STYLE} />
-            {errors.email && <p style={ERROR_STYLE}>! {errors.email.message}</p>}
+          <div style={{ marginBottom: '18px' }}>
+            <label htmlFor="cf-email" className="contact-label">Email</label>
+            <input id="cf-email" type="email" {...register('email')} placeholder="jane@example.com" autoComplete="email"
+              aria-invalid={!!errors.email} className="contact-input" style={INPUT_STYLE} />
+            {errors.email && <p style={ERROR_STYLE} role="alert">! {errors.email.message}</p>}
           </div>
 
-          <div style={{ marginBottom: '24px' }}>
-            <textarea {...register('message')} placeholder="What's on your mind?" rows={5} className="contact-input" style={{ ...INPUT_STYLE, resize: 'vertical', minHeight: '120px' }} />
-            {errors.message && <p style={ERROR_STYLE}>! {errors.message.message}</p>}
+          <div style={{ marginBottom: '22px' }}>
+            <label htmlFor="cf-message" className="contact-label">Message</label>
+            <textarea id="cf-message" {...register('message')} placeholder="What's on your mind?" rows={5}
+              aria-invalid={!!errors.message} className="contact-input" style={{ ...INPUT_STYLE, resize: 'vertical', minHeight: '120px' }} />
+            {errors.message && <p style={ERROR_STYLE} role="alert">! {errors.message.message}</p>}
           </div>
 
           <button
@@ -171,6 +177,11 @@ export default function Contact() {
 
       <style>{`
         @keyframes contactPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+        .contact-label {
+          display: block; margin-bottom: 7px;
+          font-family: 'JetBrains Mono', monospace; font-size: 10.5px;
+          letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-secondary);
+        }
         .contact-input:focus { border-color: var(--accent-dev) !important; border-left-color: var(--accent-dev) !important; }
         .contact-input::placeholder { color: var(--text-tertiary); }
         .contact-link:hover { border-color: var(--border-hover) !important; background: var(--bg-elevated); }

@@ -1,25 +1,22 @@
 'use client';
 
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useState, useEffect, useRef } from 'react';
+import { ArrowRight, ArrowDown } from 'lucide-react';
 import { useReducedMotion } from '@/lib/useReducedMotion';
 import PixelBlast from '@/components/PixelBlast';
-import Beams      from '@/components/Beams';
-import PixelWash  from '@/components/PixelWash';
+import Beams from '@/components/Beams';
+import PixelWash from '@/components/PixelWash';
 
-// Role words and their accent colours
-const ROLES = ['Developer', 'Researcher', 'Photographer', 'Builder'];
+const EASE = [0.16, 1, 0.3, 1];
 
-const ROLE_COLORS = {
-  Developer:    '#7C6FF7',
-  Researcher:   '#7C6FF7',
-  Builder:      '#7C6FF7',
-  Photographer: '#E8935A',
-};
-
-// Eases reused across multiple elements
-const EASE_OUT_EXPO = [0.16, 1, 0.3, 1];
-const EASE_IN_EXPO  = [0.76, 0, 0.24, 1];
+// Concrete, verifiable facts. The hero used to rotate
+// Developer/Researcher/Photographer/Builder and say nothing specific.
+const FACTS = [
+  ['now', 'ML research intern, IIT Bombay'],
+  ['studying', 'CS & Data Science, DJ Sanghvi'],
+  ['before', 'Web dev intern, Realatte'],
+];
 
 function scrollTo(id) {
   document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
@@ -28,9 +25,8 @@ function scrollTo(id) {
 export default function Hero() {
   const prefersReduced = useReducedMotion();
 
-  // The two WebGL background layers are the heaviest thing on the page and the
-  // 3D room further down already taxes mobile GPUs — skip them on phones and
-  // when the visitor asked for reduced motion, falling back to a static wash.
+  // The two WebGL layers are the heaviest thing on the page; phones and
+  // reduced-motion visitors get the cheap canvas shimmer instead.
   const [isSmall, setIsSmall] = useState(false);
   useEffect(() => {
     const mq = window.matchMedia('(max-width: 768px)');
@@ -41,428 +37,166 @@ export default function Hero() {
   }, []);
   const showFX = !prefersReduced && !isSmall;
 
-  // Helpers: with reduced motion every element appears instantly in place.
-  const fadeUp = (delay = 0) =>
+  const rise = (delay = 0) =>
     prefersReduced
       ? { initial: { opacity: 1, y: 0 }, animate: { opacity: 1, y: 0 } }
       : {
-          initial:    { opacity: 0, y: 20 },
-          animate:    { opacity: 1, y: 0 },
-          transition: { delay, duration: 0.7, ease: EASE_OUT_EXPO },
+          initial: { opacity: 0, y: 22 },
+          animate: { opacity: 1, y: 0 },
+          transition: { delay, duration: 0.7, ease: EASE },
         };
 
-  const bigSlide = (delay = 0, distance = 60) =>
-    prefersReduced
-      ? { initial: { opacity: 1, y: 0 }, animate: { opacity: 1, y: 0 } }
-      : {
-          initial:    { opacity: 0, y: distance },
-          animate:    { opacity: 1, y: 0 },
-          transition: { delay, duration: 0.9, ease: EASE_OUT_EXPO },
-        };
-
-  // ── Morphing role word ───────────────────────────────────────────────
-  const [roleIndex, setRoleIndex] = useState(0);
-
+  // Subtle mouse parallax on the name only.
+  const nameRef = useRef(null);
   useEffect(() => {
-    const id = setInterval(
-      () => setRoleIndex((i) => (i + 1) % ROLES.length),
-      2500
-    );
-    return () => clearInterval(id);
-  }, []);
-
-  const currentRole = ROLES[roleIndex];
-
-  // ── Scroll indicator visibility ──────────────────────────────────────
-  const [scrollVisible, setScrollVisible] = useState(true);
-
-  useEffect(() => {
+    if (prefersReduced) return;
+    const target = { x: 0, y: 0 };
+    const cur = { x: 0, y: 0 };
     let raf = 0;
-    const onScroll = () => {
-      if (raf) return;
-      raf = requestAnimationFrame(() => {
-        raf = 0;
-        setScrollVisible(window.scrollY <= 80);
-      });
+    const onMove = (e) => {
+      target.x = e.clientX - window.innerWidth / 2;
+      target.y = e.clientY - window.innerHeight / 2;
     };
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => {
-      window.removeEventListener('scroll', onScroll);
-      if (raf) cancelAnimationFrame(raf);
-    };
-  }, []);
-
-  // ── Mouse parallax on the name only ─────────────────────────────────
-  const nameRef      = useRef(null);
-  const mouseTarget  = useRef({ x: 0, y: 0 });
-  const mouseCurrent = useRef({ x: 0, y: 0 });
-  const rafRef       = useRef(null);
-
-  useEffect(() => {
-    const onMouseMove = (e) => {
-      mouseTarget.current = {
-        x: e.clientX - window.innerWidth  / 2,
-        y: e.clientY - window.innerHeight / 2,
-      };
-    };
-
-    const animate = () => {
-      const lerp = 0.05;
-      mouseCurrent.current.x += (mouseTarget.current.x - mouseCurrent.current.x) * lerp;
-      mouseCurrent.current.y += (mouseTarget.current.y - mouseCurrent.current.y) * lerp;
-
+    const tick = () => {
+      cur.x += (target.x - cur.x) * 0.05;
+      cur.y += (target.y - cur.y) * 0.05;
       if (nameRef.current) {
-        const tx = mouseCurrent.current.x / 40;
-        const ty = mouseCurrent.current.y / 40;
-        nameRef.current.style.transform = `translate(${tx}px, ${ty}px)`;
+        nameRef.current.style.transform = `translate(${cur.x / 46}px, ${cur.y / 46}px)`;
       }
-
-      rafRef.current = requestAnimationFrame(animate);
+      raf = requestAnimationFrame(tick);
     };
-
-    window.addEventListener('mousemove', onMouseMove);
-    rafRef.current = requestAnimationFrame(animate);
-
-    return () => {
-      window.removeEventListener('mousemove', onMouseMove);
-      cancelAnimationFrame(rafRef.current);
-    };
-  }, []);
+    window.addEventListener('mousemove', onMove);
+    raf = requestAnimationFrame(tick);
+    return () => { window.removeEventListener('mousemove', onMove); cancelAnimationFrame(raf); };
+  }, [prefersReduced]);
 
   return (
     <section
       id="hero"
       style={{
-        minHeight: '100svh',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        position: 'relative',
-        overflow: 'hidden',
-        background: 'var(--bg-base)',
+        minHeight: '100svh', display: 'flex', flexDirection: 'column',
+        alignItems: 'center', justifyContent: 'center',
+        position: 'relative', overflow: 'hidden', background: 'var(--bg-base)',
+        padding: '96px 24px 88px',
       }}
     >
       {showFX ? (
         <>
-          {/* ── Layer A: PixelBlast pixel grid ──────────────────────────── */}
-          <div style={{ position: 'absolute', inset: 0, opacity: 0.42, zIndex: 0, pointerEvents: 'none' }}>
+          <div style={{ position: 'absolute', inset: 0, opacity: 0.4, zIndex: 0, pointerEvents: 'none' }}>
             <PixelBlast
-              variant="square"
-              pixelSize={4}
-              color="#7C6FF7"
-              patternScale={1.2}
-              patternDensity={0.5}
-              enableRipples={true}
-              rippleSpeed={0.2}
-              rippleThickness={0.08}
-              speed={0.3}
-              transparent={true}
-              edgeFade={0.6}
+              variant="square" pixelSize={4} color="#7C6FF7"
+              patternScale={1.2} patternDensity={0.5}
+              enableRipples rippleSpeed={0.2} rippleThickness={0.08}
+              speed={0.3} transparent edgeFade={0.6}
             />
           </div>
-
-          {/* ── Layer B: Beams light overlay ─────────────────────────────── */}
-          <div style={{ position: 'absolute', inset: 0, opacity: 0.6, zIndex: 0, pointerEvents: 'none' }}>
+          <div style={{ position: 'absolute', inset: 0, opacity: 0.5, zIndex: 0, pointerEvents: 'none' }}>
             <Beams
-              beamWidth={1.5}
-              beamHeight={10}
-              beamNumber={12}
-              lightColor="#7C6FF7"
-              speed={0.6}
-              noiseIntensity={0.6}
-              scale={0.25}
-              rotation={0}
+              beamWidth={1.5} beamHeight={10} beamNumber={12}
+              lightColor="#7C6FF7" speed={0.6} noiseIntensity={0.6}
+              scale={0.25} rotation={0}
             />
           </div>
         </>
       ) : (
         <div aria-hidden="true" style={{ position: 'absolute', inset: 0, zIndex: 0, pointerEvents: 'none', overflow: 'hidden' }}>
-          <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(60% 50% at 50% 38%, rgba(124,111,247,0.18), transparent 72%)' }} />
-          <PixelWash color="#7C6FF7" cell={7} density={0.6} style={{ opacity: 0.5 }} />
+          <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(62% 50% at 50% 40%, rgba(124,111,247,0.17), transparent 72%)' }} />
+          <PixelWash color="#7C6FF7" cell={7} density={0.5} style={{ opacity: 0.45 }} />
         </div>
       )}
 
-      {/* ── Main content ─────────────────────────────────────────────── */}
-      <div
-        style={{
-          position: 'relative',
-          zIndex: 1,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          textAlign: 'center',
-          padding: '0 24px',
-          maxWidth: '900px',
-        }}
-      >
-        {/* a) Location pill */}
-        <motion.div
-          initial={prefersReduced ? { opacity: 1, y: 0 } : { opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={prefersReduced ? {} : { delay: 0.2, duration: 0.6, ease: EASE_OUT_EXPO }}
-          style={{
-            display: 'inline-block',
-            border: '1px solid var(--border-subtle)',
-            background: 'var(--border-subtle)',
-            color: 'var(--text-secondary)',
-            fontSize: '12px',
-            letterSpacing: '0.1em',
-            textTransform: 'uppercase',
-            padding: '6px 16px',
-            borderRadius: '999px',
-            marginBottom: '32px',
-          }}
-        >
-          Mumbai, India
+      {/* readability scrim so the type never fights the shader */}
+      <div aria-hidden="true" style={{
+        position: 'absolute', inset: 0, zIndex: 1, pointerEvents: 'none',
+        background: 'radial-gradient(58% 46% at 50% 46%, rgba(8,8,9,0.80), rgba(8,8,9,0.28) 60%, transparent 82%)',
+      }} />
+
+      <div style={{ position: 'relative', zIndex: 2, width: '100%', maxWidth: '860px', textAlign: 'center' }}>
+
+        {/* availability */}
+        <motion.div {...rise(0.05)} style={{ display: 'flex', justifyContent: 'center', marginBottom: '26px' }}>
+          <span style={{
+            display: 'inline-flex', alignItems: 'center', gap: '9px',
+            border: '1px solid var(--border-subtle)', background: 'rgba(255,255,255,0.03)',
+            borderRadius: '999px', padding: '7px 15px',
+            fontFamily: 'JetBrains Mono, monospace', fontSize: '11.5px',
+            letterSpacing: '0.04em', color: 'var(--text-secondary)',
+          }}>
+            <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#3FB950', boxShadow: '0 0 7px #3FB950' }} />
+            open to internships · Mumbai / remote
+          </span>
         </motion.div>
 
-        {/* b) Name — subtle mouse parallax */}
         <motion.h1
           ref={nameRef}
-          className="hero-name-grad"
-          {...bigSlide(0.4, 60)}
+          className="hero-name"
+          {...rise(0.12)}
           style={{
             fontFamily: 'Clash Display, sans-serif',
-            fontSize: 'clamp(56px, 9vw, 112px)',
-            fontWeight: 600,
-            letterSpacing: '-0.03em',
-            lineHeight: 1,
-            marginBottom: '8px',
+            fontSize: 'clamp(52px, 8.4vw, 104px)', fontWeight: 600,
+            letterSpacing: '-0.035em', lineHeight: 0.95, margin: '0 0 18px',
             willChange: 'transform',
           }}
         >
           Jay Guri
         </motion.h1>
 
-        {/* c) Morphing role word */}
-        <div
-          style={{
-            height: 'clamp(58px, 8vw, 96px)',
-            position: 'relative',
-            overflow: 'hidden',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            marginBottom: '32px',
-          }}
-        >
-          <AnimatePresence mode="wait">
-            <motion.span
-              key={currentRole}
-              initial={prefersReduced ? { opacity: 1, y: 0 } : { opacity: 0, y: 60 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={prefersReduced ? { opacity: 1, y: 0 } : { opacity: 0, y: -60 }}
-              transition={
-                prefersReduced
-                  ? {}
-                  : {
-                      enter:    { duration: 0.5, ease: EASE_OUT_EXPO },
-                      exit:     { duration: 0.3, ease: EASE_IN_EXPO },
-                      duration: 0.5,
-                      ease:     EASE_OUT_EXPO,
-                    }
-              }
-              style={{
-                fontFamily:    'Clash Display, sans-serif',
-                fontSize:      'clamp(48px, 7vw, 90px)',
-                fontWeight:    600,
-                letterSpacing: '-0.03em',
-                color:         ROLE_COLORS[currentRole],
-                transition:    'color 0.3s',
-                display:       'inline-block',
-                lineHeight:    1,
-              }}
-            >
-              {currentRole}
-            </motion.span>
-          </AnimatePresence>
-        </div>
-
-        {/* d) Tagline */}
-        <motion.p
-          {...fadeUp(1.0)}
-          style={{
-            fontFamily:   'Inter, sans-serif',
-            fontSize:     '17px',
-            color:        'var(--text-secondary)',
-            maxWidth:     '440px',
-            lineHeight:   1.6,
-            marginBottom: '48px',
-          }}
-        >
-          I build things that work. I shoot things that stay.
+        {/* The actual positioning statement — this is what the hero was missing */}
+        <motion.p {...rise(0.2)} style={{
+          fontFamily: 'Inter, sans-serif',
+          fontSize: 'clamp(17px, 2.1vw, 21px)', lineHeight: 1.55,
+          color: 'var(--text-primary)', maxWidth: '620px', margin: '0 auto 14px',
+          fontWeight: 450,
+        }}>
+          I build systems that turn messy real-world signals into decisions
+          people can act on.
         </motion.p>
 
-        {/* e) CTA buttons */}
-        <motion.div
-          {...fadeUp(1.2)}
-          style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', justifyContent: 'center' }}
-        >
-          <button
-            onClick={() => scrollTo('work')}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.opacity   = '0.85';
-              e.currentTarget.style.transform = 'translateY(-2px)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.opacity   = '1';
-              e.currentTarget.style.transform = 'translateY(0)';
-            }}
-            style={{
-              background:   'var(--accent-dev)',
-              color:        '#ffffff',
-              padding:      '14px 32px',
-              borderRadius: '8px',
-              border:       'none',
-              fontFamily:   'Inter, sans-serif',
-              fontSize:     '15px',
-              fontWeight:   500,
-              cursor:       'pointer',
-              transition:   'all 0.2s',
-            }}
-          >
-            See my work
-          </button>
+        <motion.p {...rise(0.26)} style={{
+          fontFamily: 'Inter, sans-serif', fontSize: '15.5px', lineHeight: 1.6,
+          color: 'var(--text-secondary)', maxWidth: '560px', margin: '0 auto 34px',
+        }}>
+          Machine learning, streaming data, and the web in front of it — plus a
+          camera when the laptop closes.
+        </motion.p>
 
-          <button
-            onClick={() => scrollTo('photography')}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'rgba(232,147,90,0.1)';
-              e.currentTarget.style.transform  = 'translateY(-2px)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'transparent';
-              e.currentTarget.style.transform  = 'translateY(0)';
-            }}
-            style={{
-              background:   'transparent',
-              border:       '1px solid var(--accent-photo)',
-              color:        'var(--accent-photo)',
-              padding:      '14px 32px',
-              borderRadius: '8px',
-              fontFamily:   'Inter, sans-serif',
-              fontSize:     '15px',
-              fontWeight:   500,
-              cursor:       'pointer',
-              transition:   'all 0.2s',
-            }}
-          >
-            View photos
+        {/* facts strip — replaces the rotating role word */}
+        <motion.dl {...rise(0.32)} className="hero-facts">
+          {FACTS.map(([k, v]) => (
+            <div key={k} className="hero-fact">
+              <dt>{k}</dt>
+              <dd>{v}</dd>
+            </div>
+          ))}
+        </motion.dl>
+
+        <motion.div {...rise(0.4)} className="hero-cta">
+          <button onClick={() => scrollTo('work')} className="hero-btn hero-btn--primary">
+            See the work <ArrowRight size={16} strokeWidth={2.4} />
+          </button>
+          <button onClick={() => scrollTo('contact')} className="hero-btn hero-btn--ghost">
+            Get in touch
+          </button>
+          <button onClick={() => scrollTo('photography')} className="hero-link">
+            or look at the photographs
           </button>
         </motion.div>
       </div>
 
-      {/* f) Terminal shortcut hint — fades in after 3s, bottom-left */}
-      <motion.div
-        className="hero-term-hint"
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={prefersReduced ? {} : { delay: 3.2, duration: 0.7, ease: EASE_OUT_EXPO }}
-        style={{
-          position:      'absolute',
-          bottom:        '44px',
-          left:          '40px',
-          display:       'flex',
-          alignItems:    'center',
-          gap:           '10px',
-          pointerEvents: 'none',
-          userSelect:    'none',
-        }}
+      {/* scroll cue */}
+      <motion.button
+        onClick={() => scrollTo('work')}
+        initial={prefersReduced ? { opacity: 1 } : { opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={prefersReduced ? {} : { delay: 1.1, duration: 0.8 }}
+        className="hero-scroll"
+        aria-label="Scroll to work"
       >
-        <span style={{
-          display:      'inline-block',
-          width:        '7px',
-          height:       '14px',
-          background:   '#3fb950',
-          borderRadius: '1px',
-          animation:    'termHintBlink 1s step-end infinite',
-          flexShrink:   0,
-        }} />
-        <span style={{
-          fontFamily:    "'JetBrains Mono', monospace",
-          fontSize:      '12px',
-          color:         'var(--text-tertiary)',
-          letterSpacing: '0.02em',
-        }}>
-          press{' '}
-          <kbd style={{
-            fontFamily:   'inherit',
-            fontSize:     '11px',
-            color:        '#3fb950',
-            background:   'rgba(63,185,80,0.1)',
-            border:       '1px solid rgba(63,185,80,0.3)',
-            borderRadius: '4px',
-            padding:      '1px 5px',
-          }}>Ctrl</kbd>
-          {' + '}
-          <kbd style={{
-            fontFamily:   'inherit',
-            fontSize:     '11px',
-            color:        '#3fb950',
-            background:   'rgba(63,185,80,0.1)',
-            border:       '1px solid rgba(63,185,80,0.3)',
-            borderRadius: '4px',
-            padding:      '1px 5px',
-          }}>{'\u0060'}</kbd>
-          {' '}to open terminal
-        </span>
-        <style>{`@keyframes termHintBlink { 0%,100%{opacity:1} 50%{opacity:0} }`}</style>
-      </motion.div>
-
-      {/* g) Scroll indicator */}
-      <AnimatePresence>
-        {scrollVisible && (
-          <motion.div
-            initial={prefersReduced ? { opacity: 1 } : { opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={prefersReduced ? {} : { delay: 1.8, duration: 0.7 }}
-            style={{
-              position:       'absolute',
-              bottom:         '40px',
-              left:           '50%',
-              transform:      'translateX(-50%)',
-              display:        'flex',
-              flexDirection:  'column',
-              alignItems:     'center',
-              gap:            '8px',
-            }}
-          >
-            <div
-              style={{
-                width:      '1px',
-                height:     '48px',
-                background: 'var(--text-tertiary)',
-                animation:  'scrollPulse 1.5s ease-in-out infinite',
-              }}
-            />
-            <span
-              style={{
-                fontSize:      '10px',
-                letterSpacing: '0.2em',
-                textTransform: 'uppercase',
-                color:         'var(--text-tertiary)',
-              }}
-            >
-              scroll
-            </span>
-          </motion.div>
-        )}
-      </AnimatePresence>
+        <ArrowDown size={14} strokeWidth={2} />
+      </motion.button>
 
       <style>{`
-        @keyframes scrollPulse {
-          0%, 100% { transform: translateY(0); }
-          50%       { transform: translateY(8px); }
-        }
-        /* On small screens the hint would sit under the centred scroll cue */
-        @media (max-width: 720px) {
-          .hero-term-hint { display: none !important; }
-        }
-        /* Iridescent sheen drifting across the name — mostly cream, a moving
-           purple→orange band. */
-        .hero-name-grad {
+        .hero-name {
           background-image: linear-gradient(
             110deg,
             var(--text-primary) 0%, var(--text-primary) 32%,
@@ -478,8 +212,58 @@ export default function Hero() {
           0%, 100% { background-position: 118% 0; }
           50%      { background-position: -18% 0; }
         }
+
+        .hero-facts {
+          display: flex; justify-content: center; flex-wrap: wrap;
+          gap: 10px 34px; margin: 0 0 34px; padding: 0;
+        }
+        .hero-fact { text-align: left; }
+        .hero-fact dt {
+          font-family: 'JetBrains Mono', monospace; font-size: 10px;
+          letter-spacing: 0.16em; text-transform: uppercase;
+          color: var(--accent-dev); margin-bottom: 3px;
+        }
+        .hero-fact dd {
+          font-family: 'Inter', sans-serif; font-size: 13.5px; font-weight: 500;
+          color: var(--text-secondary); margin: 0;
+        }
+
+        .hero-cta { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 12px; }
+        .hero-btn {
+          display: inline-flex; align-items: center; gap: 8px;
+          font-family: 'Inter', sans-serif; font-size: 15px; font-weight: 500;
+          padding: 13px 24px; border-radius: 10px; cursor: pointer;
+          transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease, border-color 0.18s ease;
+        }
+        .hero-btn--primary { background: var(--accent-dev); color: #fff; border: 1px solid var(--accent-dev); }
+        .hero-btn--primary:hover { transform: translateY(-2px); box-shadow: 0 12px 30px -8px rgba(124,111,247,0.55); }
+        .hero-btn--ghost { background: transparent; color: var(--text-primary); border: 1px solid var(--border-hover); }
+        .hero-btn--ghost:hover { transform: translateY(-2px); border-color: var(--text-secondary); background: rgba(255,255,255,0.04); }
+        .hero-link {
+          background: none; border: 0; cursor: pointer;
+          font-family: 'Inter', sans-serif; font-size: 14px;
+          color: var(--text-tertiary); text-decoration: underline;
+          text-decoration-color: var(--border-hover); text-underline-offset: 4px;
+          transition: color 0.18s ease;
+        }
+        .hero-link:hover { color: var(--accent-photo); text-decoration-color: var(--accent-photo); }
+        @media (max-width: 560px) { .hero-link { flex-basis: 100%; margin-top: 4px; } }
+
+        .hero-scroll {
+          position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
+          z-index: 2; width: 38px; height: 38px; border-radius: 50%;
+          display: flex; align-items: center; justify-content: center;
+          background: rgba(255,255,255,0.03); border: 1px solid var(--border-subtle);
+          color: var(--text-tertiary); cursor: pointer;
+          animation: heroScrollBob 2.2s ease-in-out infinite;
+          transition: color 0.18s ease, border-color 0.18s ease;
+        }
+        .hero-scroll:hover { color: var(--text-primary); border-color: var(--border-hover); }
+        @keyframes heroScrollBob { 0%,100% { transform: translate(-50%, 0); } 50% { transform: translate(-50%, 6px); } }
+
         @media (prefers-reduced-motion: reduce) {
-          .hero-name-grad { animation: none; background-position: 50% 0; }
+          .hero-name { animation: none; background-position: 50% 0; }
+          .hero-scroll { animation: none; }
         }
       `}</style>
     </section>

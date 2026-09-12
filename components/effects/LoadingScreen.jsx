@@ -8,7 +8,7 @@ const noopSubscribe = () => () => {};
 
 // Boot log — reads like the site compiling itself. Each line lights up in sequence.
 const BOOT_STEPS = [
-  { label: 'loading identity', tag: 'about' },
+  { label: 'loading identity', tag: 'hero' },
   { label: 'compiling the studio', tag: 'work' },
   { label: 'developing negatives', tag: 'photos' },
   { label: 'brewing chai', tag: 'always' },
@@ -35,7 +35,7 @@ export default function LoadingScreen() {
     if (hasLoaded) return;
     document.body.style.overflow = 'hidden';
 
-    const total = prefersReduced ? 700 : 2500;
+    const total = prefersReduced ? 400 : 850;
     const timer = setTimeout(() => {
       setDismissed(true);
       sessionStorage.setItem('hasLoaded', 'true');
@@ -45,7 +45,7 @@ export default function LoadingScreen() {
     let stepTimers = [];
     if (!prefersReduced) {
       stepTimers = BOOT_STEPS.map((_, i) =>
-        setTimeout(() => setStep(i + 1), 420 + i * 300)
+        setTimeout(() => setStep(i + 1), 90 + i * 150)
       );
     } else {
       setStep(BOOT_STEPS.length);

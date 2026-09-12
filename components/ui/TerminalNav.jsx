@@ -73,7 +73,7 @@ const CONFIG = {
 // ── Autocomplete map ──────────────────────────────────────────────────────────
 const AC = {
   help: [], clear: [], whoami: [], pwd: [], date: [], uname: [], exit: [],
-  cd:   ['./home', '--dev', '--research', '--experience', '--skills', '--education', '--leadership', '--photography', './about', './contact'],
+  cd:   ['./home', '--dev', '--research', '--experience', '--skills', '--leadership', '--photography', './contact'],
   ls:   ['-la ./projects', './skills', './experience'],
   cat:  ['about.md', 'contact.json', 'stack.json'],
   open: ['github', 'linkedin', 'email'],
@@ -92,31 +92,27 @@ const NAV_ITEMS = [
     label: <><span style={{ color: T.blue }}>--</span><span style={{ color: T.green }}>experience</span></> },
   { id: 'skills',      targetId: 'skills',      mobileVisible: false,
     label: <><span style={{ color: T.green }}>ls</span><span style={{ color: T.orange }}> ./skills</span></> },
-  { id: 'education',   targetId: 'education',   mobileVisible: false,
-    label: <><span style={{ color: T.blue }}>--</span><span style={{ color: T.green }}>education</span></> },
   { id: 'extracurriculars', targetId: 'extracurriculars', mobileVisible: false,
     label: <><span style={{ color: T.blue }}>--</span><span style={{ color: T.green }}>leadership</span></> },
   { id: 'photography', targetId: 'photography', mobileVisible: true,
     label: <><span style={{ color: T.blue }}>--</span><span style={{ color: T.green }}>photography</span></> },
   { id: 'projects',    targetId: 'work',        mobileVisible: false,
     label: <><span style={{ color: T.green }}>ls</span><span style={{ color: T.blue }}> -la</span><span style={{ color: T.orange }}> ./projects</span></> },
-  { id: 'about',       targetId: 'about',       mobileVisible: false,
-    label: <><span style={{ color: T.green }}>cat</span><span style={{ color: T.orange }}> about.md</span></> },
   { id: 'contact',     targetId: 'contact',     mobileVisible: true,
     label: <><span style={{ color: T.green }}>curl</span><span style={{ color: T.orange }}> contact.json</span></> },
 ];
 
 const SECTION_IDS = [
-  'hero', 'about', 'work', 'research',
-  'experience', 'skills', 'education', 'extracurriculars',
+  'hero', 'work', 'research',
+  'experience', 'skills', 'extracurriculars',
   'photography', 'me', 'contact',
 ];
 
 const SECTION_TO_NAV = {
-  hero: 'home', about: 'about', work: 'dev',
+  hero: 'home', work: 'dev',
   research: 'research',
-  experience: 'experience', skills: 'skills', education: 'education', extracurriculars: 'extracurriculars',
-  photography: 'photography', me: 'about', contact: 'contact',
+  experience: 'experience', skills: 'skills', extracurriculars: 'extracurriculars',
+  photography: 'photography', me: 'contact', contact: 'contact',
 };
 
 // ── Section navigation helper (called from runCommand, no React context needed) ─
@@ -358,7 +354,6 @@ export default function TerminalNav() {
           ['cd --research',     'jump to the research section'],
           ['cd --experience',   'jump to professional experience'],
           ['cd --skills',       'jump to the skills section'],
-          ['cd --education',    'jump to education'],
           ['cd --leadership',   'jump to leadership & extracurriculars'],
           ['cd --photography',  'browse photography portfolio'],
           ['ls -la ./projects', 'list projects with details'],
@@ -440,12 +435,12 @@ export default function TerminalNav() {
           push(`<span style="color:${T.green}">→</span> Navigating to <span style="color:${T.orange};font-weight:700">Skills</span> <span style="color:${T.dim}">↓ scrolling…</span>`);
           push('');
           navTarget = 'skills';
-        } else if (args === '--education' || args === './education') {
-          setTerminalLoc('education');
+        } else if (args === '--education' || args === './education' || args === '--track') {
+          setTerminalLoc('experience');
           push('');
           push(`<span style="color:${T.green}">→</span> Navigating to <span style="color:${T.orange};font-weight:700">Education</span> <span style="color:${T.dim}">↓ scrolling…</span>`);
           push('');
-          navTarget = 'education';
+          navTarget = 'experience';
         } else if (args === '--leadership' || args === './extracurriculars') {
           setTerminalLoc('extracurriculars');
           push('');
@@ -457,7 +452,7 @@ export default function TerminalNav() {
           push('');
           push(`<span style="color:${T.green}">→</span> Navigating to <span style="color:${T.orange};font-weight:700">About</span> <span style="color:${T.dim}">↓ scrolling…</span>`);
           push('');
-          navTarget = 'about';
+          navTarget = 'hero';
         } else if (args === './contact') {
           setTerminalLoc('contact');
           push('');
@@ -472,7 +467,7 @@ export default function TerminalNav() {
           navTarget = 'hero';
         } else {
           push(`<span style="color:${T.red}">cd: no such directory: ${esc(args)}</span>`);
-          push(`<span style="color:${T.muted}">try: cd ./home · cd --dev · cd --research · cd --experience · cd --skills · cd --education · cd --leadership · cd --photography · cd ./about · cd ./contact</span>`);
+          push(`<span style="color:${T.muted}">try: cd ./home · cd --dev · cd --research · cd --experience · cd --skills · cd --leadership · cd --photography · cd ./contact</span>`);
           push('');
         }
         break;
@@ -545,7 +540,7 @@ export default function TerminalNav() {
           push(`  <span style="color:${T.dim}">───</span>`);
           push(`  <span style="color:${T.muted}">status:</span> <span style="color:${T.green}">${esc(CONFIG.status)}</span>`);
           push('');
-          navTarget = 'about';
+          navTarget = 'hero';
         } else if (args === 'contact.json') {
           setTerminalLoc('contact');
           push('');
@@ -569,7 +564,7 @@ export default function TerminalNav() {
           });
           push(`<span style="color:${T.dim}">}</span>`);
           push('');
-          navTarget = 'about';
+          navTarget = 'hero';
         } else {
           push(`<span style="color:${T.red}">cat: ${esc(args || 'missing operand')}</span>`);
           push(`<span style="color:${T.muted}">available: about.md · contact.json · stack.json</span>`);
