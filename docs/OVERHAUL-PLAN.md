@@ -113,3 +113,42 @@ consistent section rhythm.
 6. Photography rebuild
 7. Leadership, Research, Skills, Contact, Footer polish
 8. Verify at 390 / 768 / 1440, rebuild, commit
+
+---
+
+# Results (measured, not estimated)
+
+| Metric | Before | After |
+|---|---|---|
+| Desktop scroll (1440×900) | 13.2 screens | **11.2** |
+| Mobile scroll (390×844) | 19.9 screens | **17.4** |
+| Sections | 11 | **9** |
+| Component lines | 9,655 | **6,759** |
+| Files deleted | — | 10 (~2,900 lines) |
+| `npm audit` | clean | clean |
+| Horizontal overflow | none | none |
+| Console errors | 0 | 0 |
+
+## Target missed, honestly
+
+The plan aimed for ~7 desktop screens. It landed at 11.2. Deleting `#about`
+removed 1.7 screens, but the surviving sections are now *denser*, not shorter —
+the Work grid shows four full project cards where the old section showed none
+on desktop. Getting to 7 means cutting another section outright, and the two
+remaining candidates (`#me`, `#photography`) are both content the site is
+explicitly meant to show. 11.2 across 9 sections is ~1.24 screens each, which
+is tight; the scroll is long because the content is real, not because of
+padding. That is a different problem from the one this pass fixed.
+
+## Left for the owner
+
+1. **`repo` URLs in `lib/projects.js`** are all `null`. Every per-project
+   "GitHub" button previously pointed at the profile root — misleading, so they
+   were removed. Add real repository URLs and the buttons return automatically.
+2. **No résumé link and no photograph of you anywhere on the site.** Both are
+   standard and both are missing.
+3. **`node_modules` is committed to this repository** (9,180 tracked files), so
+   any dependency change produces a huge diff. Worth untracking.
+4. The three.js studio and the Ctrl+` terminal are both preserved but now
+   opt-in / hidden. If they are the point of the site, they should be promoted
+   deliberately rather than by default.

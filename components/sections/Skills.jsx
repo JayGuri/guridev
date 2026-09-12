@@ -244,8 +244,12 @@ export default function Skills() {
       </div>
 
       <style>{`
-        .sk-marquee { height: 60px; position: relative; overflow: hidden; margin-bottom: 28px; }
-        .sk-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+        .sk-marquee {
+          height: 60px; position: relative; overflow: hidden; margin-bottom: 28px;
+          -webkit-mask-image: linear-gradient(to right, transparent, #000 7%, #000 93%, transparent);
+          mask-image: linear-gradient(to right, transparent, #000 7%, #000 93%, transparent);
+        }
+        .sk-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; align-items: start; }
         .sk-card {
           position: relative; overflow: hidden;
           background: var(--bg-elevated); border: 1px solid var(--border-subtle);

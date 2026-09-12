@@ -47,7 +47,7 @@ const EARLIER = 'Pace Junior College — HSC 88.3% · Hiranandani Foundation Sch
 export default function Experience() {
   return (
     <section id="experience" style={{ background: 'var(--bg-base)', padding: 'var(--section-pad-y) 24px', width: '100%' }}>
-      <div style={{ maxWidth: '900px', margin: '0 auto' }}>
+      <div style={{ maxWidth: '1120px', margin: '0 auto' }}>
 
         <SectionHeader
           label="track record"
@@ -114,7 +114,7 @@ export default function Experience() {
       </div>
 
       <style>{`
-        .tr-rail { position: relative; padding-left: 28px; }
+        .tr-rail { position: relative; padding-left: 28px; max-width: 900px; }
         .tr-item { position: relative; padding-bottom: 18px; }
         .tr-item:last-child { padding-bottom: 0; }
         /* connector runs between dots, not past the last one */
@@ -170,7 +170,7 @@ export default function Experience() {
         }
 
         .tr-edu {
-          display: flex; gap: 14px; margin-top: 22px;
+          display: flex; gap: 14px; margin-top: 22px; max-width: 900px;
           background: var(--bg-elevated); border: 1px solid var(--border-subtle);
           border-radius: 16px; padding: 20px 22px;
         }
